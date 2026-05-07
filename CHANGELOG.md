@@ -4,6 +4,27 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.0.2] — 2026-05-07
+
+**Hardening Bundle — 10 security, compliance, and documentation fixes from v2.0/v2.0.1 carry-forward.**
+
+**Fixed:**
+- **#23 BLOCKER** — Corrected hallucinated `peter-evans/create-pull-request` SHA in `sync-agency.yml`. Previous SHA (271a8d0...) was not a real commit; replaced with verified v7.0.6 SHA (67ccf78...). Without this fix, the PR-creation step in `/sync-agency` fails silently.
+- **#13** — Added per-file SPDX comparison step to `sync-agency.yml`. Reads OLD `.files[].spdx` from the pre-update lock file, compares to NEW entries from the fetch. If any SPDX field changes: adds `legal-review-required` label AND fails CI until @compliance acknowledges. Bootstrap-tolerant (skips when old lock has no `.files[]` entries). Closes ADR-022 compliance gap (v2.0 Phase 5 C8).
+- **#14** — Created `.github/PULL_REQUEST_TEMPLATE.md` with Summary, Test plan, and Agency-Sync Checklist sections. Checklist (collapsible, agency-sync-only) requires lock file diff review, ≥3 file sample-audit per category, nexus-strategy.md absence check, SPDX acknowledgment, and 24h soak rule. Closes v2.0 Phase 6 A3 finding.
+- **#15** — Added `verbatim-attribution-rule-check` job to `quality.yml`. Greps `CLAUDE.md` and `WIZARD.md` for the exact 4-sentence non-overridable attribution rule (ADR-024). Fails CI if the literal string is absent from either file. Closes G3 finding from v2.0 Phase 5.
+- **#16** — Closed as superseded by ADR-027. ADR-027 (template extraction, v2.0.1) eliminates the heredoc delimiter surface that issue #16 proposed randomizing.
+- **#17** — Changed fetch loop staging path from `/tmp/fetched-files/${filename}` to `/tmp/fetched-files/${category}/${filename}` with `mkdir -p` guard. Prevents filename collisions across categories. Closes A6 finding from v2.0 Phase 6.
+- **#18** — Added `permissions: read-all` at workflow top level in `sync-agency.yml`. Job-level `contents: write, pull-requests: write` explicit grants remain. Closes A7 finding from v2.0 Phase 6.
+- **#19** — Added Windows symlink note to `SETUP-CHECKLIST.md` explaining `presets/ → examples/` symlink behavior. Three workarounds documented: (a) Developer Mode, (b) `git clone -c core.symlinks=true`, (c) use `examples/` directly. Notes symlink removed in v2.1.0 (ADR-026). Closes A8 finding from v2.0 Phase 6.
+- **#20** — ADR-023 amendment block recording live 13-category enumeration from `.cowork-allowlist.json` written to `docs/architecture.md` by @architect Phase 1. Closes v2.0 Phase 5 B2 (ADR-023 placeholder drift). Live categories: `academic`, `business`, `content-creation`, `customer-success`, `data-analysis`, `design`, `engineering`, `finance`, `hr`, `legal`, `marketing`, `product`, `support`.
+- **#21** — Added `concurrency: { group: sync-agency, cancel-in-progress: false }` at workflow top level in `sync-agency.yml`. Prevents concurrent sync-agency runs; in-progress runs are preserved when a new push queues. Closes A4 finding from v2.0 Phase 6.
+- **P3 baseline** — Extended `CONTRIBUTING.md` CI Workflow Quality Baseline with Check 3: every `uses:` SHA MUST be verified via `gh api repos/<owner>/<repo>/git/refs/tags/<tag>` at Phase 5. Hallucinated SHAs are blocking. Codifies P3 pattern from v2.0 retrospective.
+
+**YAML validation:** `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/sync-agency.yml'))"` and `yaml.safe_load(open('.github/workflows/quality.yml'))` both pass.
+
+---
+
 ## [2.0.0] — 2026-05-07
 
 **Dynamic Workspace Architect — upstream content integration via msitarzewski/agency-agents.** Major supply-chain infrastructure: SHA-pinned lock file, fail-closed allowlist, monthly sync CI, prompt-injection content scan, attribution injection (ADR-024 full MIT block), THIRD-PARTY-NOTICES.md. All 8 Phase 2 MUST-FIX security items resolved. Presets relocated to `examples/` (v1.x symlink preserved for v2.0.x).
