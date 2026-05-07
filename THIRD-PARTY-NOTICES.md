@@ -9,7 +9,7 @@ This file is regenerated automatically by `.github/workflows/sync-agency.yml`
 on every upstream SHA bump. Direct edits will be overwritten — to update
 notices, update the lock file via `/sync-agency`.
 
-Last regenerated: 2026-05-07T09:42:09Z
+Last regenerated: 2026-05-07T12:32:06Z
 Lock file: cowork.lock.json (pinned commit: 783f6a72bfd7f3135700ac273c619d92821b419a)
 
 ---
