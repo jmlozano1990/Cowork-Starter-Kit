@@ -1,8 +1,8 @@
 {
   "$schema_version": "1.0",
   "upstream": "msitarzewski/agency-agents",
-  "pinned_commit_sha": "783f6a72bfd7f3135700ac273c619d92821b419a",
+  "pinned_commit_sha": "0000000000000000000000000000000000000000",
   "pinned_at": "2026-05-07T09:42:09Z",
-  "license_file_sha256": "9a45258434d5cedf0af73c9ad4771373701225038d246c49219026c33677f66f",
+  "license_file_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "files": []
 }
