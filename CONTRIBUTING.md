@@ -20,22 +20,22 @@ All contributions start from the template. Do not create a preset folder from sc
 
 Before merging a new preset PR, verify all 11 items:
 
-- [ ] **`project-instructions-starter.txt` present** — file exists at `presets/<name>/project-instructions-starter.txt`
-- [ ] **Starter file is ≤350 words** — run `wc -w presets/<name>/project-instructions-starter.txt` to confirm (raised from ≤300 in v1.2 for dynamic wizard branching)
+- [ ] **`project-instructions-starter.txt` present** — file exists at `examples/<name>/project-instructions-starter.txt`
+- [ ] **Starter file is ≤350 words** — run `wc -w examples/<name>/project-instructions-starter.txt` to confirm (raised from ≤300 in v1.2 for dynamic wizard branching)
 - [ ] **Safety rule present verbatim in starter file** — must contain: "Always ask for explicit confirmation before deleting, moving, or overwriting any file or folder."
-- [ ] **All skills in `folder/SKILL.md` format** — no flat `.md` skill files at `presets/<name>/.claude/skills/` root; each skill is a folder with `SKILL.md` containing valid YAML frontmatter (`name:` and `description:` fields)
+- [ ] **All skills in `folder/SKILL.md` format** — no flat `.md` skill files at `examples/<name>/.claude/skills/` root; each skill is a folder with `SKILL.md` containing valid YAML frontmatter (`name:` and `description:` fields)
 - [ ] **Minimum file count met** — at least 3 skills in `.claude/skills/`, at least 2 context files in `context/`, at least 1 `folder-structure.md`, at least 1 `connector-checklist.md`
 - [ ] **"Try this now" prompts present** — `skills-as-prompts.md` includes at least one file-based and one file-agnostic example prompt
 - [ ] **CI passes** — all GitHub Actions jobs pass: markdown lint, link check, shellcheck, safety-rule grep, starter-file-check, starter-safety-rule-check, skill-format-check, writing-profile-template-check
-- [ ] **`writing-profile.md` present** — file exists at `presets/<name>/context/writing-profile.md` with non-placeholder content in Tone & Voice and Anti-AI Guidance sections; must not be blank or contain only `[bracketed placeholders]`
+- [ ] **`writing-profile.md` present** — file exists at `examples/<name>/context/writing-profile.md` with non-placeholder content in Tone & Voice and Anti-AI Guidance sections; must not be blank or contain only `[bracketed placeholders]`
 - [ ] **`curated-skills-registry.md` entry follows schema** — if the PR adds skills to `curated-skills-registry.md`, each entry must include: `name`, `description`, `source_url` (HTTPS only or `builtin`), `vetting_date` (ISO 8601), `tier` (1 or 2), `goal_tags`. PR description must include vetting evidence (source repo stars/health, last commit date, keyword scan result showing no flagged terms)
 - [ ] **CLAUDE.md sync** — if the PR modifies the wizard flow in any `project-instructions-starter.txt`, `CLAUDE.md` must be updated to match (and vice versa). All 7 wizard surfaces (CLAUDE.md + 6 starter files) must stay in sync. PRs that touch one must touch all.
 - [ ] **No `Sample:` or `Raw sample:` field** — `writing-profile.md` files must not store raw user writing samples; wizard instructions must extract patterns only
 - [ ] **New/edited SKILL.md in depth-enforced preset contains all 9 sections** — `## When to use`, `## Triggers`, `## Instructions`, `## Output format`, `## Quality criteria`, `## Anti-patterns`, `## Example`, `## Writing-profile integration`, `## Example prompts` (per `templates/skill-template/SKILL.md`)
-- [ ] **New SKILL.md has ≥ 60 lines** — run `wc -l presets/<preset>/.claude/skills/<skill>/SKILL.md` to confirm; the `skill-depth-check` CI job enforces this for depth-enforced presets
+- [ ] **New SKILL.md has ≥ 60 lines** — run `wc -l examples/<preset>/.claude/skills/<skill>/SKILL.md` to confirm; the `skill-depth-check` CI job enforces this for depth-enforced presets
 - [ ] **Frontmatter `trigger_examples` list has 3–6 entries if present** — the field is optional; if included it must have at least 3 and no more than 6 example phrases
 - [ ] **Placeholder authoring rules followed** — see `##Placeholder authoring rules` section below
-- [ ] **B10 skill-input file lives under the pipeline path** — if this PR proposes a new skill, any B10 skill-input file (session notes, Q&A responses) must live under `.claude/projects/<slug>/cycles/…` and NOT under any product repo path (presets/, docs/, templates/)
+- [ ] **B10 skill-input file lives under the pipeline path** — if this PR proposes a new skill, any B10 skill-input file (session notes, Q&A responses) must live under `.claude/projects/<slug>/cycles/…` and NOT under any product repo path (examples/, docs/, templates/)
 - [ ] **Prior retro carry-forwards reviewed** — per `docs/retro-template.md` §Carry-Forward Review; every item from the previous cycle's Section 8 must have an explicit disposition before this PR closes
 - [ ] **Cross-preset slug-divergence check (community PRs)** — if this PR introduces or edits a skill whose `name:` frontmatter slug already exists in another preset (e.g., `research-synthesis` appears in both `study` and `research`), verify that `## Quality criteria` and `## Anti-patterns` content diverge meaningfully across the two files. ADR-018 permits duplicate slugs only when the two SKILL.md files implement genuinely distinct workflows. A reviewer who finds two files with >60% identical `## Instructions` content should block the PR and request a refactor. (Not CI-enforced per ADR-018 §Consequences.)
 
@@ -47,7 +47,7 @@ Before merging a new preset PR, verify all 11 items:
 
 **PRs that modify `CLAUDE.md` must:**
 
-1. Also update all 6 `presets/*/project-instructions-starter.txt` files to match (wizard flow must stay in sync — ADR-010)
+1. Also update all 6 `examples/*/project-instructions-starter.txt` files to match (wizard flow must stay in sync — ADR-010)
 2. Include a clear explanation of what changed and why in the PR description
 3. Be reviewed by a maintainer before merge — treat `CLAUDE.md` edits as security-relevant changes
 
@@ -155,14 +155,14 @@ shellcheck scripts/setup-folders.sh
 
 # Safety rule grep — global-instructions.md
 SAFETY_RULE="Always ask for explicit confirmation before deleting"
-for f in presets/*/global-instructions.md; do
+for f in examples/*/global-instructions.md; do
   if ! grep -q "$SAFETY_RULE" "$f"; then
     echo "MISSING safety rule: $f"
   fi
 done
 
 # Safety rule grep — starter files (.txt)
-for f in presets/*/project-instructions-starter.txt; do
+for f in examples/*/project-instructions-starter.txt; do
   if ! grep -q "$SAFETY_RULE" "$f"; then
     echo "MISSING safety rule: $f"
   fi
@@ -170,13 +170,13 @@ done
 
 # Starter file existence check
 for preset in study research writing project-management creative business-admin; do
-  if [ ! -f "presets/$preset/project-instructions-starter.txt" ]; then
-    echo "MISSING starter file: presets/$preset/project-instructions-starter.txt"
+  if [ ! -f "examples/$preset/project-instructions-starter.txt" ]; then
+    echo "MISSING starter file: examples/$preset/project-instructions-starter.txt"
   fi
 done
 
 # Skill format check — no flat .md files at skills root
-for skills_dir in presets/*/.claude/skills; do
+for skills_dir in examples/*/.claude/skills; do
   for f in "$skills_dir"/*.md; do
     if [ -f "$f" ]; then
       echo "FLAT SKILL FILE: $f (must be in folder/SKILL.md format)"

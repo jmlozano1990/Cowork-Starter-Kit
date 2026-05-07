@@ -195,7 +195,7 @@ _Added: 2026-04-17T21:00:00Z — v1.3.0 Preset Skills Depth cycle_
 **Assumption:** Maintaining a path allowlist in `skill-depth-check` CI (widening by one preset per point release) is operationally sustainable for 6 releases (v1.3.0–v1.3.5) without accumulating technical debt. Each release requires a 1-line CI edit to add the new preset path.
 **Risk:** If a preset is renamed or reorganized before its scheduled release, the allowlist entry must be updated manually. Missed update would silently skip enforcement for that preset.
 **Mitigation:** CI job comment documents the rollout schedule and next-preset path explicitly. Each v1.3.x spec revision confirms the path before Phase 4.
-**Validation path:** At v1.3.5, evaluate whether to consolidate to a global glob. If all 6 presets are on the new template format, replace the allowlist with `presets/**` and close the technical debt.
+**Validation path:** At v1.3.5, evaluate whether to consolidate to a global glob. If all 6 presets are on the new template format, replace the allowlist with `examples/**` and close the technical debt.
 
 ---
 
@@ -345,3 +345,53 @@ _Added: 2026-05-06T00:00:00Z — v2.0 Dynamic Workspace Architect via agency-age
 **Assumption:** The NEXUS framework in `nexus-strategy.md` defines a competing top-level orchestration model that directly conflicts with cowork-starter-kit's wizard orchestration and The-Council pipeline. This conflict is structural, not versional — a future version of NEXUS that resolves the collision would require a new architectural review before any unblocking is considered.
 **Risk:** NONE — the block is permanent until explicitly reviewed and lifted by an architecture decision (Phase 1 ADR). This assumption is a design constraint, not a hypothesis.
 **Validation path:** N/A — confirmed. The block is enforced by F4 CI check. Any future proposal to unblock nexus-strategy.md triggers a new @architect + @security review cycle.
+
+---
+
+## v2.1 Assumptions — FSM v2 Team-Composition + S3 ADR + Content Audit
+
+### A-v2.1-1 — Users want compose-from-objective, not pick-a-preset [UNTESTED — HIGH risk]
+
+**ID:** A-v2.1-1
+**Confidence:** [UNTESTED — HIGH risk]
+**Assumption:** The user's stated JTBD signal ("I want a workspace that composes a team of agents/skills for whatever objective I bring") represents a broadly held user preference — not just the project owner's mental model. The majority of cowork-starter-kit users approach setup with an objective in mind ("I'm launching a product," "I'm writing a thesis") rather than a domain category ("I need the academic preset").
+**Risk:** HIGH. If most users actually prefer the preset-menu path and find objective-first language confusing or ambiguous, the v2.1 wizard rewrite (W2-F1) could degrade onboarding for the Alex/Jordan primary personas who have responded well to the current structured menu approach. The current wizard (CLAUDE.md) has never been tested with objective-first language against real users.
+**Mitigation:** (a) The existing preset/category routing is preserved as the underlying routing engine — only the ENTRY LANGUAGE changes from "pick a category" to "describe your objective." If the objective-to-category mapping fails, the wizard can fall back to the menu. (b) The Riley product-launch stress-test at Phase 5 validates the happy-path. (c) Jordan/Alex single-category paths are explicitly protected in AC-W2-3 — no multi-category prompt for unambiguous objectives.
+**Validation path:** This assumption requires pre-launch user testing before v2.2 doubles down on the objective-first paradigm. Recommended validation at Phase 3 gate: user acceptance review of the rewritten CLAUDE.md Phase 1 prompt (is it clearer or more confusing than the current menu?). Treat Phase 3 as the first validation checkpoint — @architect and @security should both review the rewritten prompt for clarity, not just security.
+
+### A-v2.1-2 — Pinned-digest (content_sha256) is the optimal second trust anchor mechanism [ESTIMATED — MEDIUM risk]
+
+**ID:** A-v2.1-2
+**Confidence:** [ESTIMATED — MEDIUM risk]
+**Assumption:** The pinned-digest approach (extending lock schema with `content_sha256` = SHA-256 of file content computed at sync-agency fetch time) is the right architectural choice for the second trust anchor — preferable to cosign/Sigstore (too heavy for v2.1 doc-only ADR) and file-hash-registry (circular failure mode).
+**Risk:** MEDIUM. @architect may conclude that cosign is the right long-term architecture even if implemented in v2.2+, and that documenting pinned-digest in ADR-028 creates a dead-end (if the v2.2 implementation then chooses cosign, ADR-028 must be superseded). The risk is wasted ADR specification, not a security gap.
+**Mitigation:** ADR-028 should explicitly state it is "the preferred mechanism pending v2.2 implementation review" — not a final commitment. If @architect's Phase 1 analysis concludes that cosign is clearly superior for v2.2 implementation, ADR-028 can document cosign as the decision while retaining pinned-digest as an intermediate milestone. The ADR purpose (closing S3 carry-forward architecturally) is served by specifying any concrete mechanism.
+**Validation path:** @architect Phase 1 trade-off review. If @architect selects a different mechanism than pinned-digest, spec.md W1-F1 trade-off table should be updated to reflect the decision rationale.
+
+### A-v2.1-3 — Objective-first CLAUDE.md rewrite fits within the ≤ 370-word soft target [ESTIMATED — LOW risk]
+
+**ID:** A-v2.1-3
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** Rewriting CLAUDE.md Phase 1 from goal-discovery to objective-discovery language — while adding team-framing to the multi-category disambiguation path — will not push the total word count above the 370-word soft target (363 words current). The rewrite is a substitution of existing language, not an addition.
+**Risk:** LOW. CLAUDE.md is currently at 363 words (7 words below the soft target). The Phase 1 rewrite is replacing existing prompt text, not adding new sections. The CI hard cap (400 words) provides a safety buffer of 37 words above the soft target.
+**Mitigation:** If the rewrite exceeds 370 words, overflow moves to WIZARD.md per the ADR-021 overflow precedent. CI enforces the 400-word hard cap as the absolute gate.
+**Validation path:** @dev confirms word count with `wc -w CLAUDE.md` before committing. CI word-count check is the automated gate.
+
+### A-v2.1-4 — cowork-profile.md Objective field addition is backward-compatible [UNTESTED — LOW risk]
+
+**ID:** A-v2.1-4
+**Confidence:** [UNTESTED — LOW risk]
+**Assumption:** Adding an `Objective` field to the cowork-profile.md template does not break existing v2.0.x user profiles. Existing profiles omit the Objective field; the resume path must treat an absent Objective as "ask the user" rather than an error.
+**Risk:** LOW. cowork-profile.md is a user-owned file (not version-controlled). The wizard reads it for context but does not validate its schema. An absent field is already the expected state for new installs.
+**Mitigation:** AC-W2-7 specifies that the resume path degrades gracefully when the Objective field is absent. The field is optional in the template (labeled "Objective: (fill in)") — wizard fills it during Phase 4 Full Setup, not as a required Q1 input.
+**Validation path:** @qa Phase 5 test: open a v2.0.x cowork-profile.md (without Objective field) and run the resume flow — confirm the wizard asks for the objective rather than erroring or producing a broken flow.
+
+### A-v2.1-5 — All 9 prior open issues are fully closed by v2.0.2 [CONFIRMED]
+
+**ID:** A-v2.1-5
+**Confidence:** [CONFIRMED]
+**Assumption:** Issues #14, #15, #16, #17, #18, #19, #20, #21, #23 are all closed as of v2.0.2 merge. No code changes are required in v2.1 to address these issues.
+**Risk:** NONE — confirmed via CHANGELOG audit in v2.1 Phase 0 discovery. Each issue has a corresponding CHANGELOG entry in v2.0.1 (#16) or v2.0.2 (#13–#15, #17–#21, #23).
+**Mitigation:** N/A — confirmed.
+**Validation path:** At Phase 4, @dev confirms no open issues labeled v2.0.1 remain on GitHub. If any are found open (GitHub label lag), they are closed by @dev with a comment referencing the resolving CHANGELOG entry — no code change required.
+
