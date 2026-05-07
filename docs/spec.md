@@ -2412,3 +2412,82 @@ Files affected: `.github/workflows/quality.yml`
 - [CONFIRMED] `GITHUB_TOKEN` is available as a built-in secret in all GitHub Actions contexts — no repo configuration required
 - [ESTIMATED] All `api.github.com` calls in `sync-agency.yml` are concentrated in 2–4 steps — @dev must audit the full file to confirm coverage
 - [UNTESTED] Dry-run job execution time stays under 30s on a standard Actions runner with the 3-step scope defined above
+
+---
+
+## v2.0.4 Hotfix — Fetch Loop Subshell + Allowlist Alignment
+
+> **Cycle:** v2.0.4
+> **Mode:** quick
+> **Branch:** `hotfix/v2.0.4-fetch-loop-and-allowlist`
+> **Date:** 2026-05-06T00:00:00Z
+> **Classification:** SECURITY-SENSITIVE (lock-file write is supply-chain trust anchor)
+> **Issue:** #28 (BLOCKER)
+
+### Problem
+
+Two blockers discovered post-v2.0.3 from CI run 25488205240:
+
+**Fix A — Subshell scope bug (BLOCKER)**
+`sync-agency.yml` fetch loop uses a `while-read` pipe pattern. The pipe spawns a subshell; `NEW_FILES_JSON` mutations inside the loop are invisible to the parent shell. Run 25488205240 logs show 50+ files fetched yet `Files fetched: 0`. The cowork.lock.json write uses the empty array — the lock ships invalid regardless of upstream content.
+
+**Fix B — Allowlist category misalignment (BLOCKER)**
+`.cowork-allowlist.json` `.allowed_categories[]` contains 6 phantom entries not present in the actual upstream `agency-agents` catalog. Categories without a matching upstream directory silently produce empty lock sections. The allowlist must be trimmed to the vetted 10-entry subset that maps to real upstream content.
+
+### Fixes
+
+**Fix A — Accumulator pattern replaces pipe-while-read**
+Rewrite the fetch loop to accumulate JSONL entries via temp file `/tmp/new-files-accumulator.jsonl`. After the loop completes, `jq -s '.'` composes the final array from the accumulator. This eliminates the subshell scope trap entirely. The temp file is cleaned up at workflow exit.
+
+Files affected: `.github/workflows/sync-agency.yml`
+
+**Fix B — Allowlist trimmed to vetted 10 entries**
+Replace `.cowork-allowlist.json` `.allowed_categories[]` with the following exact list (alphabetical):
+`academic, design, engineering, finance, marketing, product, project-management, sales, support, testing`
+
+This list matches real upstream `agency-agents/specialized/` directories that were verified to contain at least one agent file. The 6 phantom entries removed were: `business, content-creation, customer-success, data-analysis, hr, legal`.
+
+Files affected: `.cowork-allowlist.json`
+
+### Out of Scope (v2.0.4)
+
+- Any v2.0.3 carry-forwards beyond the two blockers above
+- Lock-file schema changes
+- New sync-agency features
+
+### Technical Constraints
+
+- Stack: GitHub Actions YAML + JSON (no new runtime dependencies)
+- ADR-020 through ADR-027 must remain untouched (per AC-6)
+- Accumulator temp file must be scoped to the workflow run (no cross-run contamination)
+- `yaml.safe_load` must pass on the modified `sync-agency.yml`
+
+### Edge Cases
+
+**E1 — Accumulator file left after failure:** If the workflow errors mid-loop, the temp file persists until the runner is recycled. Use `trap 'rm -f /tmp/new-files-accumulator.jsonl' EXIT` to guarantee cleanup.
+
+**E2 — Empty allowlist category match:** A vetted category with zero matching upstream files produces an empty result set — this is correct behavior, not a bug. The lock will include an empty array for that category.
+
+**E3 — Concurrent workflow runs writing the same accumulator path:** If two sync-agency runs execute simultaneously on the same runner, they share `/tmp`. Append the GitHub run ID to the accumulator filename (`/tmp/new-files-accumulator-${GITHUB_RUN_ID}.jsonl`) to prevent collision.
+
+### Acceptance Criteria
+
+- [ ] **AC-1:** `yaml.safe_load` passes on modified `sync-agency.yml` — no YAML parse errors introduced
+- [ ] **AC-2:** Post-merge `/sync-agency` run logs show `Files fetched: N` where N > 0 — the subshell bug is resolved
+- [ ] **AC-3:** Post-merge `cowork.lock.json` `.files | length > 0` — lock is non-empty after a successful dispatch
+- [ ] **AC-4:** `.cowork-allowlist.json` `.allowed_categories` matches the 10-entry list exactly: `["academic","design","engineering","finance","marketing","product","project-management","sales","support","testing"]` (order: alphabetical)
+- [ ] **AC-5:** Dry-run CI job (from v2.0.3) updated to fetch ≥2 files and verify the accumulator file is non-empty — catches subshell-class regressions at PR time
+- [ ] **AC-6:** ADR-020 through ADR-027 are untouched
+- [ ] **AC-7:** Issue #28 is closeable on merge
+
+### Success Metrics
+
+- **Primary:** Post-merge `/sync-agency` dispatch produces a non-empty `cowork.lock.json` — v2.0.4 makes the lock-file feature functional for the first time end-to-end
+- **Secondary:** Dry-run CI catches accumulator regression — the pattern survives future sync-agency edits
+
+### Assumptions [confidence]
+
+- [CONFIRMED] Pipe-subshell variable scope loss is the root cause — run 25488205240 log (50+ files fetched, `Files fetched: 0`) is definitive
+- [CONFIRMED] The 10-entry allowlist subset maps to real `agency-agents/specialized/` directories — upstream-verified
+- [ESTIMATED] `jq -s '.'` on the JSONL accumulator is sufficient to compose valid JSON array — standard jq usage, no edge cases expected
+- [UNTESTED] Concurrent workflow run collision on `/tmp` — mitigated by run-ID suffix in accumulator filename

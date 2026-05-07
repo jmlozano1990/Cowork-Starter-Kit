@@ -4,18 +4,15 @@
   "upstream": "msitarzewski/agency-agents",
   "allowed_categories": [
     "academic",
-    "business",
-    "content-creation",
-    "customer-success",
-    "data-analysis",
     "design",
     "engineering",
     "finance",
-    "hr",
-    "legal",
     "marketing",
     "product",
-    "support"
+    "project-management",
+    "sales",
+    "support",
+    "testing"
   ],
   "blocked_files": [
     {

@@ -4,6 +4,19 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.0.4] — 2026-05-06
+
+**Hotfix — fetch loop subshell scope fix + allowlist alignment (#28).**
+
+**Fixed:**
+- **#28-A BLOCKER** — Replaced `echo "$CATEGORY_LISTING" | jq -r '...' | while read` pipe pattern with a JSONL accumulator pattern in `sync-agency.yml`. The pipe spawned a subshell; `NEW_FILES_JSON` mutations were invisible to the parent shell, producing `Files fetched: 0` and an empty `cowork.lock.json` regardless of upstream content. The accumulator writes one JSON line per file via `jq -nc --arg/--argjson` (no string interpolation — S1 mitigation), then composes the final array with `jq -s '.'` after the loop completes. Accumulator filename includes `${GITHUB_RUN_ID}` suffix to prevent cross-run `/tmp` collision (E3). `trap EXIT` cleanup prevents accumulator file leak on mid-run failure (E1).
+- **#28-B BLOCKER** — Trimmed `.cowork-allowlist.json` `.allowed_categories` from 13 entries to the vetted 10-entry subset matching real upstream `agency-agents/specialized/` directories: `academic, design, engineering, finance, marketing, product, project-management, sales, support, testing`. Removed 6 phantom entries (`business, content-creation, customer-success, data-analysis, hr, legal`) that silently produced empty lock sections because no matching upstream directory exists.
+
+**Added:**
+- **JSONL accumulator regression gate** in `sync-agency-dry-run` CI job (`quality.yml` step 3). Fetches 2 sample files from `academic/`, builds a JSONL accumulator exactly as `sync-agency.yml` does, then asserts `jq -s '.' | length >= 1`. Catches subshell-class regressions at PR time before any sync-agency edit ships broken to main.
+
+---
+
 ## [2.0.3] — 2026-05-07
 
 **Hotfix — sync-agency authentication + dry-run CI gate.**

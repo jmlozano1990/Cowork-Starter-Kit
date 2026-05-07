@@ -152,8 +152,13 @@ jobs:
           )
 
           FLAGGED_FILES=""
-          NEW_FILES_JSON="[]"
           REQUIRES_REVIEW=false
+
+          # JSONL accumulator — eliminates pipe-subshell scope loss (#28 Fix A)
+          # Run-ID suffix prevents collision when two dispatches share the same /tmp (E3)
+          ACCUM="/tmp/new-files-accumulator-${GITHUB_RUN_ID}.jsonl"
+          trap 'rm -f "$ACCUM"' EXIT
+          : > "$ACCUM"
 
           for category in $ALLOWED_CATEGORIES; do
             # Fetch the category directory listing via GitHub API
@@ -169,8 +174,7 @@ jobs:
               continue
             fi
 
-            # Extract file paths from listing
-            echo "$CATEGORY_LISTING" | jq -r '.[] | select(.type == "file") | .path' | \
+            # Extract file paths from listing — for loop avoids pipe-subshell
             while IFS= read -r file_path; do
               filename=$(basename "$file_path")
 
@@ -211,7 +215,7 @@ jobs:
               # Compute SHA-256
               FILE_SHA256=$(sha256sum "/tmp/fetched-files/${category}/${filename}" | awk '{print $1}')
 
-              # S1 Content scan — run all 8 patterns
+              # S1 Content scan — run all 8 patterns (bash array iteration — no subshell)
               FILE_FLAGGED=false
               for pattern in "${SCAN_PATTERNS[@]}"; do
                 if grep -iEq "$pattern" "/tmp/fetched-files/${category}/${filename}"; then
@@ -222,30 +226,29 @@ jobs:
                 fi
               done
 
-              REQUIRES_REVIEW_FLAG="false"
+              FILE_REQUIRES_REVIEW=false
               if [ "$FILE_FLAGGED" = "true" ]; then
-                REQUIRES_REVIEW_FLAG="true"
+                FILE_REQUIRES_REVIEW=true
               fi
 
-              # Add to files JSON
-              FILE_ENTRY=$(jq -n \
+              # Append one JSON line to accumulator — all values via --arg/--argjson (S1: no string interpolation)
+              jq -nc \
                 --arg path "$file_path" \
-                --arg sha "$FILE_SHA256" \
+                --arg sha256 "$FILE_SHA256" \
                 --arg spdx "MIT" \
-                --arg cat "$category" \
-                --arg rv "$REQUIRES_REVIEW_FLAG" \
-                '{path: $path, sha256: $sha, spdx: $spdx, category: $cat, requires_review: ($rv == "true")}')
-              NEW_FILES_JSON=$(echo "$NEW_FILES_JSON" | jq ". + [$FILE_ENTRY]")
+                --argjson requires_review "$FILE_REQUIRES_REVIEW" \
+                '{path:$path, sha256:$sha256, spdx:$spdx, requires_review:$requires_review}' \
+                >> "$ACCUM"
 
               echo "Fetched: ${file_path} (sha256: ${FILE_SHA256:0:8}...)"
-            done
+            done < <(echo "$CATEGORY_LISTING" | jq -r '.[] | select(.type == "file") | .path')
           done
 
           echo "requires_review=${REQUIRES_REVIEW}" >> "$GITHUB_OUTPUT"
           echo "flagged_files=${FLAGGED_FILES}" >> "$GITHUB_OUTPUT"
 
-          # Write files JSON to temp file for next step
-          echo "$NEW_FILES_JSON" > /tmp/new-files.json
+          # Compose JSONL accumulator into final JSON array for next step
+          jq -s '.' "$ACCUM" > /tmp/new-files.json
           echo "Files fetched: $(jq length /tmp/new-files.json)"
 
       - name: Compare SPDX fields (ADR-022 compliance gap #13)
