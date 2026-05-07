@@ -198,6 +198,29 @@ After completing all steps, say:
 
 ---
 
+## Phase 1 — Uncertainty Fallback
+
+If the user replies to CLAUDE.md Phase 1 with "not sure", "no idea", "?" or similar:
+
+Ask: "Three angles to start from:
+
+1. Learning something
+2. Shipping something
+3. Writing something
+
+Which is closest? Or just describe what's on your mind."
+
+Then resume CLAUDE.md Phase 1 routing with the user's clarified objective.
+
+---
+
 ## Fallback — if the wizard is interrupted
 
-If the user returns and says "Let's continue the setup wizard" or similar, ask: "What preset were we working on?" then resume from where you left off. If they have a `cowork-profile.md` already, read it to restore context.
+If the user returns and says "Let's continue" or similar:
+
+1. Read `cowork-profile.md` if present.
+2. If `Objective:` is populated → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
+3. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
+4. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.
+
+**Partial install detection:** After recovering the objective, the wizard inspects `<workspace>/.claude/skills/` to see which team members are already installed. For each expected team skill not yet present, the wizard asks: "Still want [Skill] — [role]?" before re-running the install step. The user can drop, keep, or swap any pending member without re-doing the objective conversation.
