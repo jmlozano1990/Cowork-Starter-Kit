@@ -585,17 +585,13 @@ jobs:
           echo "Verbatim attribution rule check passed (ADR-024 / G3 MUST-FIX)."
 
   sync-agency-dry-run:
-    name: /sync-agency Dry-Run (path-filtered, v2.0.3)
+    name: /sync-agency Dry-Run (v2.0.3)
     runs-on: ubuntu-latest
     permissions:
       contents: read  # S1 fix — defense-in-depth for PR-triggered jobs (especially fork PRs)
-    if: |
-      github.event_name == 'pull_request' && (
-        contains(toJSON(github.event.pull_request.changed_files), '.github/workflows/sync-agency.yml') ||
-        contains(toJSON(github.event.pull_request.changed_files), '.github/templates/THIRD-PARTY-NOTICES.template.md') ||
-        contains(toJSON(github.event.pull_request.changed_files), '.cowork-allowlist.json') ||
-        contains(toJSON(github.event.pull_request.changed_files), 'cowork.lock.json')
-      )
+    # Run on every PR — `github.event.pull_request.changed_files` is unreliable in `if:` context.
+    # Job body is ~5s; over-running is cheaper than missing a sync-agency.yml change.
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Step 1 — Fetch upstream HEAD SHA (auth class — caught v2.0.3 #25)
