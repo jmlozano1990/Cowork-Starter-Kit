@@ -3868,3 +3868,92 @@ The dry-run job in `.github/workflows/quality.yml` MUST be implemented using `ru
 
 **Verdict:** ADR-020 through ADR-027 bodies remain UNCHANGED. No new ADR (e.g., ADR-028) is required for v2.0.3. AC-7 is satisfied by this section. The pattern-gap response (adding pre-merge dry-run validation) is a CI-policy refinement that lives in `quality.yml` and this v2.0.3 architecture section, not as a new ADR — promote to a formal ADR only if the dry-run scope expands beyond the 3-step boundary defined here.
 
+---
+
+## v2.0.4 Hotfix — Fetch Loop Subshell + Allowlist Alignment
+
+> **Cycle:** v2.0.4
+> **Mode:** quick
+> **Branch:** `hotfix/v2.0.4-fetch-loop-and-allowlist`
+> **Date:** 2026-05-06T00:00:00Z
+> **Classification:** SECURITY-SENSITIVE (lock-file write is supply-chain trust anchor)
+
+### Impact Statement
+
+Schema=NONE, Auth=NONE. Both fixes are bug-class corrections (Fix A: bash control-flow refactor; Fix B: allowlist data trim) — neither alters lock-file structure, fetch surface, trust model, or AuthN/AuthZ flow.
+
+### Fix A — Accumulator Pattern (subshell scope resolution)
+
+**Confirmed:** The JSONL accumulator pattern (`/tmp/new-files-accumulator-${GITHUB_RUN_ID}.jsonl` → post-loop `jq -s '.'` compose) is the correct approach for `sync-agency.yml`.
+
+**Comparison with alternatives:**
+
+| Pattern | Verdict | Rationale |
+|---------|---------|-----------|
+| **JSONL accumulator + `jq -s '.'`** (chosen) | ADOPT | Eliminates subshell entirely. Each loop iteration writes one JSON line via `jq -nc ... >> $ACCUM`. After the loop, `jq -s '.' $ACCUM` composes the array. Variable-mutation-free — no shared state crosses the subshell boundary. Robust to mid-loop `continue`/`break`. Trivial to inspect (cat the accumulator on failure). |
+| Process substitution (`while read; do ...; done < <(curl ...)`) | REJECT | Removes the pipe-subshell but introduces a new failure mode: errors inside `<(...)` are masked from the parent shell's exit code. Requires extra `pipefail`/`SHELL` discipline. Also rewires the data-flow shape, increasing review surface for a SECURITY-SENSITIVE file. |
+| Move loop body into a function returning JSON | REJECT | Bash function output capture via `$(fn)` re-introduces a subshell. Also adds an indirection layer that obscures the existing line-by-line structure auditors already know. |
+| Read all listings first, fetch in second pass | REJECT | Doubles the API call count and adds memory pressure for no scope-fix benefit. |
+
+The accumulator pattern is also the lowest-diff change against the existing loop body (the inner curl/sha256/scan logic is preserved verbatim; only the JSON aggregation tail mutates).
+
+**Run-ID suffix on accumulator filename** (`${GITHUB_RUN_ID}`) addresses E3 in spec — concurrent workflow dispatches sharing `/tmp` on the same self-hosted runner cannot collide. `trap 'rm -f /tmp/new-files-accumulator-${GITHUB_RUN_ID}.jsonl' EXIT` covers E1 (mid-failure cleanup).
+
+### Inner Pattern Loop — Subshell Audit
+
+**Confirmed safe.** Lines 216–223 of `sync-agency.yml`:
+
+```bash
+for pattern in "${SCAN_PATTERNS[@]}"; do
+  if grep -iEq "$pattern" "/tmp/fetched-files/${category}/${filename}"; then
+    ...
+    FLAGGED_FILES="${FLAGGED_FILES}|${file_path}:${pattern}"
+    FILE_FLAGGED=true
+    REQUIRES_REVIEW=true
+  fi
+done
+```
+
+This is a bash `for ... in <array> ; do ... done` construct iterating an in-process bash array (`SCAN_PATTERNS=(...)`), with no pipe and no command substitution wrapping the loop. Variable mutations (`FILE_FLAGGED`, `FLAGGED_FILES`, `REQUIRES_REVIEW`) execute in the current shell scope. The trap that catches the outer fetch loop (`while read | ...`) does NOT apply here. No subshell. No fix required.
+
+The outer loop at lines 173–241 (`echo "$CATEGORY_LISTING" | jq -r '...' | while IFS= read -r file_path; do ... done`) is the sole location of the subshell scope bug — Fix A is correctly scoped to that loop only.
+
+### Fix B — Allowlist Trim
+
+**Data-only update.** Trimming `.cowork-allowlist.json` `.allowed_categories[]` from 16 entries to the vetted 10-entry alphabetical list (`academic, design, engineering, finance, marketing, product, project-management, sales, support, testing`) is a configuration data change. No schema, no key additions, no policy semantics altered. ADR-023 (hybrid allowlist) governs *the existence* of this list; the *contents* of the list are operational data and intentionally not enumerated in the ADR. No ADR amendment required.
+
+### Heredoc Verification
+
+**Confirmed: no new heredocs introduced.** Fix A uses single-line shell redirection (`>>`), `jq -nc`, and `jq -s '.'` invocations — none of which are heredoc constructs. Fix B is a pure JSON edit. AC-1 (`yaml.safe_load` parse) is the regression gate; the no-heredoc rule from v2.0 #12 BLOCKER remains intact.
+
+### ADR-020 through ADR-027 Amendment Review
+
+| ADR | Amendment needed for v2.0.4? | Rationale |
+|-----|------------------------------|-----------|
+| ADR-020 (no runtime git clone) | NO | Fix A is internal to the existing fetch loop; fetch model is unchanged. |
+| ADR-021 (examples/ replaces presets/) | NO | v2.0.4 does not touch example layout. |
+| ADR-022 (hybrid cron + manual dispatch + content-scan) | NO | Trigger model, content-scan rules, and PR-creation flow are unchanged. The accumulator refactor is internal to the fetch step. |
+| ADR-023 (hybrid allowlist) | NO | Allowlist *mechanism* is unchanged. Fix B updates the *data* governed by the mechanism. |
+| ADR-024 (verbatim attribution rule) | NO | No attribution-block changes. |
+| ADR-025 (THIRD-PARTY-NOTICES regeneration) | NO | NOTICES generation untouched. |
+| ADR-026 (examples/ rename) | NO | Examples paths untouched. |
+| ADR-027 (24h soak rule) | NO | Soak rule untouched. |
+
+**Verdict:** ADR-020 through ADR-027 bodies remain UNCHANGED. No new ADR is required for v2.0.4. AC-6 is satisfied by this section. Fix A is a bash refactor; Fix B is a data update — neither rises to architectural-decision threshold.
+
+### Anti-Pattern Scan
+
+| Pattern | Present? | Notes |
+|---------|----------|-------|
+| God Class/Module | NO | Single workflow step, single responsibility. |
+| Circular Dependencies | NO | Linear data flow: API → file → SHA → scan → JSONL → array. |
+| Leaky Abstraction | NO | Accumulator is a workflow-internal implementation detail; no external surface affected. |
+| Premature Optimization | NO | Profiled bug fix. |
+| Over-Engineering | NO | Minimum-diff refactor; no new abstractions introduced. |
+| Tight Coupling | NO | Same as before; no new collaborators. |
+| Missing Separation of Concerns | NO | Workflow step does fetch + scan + accumulate; same boundary as before. |
+| N+1 Query Pattern | NO | API call shape is unchanged from v2.0.3 (one listing call per category, one fetch per file). |
+| Destructive Migration | NO | No DDL, no DROP, no TRUNCATE. Cleanup `trap rm -f` targets a single workflow-scoped temp file. |
+
+Zero anti-patterns. Phase 1 clean.
+

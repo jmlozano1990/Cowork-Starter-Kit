@@ -1429,3 +1429,17 @@ OWASP A01-A10: all PASS or N/A. No new security surface.
 OWASP/LLM: all PASS or N/A. Auth header is GitHub-recommended pattern; no leakage. Dry-run scope (3 steps) genuinely closes 3-cycle BLOCKER pattern (YAML→envsubst→SPDX/regex→auth all caught).
 
 Decision: PASS WITH WARNINGS. Proceed to /gate. S1 carry to Phase 4 ACs.
+
+---
+
+# Security Review — v2.0.4 Hotfix (Phase 2 quick)
+
+## Phase: 2 (quick mode)
+## Date: 2026-05-07T08:30:00Z
+## Status: PASS WITH WARNINGS — 1 WARNING (S1), 2 INFO
+
+**S1 WARNING (verify-at-Phase-6):** JSONL accumulator writes MUST use `jq -n --arg` for every field, NEVER string-interpolated `echo "{...$var...}" >>`. Filenames/SPDX values from upstream could contain `"`, `\`, newlines, or `$(...)` — interpolation is injection-vulnerable. jq -n --arg is the safe construction. @dev verifies; @security re-checks at audit.
+
+**S2/S3 INFO:** Allowlist trim is no-op defense-in-depth. Dry-run scope broadening exercises more codepath without new external surface.
+
+OWASP A01-A10: PASS except A03 (Injection) flagged WARNING contingent on S1 mitigation. Decision: PASS WITH WARNINGS, FAST-TRACK eligible.
