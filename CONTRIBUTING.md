@@ -213,6 +213,18 @@ The workflow `name:` field in the API response must match the `name:` declared i
 
 Both checks are required before a workflow-modifying PR can be approved at Phase 7. @qa must verify them in the Phase 5 test report.
 
+**Check 3 — SHA verification for pinned actions (required before Phase 7 APPROVED):**
+
+Every `uses:` line in a CI workflow file that pins to a SHA MUST be verified at Phase 5 via:
+
+```bash
+gh api repos/<owner>/<repo>/git/refs/tags/<tag>
+```
+
+Confirm the SHA in the workflow matches the `.object.sha` (or `.object.sha` of the tag's target commit if it is an annotated tag) returned by the API. Hallucinated SHAs are a supply-chain risk and are a blocking finding. A workflow with an unverified SHA cannot be approved at Phase 7.
+
+This rule codifies the P3 pattern from the v2.0 retrospective: "SHA-pinning added but not verified before merge."
+
 ---
 
 ## Version management
