@@ -3791,7 +3791,11 @@ The #13 SPDX comparison logic shall be implemented using `jq` + bash control flo
 
 The original ADR-023 (Phase 1, v2.0) referenced a 13-category placeholder list whose enumeration drifted from `.cowork-allowlist.json` after v2.0 Phase 4 implementation. Per the P1 pattern in `docs/patterns.md` (ADR-spec drift on parameterized artifacts), the authoritative source for the allowed-category enumeration is `.cowork-allowlist.json` `.allowed_categories[]` at the v2.0.2 commit.
 
-**Live category list (read from `.cowork-allowlist.json` at Phase 4 by @dev — must match the live file, not this list, on AC-10 verification):** the spec freezes the expected enumeration at: `business`, `content-creation`, `customer-success`, `data-analysis`, `hr`, `legal`, `marketing`, `product`, `project-management`, `sales`, `support`, `testing`, `training` (13 entries). @dev Phase 4 protocol per spec E5: read `.cowork-allowlist.json` live, do not copy from memory. @qa AC-10 verifies amendment count matches live file.
+**Live category list** (canonical source: `.cowork-allowlist.json` `.allowed_categories[]` at v2.0.2 HEAD — verified via `jq -r '.allowed_categories[]' .cowork-allowlist.json`):
+
+`academic`, `business`, `content-creation`, `customer-success`, `data-analysis`, `design`, `engineering`, `finance`, `hr`, `legal`, `marketing`, `product`, `support`
+
+**13 entries.** This list was extracted programmatically from the live file, not authored from memory. Per the P1 pattern (`docs/patterns.md`): treat any divergence between this list and the live file as a regression — the live file is canonical, and any future amendment must re-verify via `jq` at PR time.
 
 **No structural change to ADR-023.** The hybrid allowlist mechanism (allowed_categories + blocked_patterns + blocked_files), fail-closed semantics, and `nexus-strategy.md` permanent block are all preserved verbatim from the ADR-023 body. This amendment records only the actual category enumeration as currently implemented.
 
