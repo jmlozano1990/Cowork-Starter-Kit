@@ -4,6 +4,21 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.0.5] — 2026-05-07
+
+**Chore release — first lock-populated release artifact.**
+
+**Why:** v2.0.4 fixed the subshell scope bug (#28) that was preventing `cowork.lock.json` from populating, but the v2.0.4 release artifact was tagged BEFORE PR #31 merged the first real lock-population (110 files via `/sync-agency`). The v2.0.4 release ZIP shipped with `files: []` despite the code being correct. v2.0.5 re-tags from main HEAD so the release artifact reflects the fully-populated state.
+
+**No code changes.** Identical to v2.0.4 except:
+- `cowork.lock.json` now ships with 110 vetted upstream files (`pinned_commit_sha: 783f6a72bfd7f3135700ac273c619d92821b419a`, distributed across 10 categories: marketing 30, engineering 29, testing 8, sales 8, design 8, support 6, project-management 6, product 5, finance 5, academic 5)
+- `THIRD-PARTY-NOTICES.md` reflects the same SHA
+- VERSION + README badge bumped to 2.0.5
+
+**For users:** Downloading v2.0.5.zip now gives a fully bootstrapped install. v2.0.4 still works but requires a `/sync-agency` dispatch first to populate the lock.
+
+---
+
 ## [2.0.4] — 2026-05-06
 
 **Hotfix — fetch loop subshell scope fix + allowlist alignment (#28).**
