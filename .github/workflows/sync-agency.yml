@@ -20,14 +20,19 @@ on:
         required: false
         default: "manual sync"
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: read-all
+
+concurrency:
+  group: sync-agency
+  cancel-in-progress: false
 
 jobs:
   sync-upstream:
     name: Sync agency-agents upstream
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout repo
@@ -123,6 +128,7 @@ jobs:
           mkdir -p /tmp/fetched-files
 
           # Read allowed categories from allowlist
+          # Files are staged per-category under /tmp/fetched-files/${category}/ (#17)
           ALLOWED_CATEGORIES=$(jq -r '.allowed_categories[]' .cowork-allowlist.json)
           BLOCKED_PATTERNS=$(jq -r '.blocked_patterns[].pattern' .cowork-allowlist.json)
           BLOCKED_FILES=$(jq -r '.blocked_files[].path' .cowork-allowlist.json)
@@ -185,20 +191,23 @@ jobs:
                 continue
               fi
 
+              # Create per-category staging directory (#17: namespace by category to prevent filename collisions)
+              mkdir -p "/tmp/fetched-files/${category}"
+
               # Fetch file content
               FILE_URL="https://raw.githubusercontent.com/${UPSTREAM_REPO}/${NEW_SHA}/${file_path}"
-              curl -sf "$FILE_URL" -o "/tmp/fetched-files/${filename}" || {
+              curl -sf "$FILE_URL" -o "/tmp/fetched-files/${category}/${filename}" || {
                 echo "WARNING: Failed to fetch ${file_path} — skipping"
                 continue
               }
 
               # Compute SHA-256
-              FILE_SHA256=$(sha256sum "/tmp/fetched-files/${filename}" | awk '{print $1}')
+              FILE_SHA256=$(sha256sum "/tmp/fetched-files/${category}/${filename}" | awk '{print $1}')
 
               # S1 Content scan — run all 8 patterns
               FILE_FLAGGED=false
               for pattern in "${SCAN_PATTERNS[@]}"; do
-                if grep -iEq "$pattern" "/tmp/fetched-files/${filename}"; then
+                if grep -iEq "$pattern" "/tmp/fetched-files/${category}/${filename}"; then
                   echo "::warning::CONTENT-SCAN HIT — pattern '${pattern}' in ${file_path}"
                   FLAGGED_FILES="${FLAGGED_FILES}|${file_path}:${pattern}"
                   FILE_FLAGGED=true
