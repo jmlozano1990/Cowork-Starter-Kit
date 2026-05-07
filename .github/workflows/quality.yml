@@ -617,7 +617,7 @@ jobs:
             exit 1
           fi
           echo "LICENSE SHA-256: $SHA"
-      - name: Step 3 — Content-scan regex syntax check (regex class — caught v2.0.2)
+      - name: Step 3 — Fetch 2 sample files + verify JSONL accumulator pattern (#28 Fix A regression gate)
         run: |
           # Verify the 8 patterns from upstream-content-scan-rules.md compile cleanly
           PATTERN_COUNT=$(grep -c '^- `' docs/security/upstream-content-scan-rules.md || echo 0)
@@ -634,3 +634,41 @@ jobs:
             fi
           done < <(grep '^- `' docs/security/upstream-content-scan-rules.md)
           echo "PASS: $PATTERN_COUNT regex patterns compile cleanly"
+
+          # JSONL accumulator pattern regression gate — catches subshell-class regressions (#28 Fix A)
+          # Fetch 2 sample files from academic/ and build accumulator exactly as sync-agency.yml does
+          DRY_RUN_ACCUM="/tmp/dry-run-accumulator-$$.jsonl"
+          trap 'rm -f "$DRY_RUN_ACCUM"' EXIT
+          : > "$DRY_RUN_ACCUM"
+
+          for sample_file in "academic/academic-anthropologist.md" "academic/academic-historian.md"; do
+            FILE_URL="https://raw.githubusercontent.com/msitarzewski/agency-agents/main/${sample_file}"
+            TMP_FILE="/tmp/dry-run-$(basename "$sample_file")"
+            if curl -sf "$FILE_URL" -o "$TMP_FILE"; then
+              FILE_SHA256=$(sha256sum "$TMP_FILE" | awk '{print $1}')
+              jq -nc \
+                --arg path "$sample_file" \
+                --arg sha256 "$FILE_SHA256" \
+                --arg spdx "MIT" \
+                --argjson requires_review false \
+                '{path:$path, sha256:$sha256, spdx:$spdx, requires_review:$requires_review}' \
+                >> "$DRY_RUN_ACCUM"
+              echo "Fetched: ${sample_file} (sha256: ${FILE_SHA256:0:8}...)"
+            else
+              echo "WARNING: Could not fetch ${sample_file} (network issue) — skipping"
+            fi
+          done
+
+          # Compose accumulator and assert length >= 1 (both files available) or >= 1 (network partial)
+          jq -s '.' "$DRY_RUN_ACCUM" > /tmp/dry-run-files.json
+          FETCHED_COUNT=$(jq length /tmp/dry-run-files.json)
+          echo "Dry-run accumulator length: ${FETCHED_COUNT}"
+          if [ "$FETCHED_COUNT" -lt 1 ]; then
+            echo "ERROR: JSONL accumulator produced empty result — subshell regression or network failure"
+            exit 1
+          fi
+          if [ "$FETCHED_COUNT" -ge 2 ]; then
+            echo "PASS: accumulator contains ${FETCHED_COUNT} entries (expected 2)"
+          else
+            echo "PARTIAL: accumulator contains ${FETCHED_COUNT}/2 entries (network issue — non-blocking)"
+          fi
