@@ -4,6 +4,31 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.1.0] — 2026-05-07
+
+**v2.1 — Objective-First FSM + Team-Composition Framing + Stub Markers + Symlink Removal**
+
+### Added
+
+- **Objective-first wizard FSM (ADR-029):** CLAUDE.md Phase 1 rewritten as "Phase 1 — Objective & Team". The wizard now opens with "What do you need help with? Tell me what you want this workspace to do for you — I'll assemble the right team." Three routing branches (fits one area / spans areas / novel) all emit named team members with objective-specific roles, not a category list.
+- **WIZARD.md §Phase 1 Uncertainty Fallback (ADR-029):** New section inserted before the existing fallback — three angles (Learning / Shipping / Writing) for users who reply "not sure". Referenced by CLAUDE.md Phase 1 final line.
+- **WIZARD.md §Phase 1 Role-Generation Rule (ADR-030, AC-W2-9):** Verbatim-fallback rule encoded: if a generated role line does not contain at least one keyword from the source skill's `description` field, fall back to verbatim `description` (truncated to ≤12 words).
+- **Resume-after-interrupt with objective context (ADR-031):** WIZARD.md Fallback section rewritten to read `Objective:` from `cowork-profile.md`. v2.0.x profiles (no Objective field) trigger one extra question before resuming. Partial-install detection checks `<workspace>/.claude/skills/` for already-installed team members.
+- **`cowork-profile.md` Objective field (ADR-031):** Optional `Objective:` line added to WIZARD.md Step 1 template, after `Goal preset:`. Absence in v2.0.x profiles is non-error (backward-compatible).
+- **Stub depth markers (ADR-030):** `depth: stub` and `expansion: v2.2+` YAML frontmatter added to all 12 stub SKILL.md files: writing (editing-pass, outline-generator, voice-matching), creative (creative-brief, feedback-synthesizer, ideation-partner), business-admin (email-drafting, doc-summary, action-items), personal-assistant (daily-briefing, follow-up-tracker, spend-awareness).
+
+### Changed
+
+- **`presets/` symlink removed (ADR-032, ADR-026):** The `presets/` backward-compat symlink (pointing to `examples/`) is removed. `examples/` is the sole canonical path from v2.1.0. All CI, CONTRIBUTING.md, and SETUP-CHECKLIST.md references updated to `examples/`. Upgrade note in SETUP-CHECKLIST.md §Upgrading from v2.0.x.
+- **CLAUDE.md word count:** 363 → 397 words (hard cap 400; 3-word buffer). Phase 1 block replaced (81 words → 115 words per ADR-029 verbatim contract).
+
+### Documentation
+
+- **ADR-028** (doc-only): Second trust anchor (content_sha256 pinned-digest) contract frozen for v2.2+ implementation.
+- **ADR-033** (codified): Release-artifact completeness checklist (VERSION + CHANGELOG + README badge + Next-up teaser) as a mandatory single Phase 4 sub-step.
+
+---
+
 ## [2.0.4] — 2026-05-06
 
 **Hotfix — fetch loop subshell scope fix + allowlist alignment (#28).**

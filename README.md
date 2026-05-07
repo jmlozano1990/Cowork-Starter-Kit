@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.4-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -145,9 +145,9 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## Next up — v2.1 Multi-Source Upstream + Wizard FSM Completion
+## Next up — v2.2+ Stub Depth Expansion + Multi-Source Upstream
 
-v2.0 ships the Dynamic Workspace Architect (upstream content integration, lock file, allowlist, attribution). v2.0.2 hardens the supply-chain and compliance controls (SHA fix, SPDX comparison, PR template, verbatim-attribution CI, Windows symlink docs). v2.1 will add a second upstream source and complete the Wizard FSM for Riley-class users building cross-functional workspaces.
+v2.1 ships the objective-first wizard FSM (compose-team-for-objective), resume-after-interrupt with objective context, stub depth markers for 12 skills (writing, creative, business-admin, personal-assistant), and the presets/ symlink removal (examples/ is now the sole canonical path). v2.2+ will expand the 12 stub skills to full 9-section ADR-015 depth, and implement ADR-028 multi-source upstream (second trust anchor beyond agency-agents).
 
 ---
 
