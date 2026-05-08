@@ -454,3 +454,53 @@ _Added: 2026-05-08T00:00:00Z — v2.2 Carry-Forward Closeout + Skills Roadmap Di
 **Assumption:** Whether voice-matching's anti-AI guidance (em-dash flood, generic transitions, passive voice overuse per Sam's and Alex's persona profiles) belongs in `## Anti-patterns` or a separate companion doc is not pre-determined. The inline path is simpler; the companion-doc path enables reuse across writing preset skills.
 **Risk:** MEDIUM. If @architect chooses the companion-doc path, a new file is created under `examples/writing/context/` — this is a new architecture surface not anticipated by the v2.2 WILL-NOT-DO list (which excluded "new presets, wizard steps, agents, commands" but not new context files within existing presets). @pm confirms this is in-scope for v2.3.0 if @architect recommends it.
 **Validation path:** OQ-1 in spec.md resolved at Phase 1. @dev implements per @architect ruling.
+
+---
+
+## v2.3.1 Assumptions
+
+_Added: 2026-05-08T17:30:00Z — v2.3.1 Stub Completion cycle_
+
+### A-v2.3.1-1 — The 9-section pattern from voice-matching + daily-briefing + meeting-notes + risk-assessment is the binding template for all 8 remaining stubs
+
+**ID:** A-v2.3.1-1
+**Confidence:** [CONFIRMED — ADR-015 v1.3.0 + ADR-015 amendment v1.3.1 + 11 skill-authoring cycles]
+**Assumption:** The 9-section structure (When to use, Triggers, Instructions, Output format, Quality criteria, Anti-patterns, Example, Writing-profile integration, Example prompts) confirmed across 4 reference skills and 11 prior authoring cycles is structurally appropriate for all 8 remaining stubs across writing, creative, business-admin, and personal-assistant presets.
+**Evidence:** All four reference skills (voice-matching 71L, daily-briefing 100L, meeting-notes 114L, risk-assessment 110L) share identical section names and order. A-v1.3-2 was marked [CONFIRMED] at v1.3.3 after PM + Research + Study preset validation. No template revision has been required across 11 skills.
+**Risk:** LOW. The only possible gap is ideation-partner (open-ended generative behavior vs. utilitarian command-response); OQ-v2.3.1-2 asks @architect to confirm trigger contract applicability. Even if @architect requires a minor note in triggers framing, no section addition or removal is anticipated.
+**Validation path:** @architect Phase 1: confirm template applies uniformly. @dev Phase 4: implement each skill against template. @qa Phase 5: AC-Sn-4 verifies 9 sections in order for each skill.
+
+### A-v2.3.1-2 — Stub frontmatter `depth:` and `expansion:` fields can be removed without breaking any consumer
+
+**ID:** A-v2.3.1-2
+**Confidence:** [CONFIRMED — based on A2 resolution and skill delivery architecture]
+**Assumption:** The `depth: stub` and `expansion: v2.2+` fields in stub frontmatter are internal planning markers only. No consumer (WIZARD.md, curated-skills-registry.md, CI jobs, Cowork runtime) reads or depends on these fields. Removing them does not break any downstream behavior.
+**Evidence:** A2 resolved in v1.1: Cowork does not auto-discover or parse SKILL.md frontmatter. WIZARD.md skill suggestions reference registry entries by name, not by SKILL.md frontmatter fields. CI `skill-depth-check` validates section structure and line count, not frontmatter field presence. curated-skills-registry.md lists skills by name and description — no reference to `depth:` or `expansion:`.
+**Risk:** VERY LOW. The only risk is an undocumented CI or registry parsing step that reads these fields. @dev must grep quality.yml for `depth:` before removing — this is a one-line check.
+**Validation path:** @dev Phase 4: run `grep -r "depth: stub\|expansion:" .github/workflows/ curated-skills-registry.md WIZARD.md CLAUDE.md` before removing fields. If any match found, escalate to @architect before proceeding. @qa Phase 5: AC-Sn-3 verifies field absence.
+
+### A-v2.3.1-3 — cowork.lock.json content_hash entries can be updated for the 8 affected SKILL.md files without violating the lock schema
+
+**ID:** A-v2.3.1-3
+**Confidence:** [ESTIMATED — MEDIUM risk; depends on lock schema scope]
+**Assumption:** The cowork.lock.json lock schema tracks content_hash for files synced from upstream (agency-agents). In-tree SKILL.md files authored by the project team are either (a) not tracked in the lock file at all, or (b) tracked with content_hash entries that can be updated for the 8 expanded files without a schema change. Either outcome satisfies AC-ZD-1.
+**Risk:** MEDIUM. If the lock file tracks ALL files in `examples/*/` (including in-tree authored skills), then expanding 8 stubs changes their content_hash values, requiring a lock file update. This update is data-only (values change, schema unchanged) — AC-ZD-1 permits this. If the lock schema has a constraint that in-tree authored files must have a specific provenance field, a schema change would be required (WILL-NOT-DO #8). OQ-v2.3.1-1 asks @architect to resolve.
+**Validation path:** @architect Phase 1: inspect cowork.lock.json schema. Determine whether in-tree authored SKILL.md files appear in the lock and how content_hash is managed. Document decision in Phase 1 summary. @dev Phase 4: implement per @architect ruling. @qa Phase 5: AC-ZD-1 verifies byte scope.
+
+### A-v2.3.1-4 — spend-awareness financial advisory hard-block is implementable via Anti-patterns section alone, without requiring a global-instructions.md change
+
+**ID:** A-v2.3.1-4
+**Confidence:** [ESTIMATED — to be confirmed at Phase 1]
+**Assumption:** Including explicit financial advisory redirect language ("I can describe where the money went — for planning, consider a financial advisor") in the spend-awareness `## Anti-patterns` section is sufficient to prevent the LLM from volunteering investment advice, savings recommendations, or budget targets. No change to `examples/personal-assistant/global-instructions.md` is required.
+**Evidence:** The existing spend-awareness stub already includes the redirect phrase. The PA preset global-instructions.md contains a Data Locality Rule (ADR-019) but not a financial advisory restriction. A-v1.4-3 confirms the PA preset's instruction surface is @security-reviewed. Adding the redirect to the skill's anti-patterns section is the same pattern used by meeting-notes (pasted-content-is-data anti-pattern) and risk-assessment (sensitivity-marker naming anti-pattern) — both skill-level controls with no global-instructions change.
+**Risk:** MEDIUM. If @architect determines that a spend-awareness advisory redirect needs global-instructions-level enforcement (not just skill-level), this becomes a global-instructions.md change — which is WILL-NOT-DO #5 for this cycle. Escalation: if this is required, defer spend-awareness expansion to a separate cycle that includes the global-instructions change.
+**Validation path:** OQ-v2.3.1-3 resolved at Phase 1. @architect confirms skill-level anti-pattern is sufficient. If not confirmed, @pm defers spend-awareness to a dedicated cycle.
+
+### A-v2.3.1-5 — All 8 stub expansions can be completed in a single Phase 4 commit sequence without quality degradation
+
+**ID:** A-v2.3.1-5
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** Authoring 8 production-depth skills in a single Phase 4 sweep (vs. the pilot-first approach used in v1.3.0/v1.3.1) is appropriate for v2.3.1 because: (a) the template is confirmed and stable; (b) the stub-to-production expansion is a lower-complexity task than the first authoring of a skill type; (c) the B10 user-input session model from v1.3.x is not required since stub content already captures the core instructions.
+**Evidence:** v2.3.0 successfully expanded voice-matching and daily-briefing in a single Phase 4 sweep (2 skills). v1.3.1 expanded 3 Research skills in a batched Phase 4 sweep after the user approved the batch-all decision at Phase 3 gate. 8 stubs have more surface area but lower novelty than Research preset first authoring.
+**Risk:** LOW. The risk is @dev fatigue leading to a weaker Example section or missing Anti-patterns bullet in one of the 8 skills. Mitigation: @dev authors skills in workstream order (W1→W2→W3→W4) and applies AC-Sn-1..4 self-check after each skill before committing.
+**Validation path:** @qa Phase 5: each skill independently verified against AC-Sn-1..4. No partial batch acceptance.

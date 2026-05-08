@@ -3424,3 +3424,331 @@ Reference: 12 stubs across 4 presets. After v2.3.0, 2 stubs move to full depth:
 
 **Next step:** Run `/design` (Phase 1, @architect). OQ-1 through OQ-5 are the primary Phase 1 decisions.
 
+
+---
+
+## v2.3.1 — Stub Completion Cycle
+
+> **Cycle:** Stub Completion — 8 remaining stubs → production depth
+> **Status:** Phase 0 — Requirements
+> **Date:** 2026-05-08T17:30:00Z
+> **Patch:** v2.3.0 → v2.3.1 (no new features, no minor bump)
+> **PM mode:** quick
+> **Classification:** STANDARD
+
+### Problem
+
+After v2.3.0, the cowork-starter-kit ships 8 SKILL.md files still at stub depth (18 lines each, frontmatter `depth: stub` / `expansion: v2.2+`). These files are present in the registry, present in wizard suggestions, and reachable by users — but they deliver generic boilerplate rather than the structured, high-quality guidance that production-depth skills provide. A kit where half the skills are half-baked is not "enough featured to be used." v2.3.1 closes the gap.
+
+**What breaks today:** When a user installs editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, email-drafting, follow-up-tracker, or spend-awareness, they receive a one-paragraph placeholder. No triggers, no structured output format, no quality criteria, no anti-patterns, no worked example. The skill technically exists but provides minimal guidance beyond what a user could prompt freehand.
+
+**What v2.3.1 fixes:** All 8 stubs are rewritten to the 9-section production template (70–130 lines each), matching the quality bar set by voice-matching (71L, v2.3.0), daily-briefing (100L, v2.3.0), meeting-notes (114L), and risk-assessment (110L). No new skills. No architecture changes. Patch only.
+
+---
+
+### Scope
+
+**8 skills in scope (patch v2.3.0 → v2.3.1):**
+
+| # | Skill | Path | Goal preset |
+|---|-------|------|-------------|
+| 1 | editing-pass | `examples/writing/.claude/skills/editing-pass/SKILL.md` | writing |
+| 2 | outline-generator | `examples/writing/.claude/skills/outline-generator/SKILL.md` | writing |
+| 3 | creative-brief | `examples/creative/.claude/skills/creative-brief/SKILL.md` | creative |
+| 4 | feedback-synthesizer | `examples/creative/.claude/skills/feedback-synthesizer/SKILL.md` | creative |
+| 5 | ideation-partner | `examples/creative/.claude/skills/ideation-partner/SKILL.md` | creative |
+| 6 | email-drafting | `examples/business-admin/.claude/skills/email-drafting/SKILL.md` | business-admin |
+| 7 | follow-up-tracker | `examples/personal-assistant/.claude/skills/follow-up-tracker/SKILL.md` | personal-assistant |
+| 8 | spend-awareness | `examples/personal-assistant/.claude/skills/spend-awareness/SKILL.md` | personal-assistant |
+
+**Excluded — MUST NOT TOUCH:**
+
+- `examples/business-admin/.claude/skills/action-items/SKILL.md` — disposition: covered-by-runtime per v2.3.0 W3
+- `examples/business-admin/.claude/skills/doc-summary/SKILL.md` — disposition: covered-by-runtime per v2.3.0 W3
+
+**Registry cardinality:** Stays at 22. No insertions, no deletions.
+
+---
+
+### Binding Template — 9-Section Structure
+
+Extracted from four reference skills (all 4 share identical section order):
+
+1. `## When to use` — prose, 2–5 sentences, distinguishes skill from adjacent skills
+2. `## Triggers` — 4-bullet list matching v2.3.0 C-v2.3-4 contract (4 bullets, each a distinct trigger phrase or scenario)
+3. `## Instructions` — numbered steps (4–8 steps), each bold-labeled, concrete and procedural
+4. `## Output format` — format contract: medium, section structure, portability constraints
+5. `## Quality criteria` — numbered list (4–6 items), each testable and independently verifiable
+6. `## Anti-patterns` — bullet list (4–6 items), bold label + explanation, covers most common failure modes
+7. `## Example` — worked example: input snippet → output snippet (illustrates key skill behaviors)
+8. `## Writing-profile integration` — when and how `context/writing-profile.md` applies (can be "n/a" or lightweight for non-prose skills)
+9. `## Example prompts` — 3 bulleted example invocations, matching trigger language
+
+**Frontmatter contract (binding):**
+
+```yaml
+---
+name: <skill-name>
+description: <one-line description, substantive — no stopwords-only>
+trigger_examples:
+  - "<trigger phrase 1>"
+  - "<trigger phrase 2>"
+  - "<trigger phrase 3>"
+  - "<trigger phrase 4>"
+---
+```
+
+**Fields removed vs. stub:** `depth: stub` and `expansion: v2.2+` are removed. No replacement fields added.
+
+---
+
+### WILL-NOT-DO List (v2.3.1, 10+ items)
+
+1. No NEW skills — registry cardinality stays at 22 (no insertions, no deletions)
+2. No version-minor bump — strict patch v2.3.0 → v2.3.1 (no v2.4)
+3. No ADR-028 implementation work — PROPOSED scaffold in docs/architecture.md remains untouched; full impl deferred to v2.4
+4. No external skill import — deferred (separate cycle)
+5. No global-instructions.md changes — any preset; byte-unchanged
+6. No WIZARD.md changes — byte-unchanged
+7. No CLAUDE.md changes — word budget 397w preserved, byte-unchanged
+8. No cowork.lock.json schema changes — byte-unchanged unless content-hash rebuild required for the 8 expanded files (OQ-v2.3.1-1)
+9. No CI workflow changes — `.github/workflows/quality.yml` and `sync-agency.yml` byte-unchanged
+10. No template changes — `templates/` tree byte-unchanged
+11. No preset structure changes — folder layout intact
+12. No registry annotation moves or table re-layouts — `curated-skills-registry.md` byte-unchanged unless an annotation must be added by exception (no annotations planned)
+
+---
+
+### Core Deliverables
+
+**W1 — Writing preset stubs → production depth:**
+Expand `editing-pass` and `outline-generator` to the 9-section structure. Both serve the same writing goal-preset. editing-pass is complementary to voice-matching (edits existing drafts; voice-matching generates new content). outline-generator is a standalone structuring tool.
+
+**W2 — Creative preset stubs → production depth:**
+Expand `creative-brief`, `feedback-synthesizer`, and `ideation-partner` to the 9-section structure. All three serve the creative goal-preset. Note: ideation-partner has open-ended generative behavior; the 4-bullet trigger contract should reflect "when to invoke" in open ideation contexts (OQ-v2.3.1-2).
+
+**W3 — Business-admin email-drafting → production depth:**
+Expand `email-drafting` to the 9-section structure. Heightened attention to: (a) pre-send verification step in `## Instructions` (LLM01 surface — see OQ-v2.3.1-4); (b) anti-pattern for sensitive communications.
+
+**W4 — Personal-assistant stubs → production depth:**
+Expand `follow-up-tracker` and `spend-awareness` to the 9-section structure. For `spend-awareness`: explicit Boundaries subsection within `## Anti-patterns` blocking investment advice, budgeting recommendations, and savings plans (see OQ-v2.3.1-3). For `follow-up-tracker`: structured output format specifying file save targets (People/<name>.md or Tasks/).
+
+**W5 — Release artifacts:**
+- `VERSION` → `2.3.1`
+- `CHANGELOG.md` → prepend `## [2.3.1] — 2026-05-XX` block naming all 8 expanded skills
+- `README.md` → badge updated to `version-2.3.1-green`
+- `README.md` → "Next up" teaser still references v2.4 scope (ADR-028 impl + external skill import + ADR Index backfill + local markdownlint pre-commit) — does NOT incorrectly advance to v2.5
+
+---
+
+### Carry-Forward Dispositions (from v2.3.0 retro)
+
+| ID | Item | v2.3.1 disposition |
+|----|------|---------------------|
+| CF-1 | ADR-028 impl | DEFER v2.4 (out of scope this cycle) |
+| CF-2 | First external skill import | DEFER (separate cycle) |
+| CF-3 | ADR Index backfill | DEFER (hygiene cycle later) |
+| CF-4 | Local markdownlint pre-commit | DEFER (separate guard cycle) |
+| CF-5 | Recurring version-artifact miss (RESOLVED v2.3.0) | TRACK — all 4 release artifacts (VERSION + CHANGELOG + README badge + README "Next up") must be present at Phase 5 (regression watch; non-negotiable) |
+| CF-6 | Local-Lint-vs-CI-Divergence WATCH pattern | TRACK — @dev must run `markdownlint-cli2` locally on all changed files before push; @qa Phase 5 verifies CI green before closing |
+
+---
+
+### Acceptance Criteria
+
+#### Per-Skill ACs (8 skills × 4 = 32 ACs)
+
+**S1 — editing-pass:**
+- AC-S1-1: `examples/writing/.claude/skills/editing-pass/SKILL.md` line count is ≥ 70 and ≤ 130 (verify: `wc -l`)
+- AC-S1-2: Frontmatter contains `description` field and `trigger_examples` array with exactly 4 bullets (verify: `grep -c "^  - " + head frontmatter`)
+- AC-S1-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields (verify: `grep -c "depth: stub" = 0`)
+- AC-S1-4: SKILL.md body contains all 9 sections from the reference template in order: When to use, Triggers, Instructions, Output format, Quality criteria, Anti-patterns, Example, Writing-profile integration, Example prompts (verify: `grep -n "^## "` confirms all 9 present and in correct order)
+
+**S2 — outline-generator:**
+- AC-S2-1: `examples/writing/.claude/skills/outline-generator/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S2-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S2-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S2-4: SKILL.md body contains all 9 sections in reference order
+
+**S3 — creative-brief:**
+- AC-S3-1: `examples/creative/.claude/skills/creative-brief/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S3-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S3-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S3-4: SKILL.md body contains all 9 sections in reference order
+
+**S4 — feedback-synthesizer:**
+- AC-S4-1: `examples/creative/.claude/skills/feedback-synthesizer/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S4-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S4-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S4-4: SKILL.md body contains all 9 sections in reference order
+
+**S5 — ideation-partner:**
+- AC-S5-1: `examples/creative/.claude/skills/ideation-partner/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S5-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S5-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S5-4: SKILL.md body contains all 9 sections in reference order
+
+**S6 — email-drafting:**
+- AC-S6-1: `examples/business-admin/.claude/skills/email-drafting/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S6-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S6-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S6-4: SKILL.md body contains all 9 sections in reference order
+
+**S7 — follow-up-tracker:**
+- AC-S7-1: `examples/personal-assistant/.claude/skills/follow-up-tracker/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S7-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S7-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S7-4: SKILL.md body contains all 9 sections in reference order
+
+**S8 — spend-awareness:**
+- AC-S8-1: `examples/personal-assistant/.claude/skills/spend-awareness/SKILL.md` line count ≥ 70 and ≤ 130
+- AC-S8-2: Frontmatter has `description` field + `trigger_examples` array with exactly 4 bullets
+- AC-S8-3: Frontmatter does NOT contain `depth: stub` or `expansion:` fields
+- AC-S8-4: SKILL.md body contains all 9 sections in reference order
+
+#### Constraint Preservation ACs — Zero-Diff Enforcement (9 ACs)
+
+- AC-ZD-1: `cowork.lock.json` byte-unchanged OR only the content_hash entries for the 8 affected SKILL.md files changed (verify: `git diff --name-only` shows lock file only for hash fields; schema structure byte-identical)
+- AC-ZD-2: `.github/workflows/quality.yml` byte-unchanged (verify: `cmp .github/workflows/quality.yml <base-ref>` returns 0)
+- AC-ZD-3: `.github/workflows/sync-agency.yml` byte-unchanged (verify: `cmp`)
+- AC-ZD-4: `CLAUDE.md` byte-unchanged; word count 397 preserved (verify: `wc -w CLAUDE.md = 397`)
+- AC-ZD-5: `WIZARD.md` byte-unchanged (verify: `cmp`)
+- AC-ZD-6: All 6 `examples/*/global-instructions.md` files byte-unchanged (verify: `git diff --name-only` shows no global-instructions paths)
+- AC-ZD-7: `templates/` tree byte-unchanged (verify: `git diff --name-only | grep "^templates/" = 0 lines`)
+- AC-ZD-8: `curated-skills-registry.md` byte-unchanged; cardinality 22 preserved (verify: `grep -c "| [a-z]" curated-skills-registry.md = 22`)
+- AC-ZD-9: `examples/business-admin/.claude/skills/action-items/SKILL.md` and `examples/business-admin/.claude/skills/doc-summary/SKILL.md` byte-unchanged (verify: `cmp` both files against base ref)
+
+#### Release Artifact ACs (4 ACs — CF-5 regression watch)
+
+- AC-REL-1: `VERSION` file contains exactly `2.3.1` (verify: `cat VERSION` = `2.3.1`)
+- AC-REL-2: `CHANGELOG.md` contains a `## [2.3.1]` entry at the top of the changelog body, listing all 8 skill names by name: editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, email-drafting, follow-up-tracker, spend-awareness (verify: `head -30 CHANGELOG.md | grep "2.3.1"` + grep each skill name in [2.3.1] block)
+- AC-REL-3: `README.md` badge URL contains `version-2.3.1-green` (verify: `grep "version-2.3.1-green" README.md` returns 1+ matches)
+- AC-REL-4: `README.md` "Next up" teaser references v2.4 scope items (ADR-028 and/or external skill import) and does NOT reference v2.5 or skip v2.4 (verify: `grep -i "next up" README.md` + check for v2.4 reference)
+
+#### Base-Sync + Paperwork ACs (4 ACs)
+
+- AC-BS-1: Commit 0 body contains the verbatim string `Base-sync verified: release/v2.3.1 at <short-SHA>, ahead of main by N commits, working branch matches release/v2.3.1 at <short-SHA>.` (verify: `git log --format=%B <commit-0-sha> | grep "Base-sync verified"`)
+- AC-BS-2: `scratchpad.md` contains the same evidence string (verify: `grep "Base-sync verified" .claude/projects/claude-cowork-config/scratchpad.md`)
+- AC-BS-3: Branch `release/v2.3.1` exists and is pushed to origin (verify: `git ls-remote origin | grep release/v2.3.1`)
+- AC-BS-4: PR opened against `main` with changelog snippet and ACs summary in description (verify: `gh pr list --base main | grep v2.3.1`)
+
+#### Commit Topology AC (1 AC — added Round 1 amendment A2)
+
+- AC-CT-1: `git log --oneline release/v2.3.1 ^main | wc -l` returns 6 or 7, AND subject prefixes match the 6 expected batches per C-v2.3.1-13 (Base-sync evidence / Writing batch / Creative batch / Business-admin batch / Personal-assistant batch / Release artifacts). Optional 7th paperwork commit permitted at @dev discretion. Verify: `git log --pretty=%s release/v2.3.1 ^main` matches the 6 expected subject lines.
+
+---
+
+### Edge Cases
+
+**1. Line-count band edge cases:**
+- Skill content naturally lands at exactly 70 or 130 lines: both are in-band (≥ 70 and ≤ 130)
+- Skill content reaches 131+ lines (e.g., spend-awareness Boundaries subsection, creative-brief detailed examples): @dev must trim or condense before commit; AC-Sn-1 is a hard gate
+- Skill content reaches 69 or fewer lines after removing stub boilerplate: @dev must expand; bare-minimum expansion is not acceptable
+
+**2. spend-awareness financial boundary:**
+- User asks follow-up financial planning questions after spend-awareness output: skill must redirect, not answer. Anti-patterns section must explicitly name investment advice, budgeting recommendations, savings plans as hard-blocked redirects. The `## Writing-profile integration` may be "N/A — spend summaries are data outputs, not prose" (acceptable lightweight entry)
+
+**3. ideation-partner open-ended trigger contract:**
+- Unlike utilitarian skills where 4 triggers are concrete imperative phrases, ideation-partner triggers may be phrased as "when the user has a vague creative problem". The 4-bullet trigger contract must still be satisfied; OQ-v2.3.1-2 asks @architect to confirm whether open-ended framing counts
+
+**4. email-drafting sensitive-communication pre-send:**
+- User sends a high-stakes email (difficult news, apologies, escalations) without confirming tone first. The `## Instructions` must include a pre-send check step (recipient, subject, tone, sensitive-content scan). Anti-patterns must flag drafting sensitive emails without confirming tone
+
+**5. follow-up-tracker ambiguous commitment detection:**
+- Pasted conversation contains implied commitments ("I'll look into it") with no named owner or date. The skill must log these as `[owner: unassigned]` with `[no deadline set]` — not omit them and not invent owners/dates
+
+**6. Concurrent stub expansion (8 files in one PR):**
+- @qa must verify each skill independently; passing one does not imply passing others. All 8 × AC-Sn-1..4 are independently required
+
+---
+
+### Out of Scope (v2.3.1)
+
+- New skills (registry cardinality stays at 22)
+- Expanding action-items or doc-summary (covered-by-runtime, permanently excluded from expansion)
+- ADR-028 implementation (scaffold-only in architecture.md; real impl is v2.4)
+- External skill import from agency-agents or any other upstream
+- ADR Index backfill (docs hygiene, separate cycle)
+- Local markdownlint pre-commit guard (Council self-improve cycle)
+- Global-instructions.md changes (any preset)
+- cowork.lock.json schema changes
+- CI workflow changes
+- Template changes
+- WIZARD.md or CLAUDE.md changes
+- skills-roadmap.md updates (planning artifact only, no re-author needed)
+
+---
+
+### Technical Constraints
+
+- Stack: markdown-only (SKILL.md files). No code, no schemas, no migrations.
+- Branch: `release/v2.3.1` cut from `main` at commit `454ce2e` (tag `v2.3.0`)
+- 9-section template structure is binding per ADR-015 (v1.3.0) + ADR-015 amendment (v1.3.1) — confirmed compatible with all preset types across 11 prior skill authoring cycles
+- `trigger_examples` frontmatter must contain exactly 4 bullets per C-v2.3-4 design constraint
+- All SKILL.md files must pass `markdownlint-cli2` (CI job: `skill-depth-check`) — run locally before push per CF-6
+- `ENFORCED_PRESETS` in `quality.yml` — OQ-v2.3.1-6 asks @architect to verify creative and business-admin presets are already in the allowlist; if not, @dev adds them per ADR-015 precedent
+
+---
+
+### User Stories
+
+- As a Cowork user setting up the writing preset, I can invoke editing-pass and receive structured feedback at the level I specify (light/medium/heavy), with specific changes enumerated and my voice preserved, so that I can improve drafts without generic rewrites.
+- As a Cowork user setting up the writing preset, I can invoke outline-generator with a content type, length, audience, and argument, and receive a detailed enough outline to write from, so that I don't start from a blank page.
+- As a Cowork user setting up the creative preset, I can invoke creative-brief to turn a vague project description into a structured brief (problem, audience, principles, constraints, success criteria), so that I have clear direction before starting work.
+- As a Cowork user setting up the creative preset, I can invoke feedback-synthesizer after receiving reviewer feedback, and get a prioritized, consolidated direction (clear signals, outliers, contradictions, recommended next move), so that I know what to address without trying to satisfy everyone.
+- As a Cowork user setting up the creative preset, I can invoke ideation-partner with a goal or brief, and receive genuinely distinct creative directions (not variations on one theme), so that I can explore the option space before committing.
+- As a Cowork user setting up the business-admin preset, I can invoke email-drafting with a recipient context and desired outcome, and receive a ready-to-send draft with subject line, on-point opening, and appropriate tone, with a pre-send verification step for sensitive communications.
+- As a Cowork user setting up the personal-assistant preset, I can invoke follow-up-tracker with pasted conversation content, and have all explicit and implied commitments logged (things I owe, things others owe me), with owner and deadline, to People/ or Tasks/ as appropriate.
+- As a Cowork user setting up the personal-assistant preset, I can invoke spend-awareness with pasted transaction data and receive a plain-language categorical summary (totals + transaction counts), with the skill hard-declining any investment or savings advice.
+
+---
+
+### Success Metrics
+
+**Primary:** All 8 skills pass AC-Sn-1 through AC-Sn-4 at Phase 5 (line count, frontmatter, no stub markers, 9 sections in order). Binary pass/fail — no partial credit.
+
+**Secondary:**
+- CI passes on first push (no MD058 or other markdownlint failures — CF-6 regression watch)
+- All 4 release artifacts present at Phase 5 (CF-5 regression watch — recurring 2-cycle miss, RESOLVED v2.3.0, must stay resolved)
+- Zero rework commits after Phase 4 SHA (target: rework rate 0%; tolerance: ≤ 5% for doc-only fixes)
+- Phase 5 closes in ≤ 1 session (no structural redesigns, no scope debates — content-only expansion)
+
+---
+
+### Open Questions for @architect (Phase 1)
+
+1. **OQ-v2.3.1-1 — cowork.lock.json content_hash recompute:** Does the lock file need content_hash recompute for the 8 expanded SKILL.md files? If yes: (a) is this a single batch update at end of Phase 4 or per-file per commit? (b) does the lock schema permit a partial update (only the 8 affected entries), or does a full recompute run against all entries? AC-ZD-1 specifies the byte-change scope; @architect must confirm whether recompute is required at all for this cycle (the lock may only track upstream agency-agents content, not in-tree SKILL.md files).
+
+2. **OQ-v2.3.1-2 — ideation-partner trigger contract:** For ideation-partner specifically, the skill has open-ended generative behavior vs. the utilitarian command-response pattern of other skills. Should the 4-bullet trigger_examples still apply as 4 distinct direct-invocation phrases? Or does an open-ended ideation skill warrant broader trigger language ("when the user wants to explore creative directions for any project")? @architect to confirm trigger contract applies uniformly and ideation-partner's 4 bullets should reflect concrete invocation patterns, not behavioral descriptions.
+
+3. **OQ-v2.3.1-3 — spend-awareness Boundaries section and line budget:** The spend-awareness skill requires an explicit financial advisory hard-block in `## Anti-patterns` (investment advice, budgeting recommendations, savings plans). This is a security/liability constraint from the registry caveat. If the Boundaries content naturally pushes the skill toward 115–130 lines, is this acceptable? @architect to confirm the band is 70–130 (inclusive), and that 130-line spend-awareness satisfies all depth constraints. Confirm no upper-bound exception is needed.
+
+4. **OQ-v2.3.1-4 — email-drafting pre-send verification step:** Should email-drafting's `## Instructions` include a mandatory pre-send verification step (recipient, subject, tone, and sensitive-content scan) before presenting the draft? This matches the v2.3.0 voice-matching anti-patterns precedent (guarding against anti-AI defaults). @architect to confirm this is the correct placement (Instructions step, not Anti-patterns) and whether it constitutes a new architectural surface requiring an ADR or is handled inline.
+
+5. **OQ-v2.3.1-5 — ENFORCED_PRESETS coverage for creative and business-admin:** Confirm whether `examples/creative/.claude/skills/*/SKILL.md` and `examples/business-admin/.claude/skills/*/SKILL.md` are currently in the CI `ENFORCED_PRESETS` allowlist in `.github/workflows/quality.yml`. If yes, the 5 creative + business-admin skills are CI-enforced immediately. If no, @dev must add these paths at the same commit per ADR-015 v1.3.3 pattern (CI-red-avoidance). Write-preset expansion (editing-pass, outline-generator) already has CI coverage confirmed from v2.3.0 W1; confirm the writing preset path is also still in ENFORCED_PRESETS.
+
+---
+
+### Routing Notes
+
+**Classification:** STANDARD — content-only changes to existing SKILL.md files. No external content detected. No external URLs, no derived-from language, no external framework attribution. No auth/RLS/payments/external API surface. No `/legal` required.
+
+**Combined-path eligibility:** TBD at Phase 1 deliberation per v2.3.0 + v2.2 precedent. STANDARD classification + zero-architecture cycle (no ADRs required) suggests combined-path eligible pending @architect confirmation.
+
+**Next step:** Run `/design` (Phase 1, @architect). OQ-v2.3.1-1 through OQ-v2.3.1-5 are the primary Phase 1 decisions.
+
+---
+
+### Summary Table
+
+| Workstream | Files Touched | AC Count | Acceptance Bar |
+|------------|--------------|----------|----------------|
+| W1 — Writing stubs | editing-pass/SKILL.md, outline-generator/SKILL.md | 8 (AC-S1-1..4, AC-S2-1..4) | Each skill: 70–130L, 4-bullet triggers, no stub markers, 9 sections in order |
+| W2 — Creative stubs | creative-brief/SKILL.md, feedback-synthesizer/SKILL.md, ideation-partner/SKILL.md | 12 (AC-S3-1..4 through AC-S5-1..4) | Same bar; ideation-partner trigger contract confirmed at Phase 1 |
+| W3 — Business-admin stub | email-drafting/SKILL.md | 4 (AC-S6-1..4) | Same bar; pre-send step in Instructions per OQ-v2.3.1-4 |
+| W4 — PA stubs | follow-up-tracker/SKILL.md, spend-awareness/SKILL.md | 8 (AC-S7-1..4, AC-S8-1..4) | Same bar; spend-awareness Boundaries block required |
+| W5 — Release artifacts | VERSION, CHANGELOG.md, README.md (×2 changes) | 4 (AC-REL-1..4) | CF-5 regression watch — all 4 must be present; grep-verifiable |
+| ZD — Zero-diff | cowork.lock.json?, quality.yml, sync-agency.yml, CLAUDE.md, WIZARD.md, 6× global-instructions.md, templates/, curated-skills-registry.md, action-items/SKILL.md, doc-summary/SKILL.md | 9 (AC-ZD-1..9) | cmp / wc -w / grep byte-equality checks |
+| BS — Base-sync + PR | Commit 0 body, scratchpad.md, origin branch, PR | 4 (AC-BS-1..4) | grep / git ls-remote / gh pr list |
+| CT — Commit topology | git log on release/v2.3.1 ^main | 1 (AC-CT-1 — added Round 1 amendment A2) | git log subject prefix match per C-v2.3.1-13 |
+| **Total** | **13 files (8 SKILL.md + VERSION + CHANGELOG + README + cowork.lock.json if needed)** | **50** | |
