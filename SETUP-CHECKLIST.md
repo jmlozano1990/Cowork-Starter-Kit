@@ -143,6 +143,8 @@ When a new version ships, check the [Releases tab on GitHub](https://github.com/
 
 ### Upgrading from v2.0.x to v2.1.0
 
+> **v2.1 migration complete — historical reference only.** The steps below describe a one-time migration that applied to users upgrading from v2.0.x to v2.1.0. If you are on v2.1.0 or later, no action is needed. Retained for audit trail.
+
 If you cloned this repo on v2.0.x and you see a broken `presets/` symlink after `git pull`:
 
 1. Delete the broken symlink: `rm presets` (Mac/Linux) or `Remove-Item presets` (Windows PowerShell)
