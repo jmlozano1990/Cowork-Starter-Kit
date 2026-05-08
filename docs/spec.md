@@ -3126,3 +3126,301 @@ Reference: 12 stubs across 4 presets (no changes in v2.2):
 | personal-assistant | follow-up-tracker | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
 | personal-assistant | spend-awareness | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
 
+---
+
+## v2.3.0 PRD — Top-2 Stub Expansion + ADR-028 Spec Scaffold
+
+> **Cycle:** v2.3.0 — Top-2 Stub Expansion + ADR-028 Spec Scaffold
+> **Status:** Phase 0 — Requirements
+> **Date:** 2026-05-08T00:00:00Z
+> **Classification:** STANDARD
+> **Version bump:** v2.2.0 → v2.3.0 (minor — two stubs reach full 9-section depth = new feature surface)
+> **Mode:** full
+
+---
+
+### Problem
+
+v2.2 shipped `docs/skills-roadmap.md` — a rigorous per-stub ROI scan that ranked 12 stubs and produced 5 v2.3+ recommendations. The top two ranked candidates are in-tree stub expansions: `voice-matching` (Score 30, Sam's highest-value skill) and `daily-briefing` (Score 25, Casey's retention driver). Both have been 16-line stubs since their preset launched. That gap is the problem this cycle solves.
+
+Secondary problem: `action-items` and `doc-summary` have COVER-BY-RUNTIME verdicts from the roadmap — they show up in team-composition output and suggest development investment that will never happen. Annotating them with `disposition: covered-by-runtime` in the registry suppresses this noise without requiring a file removal (which would need an ADR-015 amendment).
+
+Tertiary problem: ADR-028 (`content_sha256` lock-schema field) was deferred in v2.0, v2.1, and v2.2 under YAGNI. The roadmap's Rank 3 and Rank 5 candidates (contract-review, meeting-insights-analyzer) both require ADR-028 before they can be imported. v2.3.0 produces the spec scaffold for ADR-028 — setting up v2.4 to execute it — without implementing it prematurely.
+
+Hygiene problem (W5): Two orphan items from v2.2 Phase 3 recovery (a7aa1cb retro patch + v2.1 PRD section drift) were parked "for a separate hygiene cycle." Both landed on main post-v2.2 (commits a7aa1cb and 02bdf21). v2.3.0 formally closes these as resolved in the pipeline log.
+
+---
+
+### Target Users
+
+**W1 primary persona: Sam (The Creator)**
+Sam's pain: every Cowork output sounds like generic AI, not like Sam. The `voice-matching` stub currently encodes the right intention (analyze samples, match patterns, anti-AI guidance) but provides no structured workflow. Sam pastes a sample, gets a vague paragraph about tone, and has no confidence the output will hold up across 10 newsletter issues. The expanded skill gives Sam a repeatable 9-section workflow with quality criteria, anti-patterns, and an example that demonstrates what "your voice, not generic AI" actually means.
+
+**W2 primary persona: Casey (The Life Admin Juggler)**
+Casey's pain: the PA preset's morning brief requires Casey to manually pull together schedule, tasks, and follow-up context that lives in three separate local folders. The stub says "read Calendar/, Tasks/, People/ and summarize" — but gives Cowork no guidance on what a good brief looks like, what format to use, or how to handle missing files. Casey abandons the skill after two sessions because the output is inconsistent. The expanded skill gives Casey a fixed output schema, file-read fallback rules, and a worked example that matches the morning-brief mental model.
+
+**W3 target: any user whose team-composition output shows action-items or doc-summary as stubs with implied development value.** Annotation removes the false expectation.
+
+**W4 target: @architect and @dev in v2.4.** The ADR-028 spec scaffold gives the next cycle a concrete starting point instead of re-litigating the scope from scratch.
+
+---
+
+### Core Features (MVP)
+
+#### W1 — voice-matching stub → full 9-section depth
+
+Expand `examples/writing/.claude/skills/voice-matching/SKILL.md` from 16 lines to full ADR-015 9-section depth (~100–130 lines).
+
+**AC-VM-1:** `examples/writing/.claude/skills/voice-matching/SKILL.md` contains all 9 required section headers in ADR-015 order: `## When to use`, `## Triggers`, `## Instructions`, `## Output format`, `## Quality criteria`, `## Anti-patterns`, `## Example`, `## Writing-profile integration`, `## Example prompts`. Verifiable: `grep "^## " examples/writing/.claude/skills/voice-matching/SKILL.md` returns exactly these 9 headers in this order.
+
+**AC-VM-2:** Line count is ≥60 (ADR-015 floor) and ≤150 (soft cap). Verifiable: `wc -l examples/writing/.claude/skills/voice-matching/SKILL.md`.
+
+**AC-VM-3:** `## Instructions` contains at least 4 numbered steps that together encode the sample-analysis → pattern-extraction → voice-matching → output workflow. Steps must cover: (a) reading the user's writing samples, (b) identifying named voice patterns (sentence length, vocabulary register, structural habits, signature elements), (c) applying identified patterns to new content, (d) producing the anti-AI meta-note.
+
+**AC-VM-4:** `## Anti-patterns` explicitly includes the "averaging to generic clear writing" anti-pattern and the "ignoring existing samples" anti-pattern. Both are named in the roadmap's stress-test (architecture.md L1263–1265) as the two highest-risk failure modes for this skill.
+
+**AC-VM-5:** `## Writing-profile integration` states that this skill consults `context/writing-profile.md` on every invocation (regardless of output length) because voice-matching is the primary writing-profile implementation — per the ADR-015 stress-test note at architecture.md L1266.
+
+**AC-VM-6:** `## Triggers` contains 4–8 bullets. Trigger 1 is the direct-invocation trigger (ADR-015 v1.3.2 amendment: exempt from global-instructions.md consistency check). Triggers 2–N must be consistent with `examples/writing/global-instructions.md` proactive rules.
+
+**AC-VM-7:** `## Example` shows exactly one complete worked input-output pair: a short writing sample (input) followed by a new content piece in the same voice (output), with a one-sentence meta-note naming the specific voice choices made.
+
+**AC-VM-8:** `## Quality criteria` contains at least 4 checkable criteria. Must include: voice idiosyncrasy preservation (named, not described vaguely) and meta-note presence. May include sentence-length distribution, vocabulary level, structural habit matching.
+
+**Anti-AI guidance scope note [OQ for @architect]:** The roadmap notes that voice-matching needs to encode "anti-AI guidance" — patterns that specifically prevent generic AI writing tics (em-dash flood, hedged language, passive voice overuse per personas.md Alex + Sam profiles). Whether this guidance lives in the `## Anti-patterns` section or as a separate companion doc is an architectural decision for Phase 1.
+
+---
+
+#### W2 — daily-briefing stub → full 9-section depth
+
+Expand `examples/personal-assistant/.claude/skills/daily-briefing/SKILL.md` from 16 lines to full ADR-015 9-section depth (~90–120 lines). The ADR-015 v1.3.2 stress-test for this skill is already validated at architecture.md L2241–2247 — @architect does not need to re-run it.
+
+**AC-DB-1:** `examples/personal-assistant/.claude/skills/daily-briefing/SKILL.md` contains all 9 required section headers in ADR-015 order. Verifiable: same grep pattern as AC-VM-1.
+
+**AC-DB-2:** Line count is ≥60 (ADR-015 floor) and ≤150 (soft cap).
+
+**AC-DB-3:** `## Output format` encodes the fixed output schema from the ADR-015 v1.3.2 stress-test (architecture.md L2243): `(1) Intention — one line; (2) Priorities — 3 bullets, ranked; (3) Time blocks — table with time range + activity + priority-link; (4) Protect — one item to defend against interruption.` The schema must appear verbatim or in equivalent structure in the Output format section. Verifiable: `grep -A4 "^## Output format" examples/personal-assistant/.claude/skills/daily-briefing/SKILL.md` contains all four numbered components.
+
+**AC-DB-4:** `## Instructions` explicitly specifies file-read source precedence: which folders to read first, and what to do when a folder is absent or empty (graceful degradation to "no events today" or equivalent — must not error or produce a blank brief).
+
+**AC-DB-5:** `## Writing-profile integration` states the tiered rule from architecture.md L2247: writing-profile applies selectively to the Intention line (user's voice); Priorities and Time blocks remain terse/schematic regardless of voice profile. The section must reference this tier distinction explicitly.
+
+**AC-DB-6:** `## Triggers` contains 4–8 bullets. Trigger 1 is the direct-invocation trigger (ADR-015 v1.3.2 amendment exempt). Triggers 2–N must be consistent with `examples/personal-assistant/global-instructions.md` proactive rules (specifically the Daily Briefing proactive trigger block at lines 15–19 of that file). Verifiable: @qa checks that Trigger 2–N bullet text semantically matches the three conditions in the global-instructions Daily Briefing block.
+
+**AC-DB-7:** `## Anti-patterns` includes the "reading files without graceful fallback for missing folders" anti-pattern and the "producing a blank or error output when a source folder is absent" anti-pattern.
+
+**AC-DB-8:** `## Example` shows exactly one worked pair: an illustrative vault state (today's date, sample calendar event, sample task) followed by a complete daily-brief output in the four-section schema.
+
+**Local file-read assumption [A1 — MEDIUM risk]:** Daily-briefing reads local markdown files (Calendar/, Tasks/, People/ folders per the stub). The v1.3.2 PA preset uses plain-markdown vault format — this assumption is consistent with the existing PA preset design. The expanded skill MUST assume markdown-only format (not YAML front-matter-parsed, not Obsidian-specific syntax). If the user's vault uses non-markdown formats, the skill should produce a partial output and note what was not readable.
+
+**Invocation contract [OQ for @architect]:** Is daily-briefing a "give me my morning brief now" runtime invocation, or is it a wizard-step output that produces a briefing at session-start automatically? The global-instructions proactive trigger block suggests both are valid. The spec assumes runtime-invocation-primary with proactive-offer as the secondary path (per the global-instructions "offer automatically" wording). @architect should confirm whether the SKILL.md's Trigger 2–N encoding is sufficient or whether a global-instructions amendment is needed.
+
+---
+
+#### W3 — action-items + doc-summary registry annotation
+
+Add `disposition: covered-by-runtime` annotation to `action-items` and `doc-summary` entries in `curated-skills-registry.md`. Per the roadmap's OQ #3 (Section 3, lines 200–202): annotation is the safer path vs. stub removal (which requires ADR-015 amendment).
+
+**AC-REG-1:** `curated-skills-registry.md` contains exactly one line matching `disposition: covered-by-runtime` directly below (within the same registry row or as a separate annotation block) the `action-items` entry. Verifiable: `grep -A2 "action-items" curated-skills-registry.md | grep "disposition"`.
+
+**AC-REG-2:** `curated-skills-registry.md` contains exactly one line matching `disposition: covered-by-runtime` directly below (within the same registry row or as a separate annotation block) the `doc-summary` entry. Verifiable: `grep -A2 "doc-summary" curated-skills-registry.md | grep "disposition"`.
+
+**AC-REG-3:** No `action-items` or `doc-summary` stub files are deleted or renamed. Annotation only. Verifiable: `ls examples/business-admin/.claude/skills/` still lists both `action-items/` and `doc-summary/`.
+
+**AC-REG-4:** The annotation is accompanied by a brief justification in a comment-style note: "COVER-BY-RUNTIME — meeting-notes skill + runtime default are sufficient; see docs/skills-roadmap.md §Section 1." Exact wording flexible; must include the verdict token and a pointer to the roadmap.
+
+---
+
+#### W4 — ADR-028 `content_sha256` lock-schema spec scaffold (spec only, NO implementation)
+
+Add ADR-028 to `docs/architecture.md` as a PROPOSED ADR (not ACCEPTED — no implementation). The ADR must define the lock-schema change needed to support external skill import integrity verification. This is the scaffolding that v2.4 will execute.
+
+**AC-ADR-028-1:** `docs/architecture.md` contains a new `## ADR-028` section with `Status: PROPOSED`. Verifiable: `grep -n "## ADR-028\|ADR-028.*PROPOSED" docs/architecture.md` returns a match.
+
+**AC-ADR-028-2:** ADR-028 specifies a `content_sha256` field on the `files[]` entry in `cowork.lock.json`. The spec must state: field name (`content_sha256`), value format (SHA-256 hex string, 64 lowercase hexadecimal characters), where it appears in the schema (per-file entry alongside the existing `sha256` field), and the distinction from the existing `sha256` field (existing `sha256` is the file-path hash; new `content_sha256` is the actual file content hash, enabling integrity verification of installed skill content).
+
+**AC-ADR-028-3:** ADR-028 includes a representative JSON example showing a lock entry with both `sha256` and `content_sha256` fields populated with 64-char hex strings. Verifiable: `grep -A10 "content_sha256" docs/architecture.md` shows a JSON block with both fields.
+
+**AC-ADR-028-4:** ADR-028 explicitly states its migration impact on the existing `cowork.lock.json` (currently at `$schema_version: "1.0"`). The spec scaffold must declare one of: (a) backfill existing entries on next `/sync-agency` run, (b) v2.4 migration step, or (c) new entries only (existing entries tolerate absence of `content_sha256` until regenerated). The chosen option is a commitment for v2.4 to implement — not a decision left open.
+
+**AC-ADR-028-5:** ADR-028 specifies the CI verification step: what the quality.yml gate will assert for entries that have `content_sha256` populated (e.g., "installed file content matches the declared SHA-256 before Phase 5 approval"). This does not need to be a full implementation — a prose statement of the assertion is sufficient for the spec scaffold.
+
+**A2 resolution [CONFIRMED]:** Based on reading `cowork.lock.json`, the existing `sha256` field (line 5, `license_file_sha256`) is a license-file hash, not a per-file content hash. The new `content_sha256` field is additive — no schema version bump is strictly required for a PROPOSED ADR, but the spec scaffold should note that `$schema_version: "2.0"` is the likely v2.4 target (per architecture.md L3345's existing note about the `2.0` schema change).
+
+---
+
+#### W5 — Orphan-item hygiene closeout
+
+Both orphan items parked at v2.2 Phase 3 (pipeline.md line 255) are already resolved on main:
+- `a7aa1cb` — v2.0.x umbrella retrospective + P4 promotion + P1 strengthening. Landed on main.
+- `02bdf21` — v2.1 PRD section backfill to docs/spec.md. Landed on main.
+
+**AC-W5-1:** pipeline.md for v2.3.0 Phase 0 records the orphan-item closure: "Orphan items a7aa1cb + 02bdf21 confirmed resolved on main (see git log). No further hygiene action required." This AC is satisfied by the pipeline.md Phase 0 entry this spec produces.
+
+**AC-W5-2:** No additional file changes are required for W5. W5 is administrative: the pipeline log entry closes the record.
+
+---
+
+### Out of Scope (v2.3.0)
+
+The following are explicit WILL-NOT-DO items for this cycle. @qa must reject any Phase 4 deliverable that touches these surfaces.
+
+1. **Other 7 EXPAND-IN-TREE stubs**: editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, follow-up-tracker, spend-awareness — deferred to future cycles.
+2. **ADR-028 implementation**: The ADR-028 section is PROPOSED and scaffold-only. No changes to `cowork.lock.json` schema, no CI changes, no `/sync-agency` changes. Implementation is v2.4.
+3. **External skill imports**: No new entries in `cowork.lock.json`. No new upstream sources. Deferred until ADR-028 is ACCEPTED and implemented.
+4. **Stub removal or ADR-015 amendments**: `action-items` and `doc-summary` stub files are annotated, not removed.
+5. **New presets, wizard steps, agents, or commands**: Out of scope entirely.
+6. **check-base-sync.sh guard work**: A Council self-improve cycle (pattern P5), not a Cowork cycle.
+7. **email-drafting stub expansion**: Not in the top-2 ranked candidates. Deferred.
+8. **follow-up-tracker or spend-awareness stub expansion**: Not in scope.
+9. **curated-skills-registry.md structural schema changes**: Annotation only — no new columns, no schema version bump.
+10. **personas.md or competitive.md updates**: Both are current for v2.3.0 scope.
+
+---
+
+### Technical Constraints
+
+- **Stack:** Config-distribution repo (markdown + YAML + JSON + bash CI). No runtime code, no auth, no schema migrations. No Node.js or Python runtime artifacts.
+- **ADR-015 compliance (mandatory for W1 + W2):** Both expanded skills MUST pass the 9-section check and 60-line floor enforced by the CI skill-depth-check job (`.github/workflows/quality.yml`). CI-red on any writing or personal-assistant skill that fails the check.
+- **ENFORCED_PRESETS for W1:** `examples/writing/.claude/skills/*/SKILL.md` is already in the CI `ENFORCED_PRESETS` allowlist per ADR-015 v1.3.0. voice-matching expansion must pass CI immediately.
+- **ENFORCED_PRESETS for W2:** Verify that `examples/personal-assistant/.claude/skills/*/SKILL.md` is in the CI `ENFORCED_PRESETS` allowlist before W2 Phase 4. If not, @dev must add it at the same commit as the expansion (CI-red-avoidance rule per ADR-015 v1.3.3 precedent). This is a question for @architect to resolve at Phase 1.
+- **Lock schema integrity:** No changes to `cowork.lock.json` or `$schema_version` in this cycle. ADR-028 lives in architecture.md only.
+- **CLAUDE.md word budget:** ≤400 words (current: 397w per v2.2 Phase 6 audit). No CLAUDE.md changes in this cycle.
+- **Anti-AI guidance placement:** @architect decides whether voice-matching anti-AI patterns belong in `## Anti-patterns` or a separate companion doc. @dev must follow @architect's Phase 1 ruling.
+- **Release artifacts (ADR-033 binding — Phase 4 deliverables):** VERSION → `2.3.0`, CHANGELOG → `[2.3.0]` section, README badge → `2.3.0`, README "Next up" teaser → references v2.4 (first external skill import cycle + ADR-028 implementation). @dev MUST include all four per ADR-033. Note: this checklist recurs here explicitly because the "Next up" teaser and README badge have been missed in two prior cycles (`feedback_version_bump_completeness.md`). @qa MUST verify AC-REL-1..4 at Phase 5.
+
+---
+
+### User Stories
+
+- As Sam, I can invoke voice-matching and receive a new piece of content that preserves my named voice idiosyncrasies (em-dash usage, sentence-starting conjunctions, short paragraphs) — not a generic "professional" tone — so that my newsletter outputs sound like mine, not like Claude's.
+- As Casey, I can say "what does my day look like" and receive a structured daily brief in the four-section schema (Intention, Priorities, Time blocks, Protect), drawn from my Calendar/, Tasks/, and People/ folders, so that I start each morning without manually assembling context.
+- As any user, I can see that `action-items` and `doc-summary` are annotated with `disposition: covered-by-runtime` in the registry, so I do not invest time trying to install or expand stubs that are already covered by Claude's default capability.
+- As @architect in v2.4, I can read ADR-028 in `docs/architecture.md` and find a complete spec scaffold for the `content_sha256` lock-schema field — including format, migration approach, and CI assertion — so that v2.4 implementation can start at Phase 1 design without re-litigating the scope.
+
+---
+
+### Acceptance Criteria
+
+**W1 — voice-matching**
+- [ ] AC-VM-1: All 9 ADR-015 section headers present in order (grep verifiable)
+- [ ] AC-VM-2: Line count ≥60 and ≤150
+- [ ] AC-VM-3: Instructions encode sample-read → pattern-extraction → application → meta-note workflow (4+ numbered steps)
+- [ ] AC-VM-4: Anti-patterns includes "averaging to generic clear writing" and "ignoring existing samples"
+- [ ] AC-VM-5: Writing-profile integration states always-consult rule for this skill
+- [ ] AC-VM-6: Triggers has 4–8 bullets; Trigger 1 is direct-invocation (ADR-015 v1.3.2 exempt); Triggers 2–N match writing global-instructions proactive rules
+- [ ] AC-VM-7: Example shows exactly one worked input→output pair with meta-note
+- [ ] AC-VM-8: Quality criteria has ≥4 checkable criteria including voice idiosyncrasy and meta-note
+
+**W2 — daily-briefing**
+- [ ] AC-DB-1: All 9 ADR-015 section headers present in order (grep verifiable)
+- [ ] AC-DB-2: Line count ≥60 and ≤150
+- [ ] AC-DB-3: Output format encodes four-section schema (Intention, Priorities, Time blocks, Protect)
+- [ ] AC-DB-4: Instructions specifies file-read source precedence and graceful-degradation rule for missing folders
+- [ ] AC-DB-5: Writing-profile integration states tiered rule (Intention line: consult; others: schematic)
+- [ ] AC-DB-6: Triggers has 4–8 bullets; Trigger 1 direct-invocation exempt; Triggers 2–N match PA global-instructions Daily Briefing block
+- [ ] AC-DB-7: Anti-patterns includes missing-folder and blank-output anti-patterns
+- [ ] AC-DB-8: Example shows one worked vault-state → four-section brief pair
+
+**W3 — registry annotation**
+- [ ] AC-REG-1: action-items entry has `disposition: covered-by-runtime` annotation
+- [ ] AC-REG-2: doc-summary entry has `disposition: covered-by-runtime` annotation
+- [ ] AC-REG-3: Both stub files still present (not deleted or renamed)
+- [ ] AC-REG-4: Annotation includes verdict token and roadmap pointer
+
+**W4 — ADR-028 scaffold**
+- [ ] AC-ADR-028-1: `## ADR-028` section exists in docs/architecture.md with `Status: PROPOSED`
+- [ ] AC-ADR-028-2: ADR-028 specifies `content_sha256` field (name, format: 64-char lowercase hex, placement, distinction from `sha256`)
+- [ ] AC-ADR-028-3: JSON example shows lock entry with both `sha256` and `content_sha256` fields
+- [ ] AC-ADR-028-4: Migration impact declared (one of: backfill on next sync, v2.4 migration step, or new-entries-only)
+- [ ] AC-ADR-028-5: CI verification step stated (prose assertion is sufficient)
+
+**W5 — orphan closeout**
+- [ ] AC-W5-1: pipeline.md Phase 0 entry records orphan-item closure (satisfied by this entry)
+
+**Release artifacts (binding)**
+- [ ] AC-REL-1: VERSION file reads `2.3.0`
+- [ ] AC-REL-2: CHANGELOG.md has a `[2.3.0]` section covering W1–W5
+- [ ] AC-REL-3: README.md version badge reads `2.3.0`
+- [ ] AC-REL-4: README.md "Next up" teaser references v2.4 (first external skill import + ADR-028 implementation)
+
+**Out-of-scope enforcement**
+- [ ] AC-OOS-1: No changes to `cowork.lock.json` (zero diff on that file)
+- [ ] AC-OOS-2: No new preset, command, or wizard-step files
+- [ ] AC-OOS-3: `$schema_version` in cowork.lock.json is unchanged
+
+---
+
+### Edge Cases
+
+1. **Missing folder graceful degradation (W2 daily-briefing):** User's vault is missing one or more of Calendar/, Tasks/, People/. Skill must produce a partial brief with a note for each missing source, not an empty output or an error message.
+2. **No writing samples available (W1 voice-matching):** User invokes voice-matching with no samples in Voice-and-Style/ or Published/ folders and pastes no sample. Skill must ask for a sample before proceeding, not generate in a default voice.
+3. **Registry annotation format ambiguity (W3):** The current registry schema (curated-skills-registry.md) uses a markdown table format — adding a `disposition` field mid-table requires a decision about where it lives (new column, or annotation block below the row). @architect to specify the annotation placement at Phase 1.
+4. **ADR-028 existing-entry migration (W4):** Current `cowork.lock.json` has 97 `files[]` entries with no `content_sha256` field. AC-ADR-028-4 requires the ADR to commit to one migration path. The spec does not pre-select the path — @architect decides at Phase 1.
+5. **CI ENFORCED_PRESETS for PA preset (W2):** If `examples/personal-assistant/.claude/skills/*/SKILL.md` is NOT in the `ENFORCED_PRESETS` allowlist, adding the expanded daily-briefing without also updating the allowlist will cause CI to ignore the new skill. @architect must confirm allowlist state at Phase 1.
+
+---
+
+### Success Metrics
+
+- **Primary (W1):** Sam (or representative) can invoke `voice-matching` on a writing sample and receive output that preserves at least two named idiosyncrasies identified in the sample — measured by @qa's AC-VM-7 example verification.
+- **Primary (W2):** Casey (or representative) invokes `daily-briefing` and receives a structured four-section brief with graceful fallback when a source folder is absent — measured by @qa's AC-DB-3 and AC-DB-4 verification.
+- **Secondary (W3):** Zero issues reported about action-items or doc-summary being "planned for expansion" after registry annotation ships.
+- **Secondary (W4):** @architect begins v2.4 Phase 1 design without returning to @pm for ADR-028 scope clarification.
+- **Hygiene (W5):** Orphan items do not appear in v2.3.0 retro carry-forwards.
+
+---
+
+### Assumptions
+
+- [CONFIRMED] **A1 — daily-briefing file format:** Casey's vault uses plain markdown files (Calendar/, Tasks/, People/ folders with `.md` files). This is consistent with the v1.3.2 PA preset design and the existing stub's "read Calendar/, Tasks/, and People/ folders" instruction. Spec commits to markdown-only format.
+- [CONFIRMED] **A2 — ADR-028 scope:** "Spec scaffold" means: ADR-028 section in architecture.md (PROPOSED status), `content_sha256` field specification with JSON example, migration path commitment, and CI assertion statement. It does NOT include a cowork.lock.json schema change, a `/sync-agency` code change, or a quality.yml CI job change. Implementation deferred to v2.4.
+- [CONFIRMED] **A3 — Orphan items resolved:** Commits a7aa1cb and 02bdf21 are confirmed on main (git log verified). No file changes required for W5.
+- [ESTIMATED] **A4 — PA preset CI allowlist:** Based on ADR-015 v1.3.3 precedent pattern, the personal-assistant preset's skills directory is likely in `ENFORCED_PRESETS`. @architect must verify at Phase 1 — if absent, a one-line CI allowlist update is required alongside the W2 skill expansion.
+- [UNTESTED] **A5 — voice-matching anti-AI guidance placement:** Whether anti-AI guidance (Sam's anti-patterns: em-dash flood, hedged language, passive voice) belongs in the SKILL.md `## Anti-patterns` section or a separate companion doc is unresolved. The companion-doc path would make anti-AI guidance reusable across multiple writing preset skills. The in-skill path is simpler but not composable. Spec flags this as an OQ for @architect.
+
+---
+
+### Open Questions for @architect (Phase 1)
+
+1. **OQ-1 — Anti-AI guidance placement (W1):** Should voice-matching encode anti-AI patterns (em-dash flood, generic transitions, passive voice overuse) directly in `## Anti-patterns`, or in a separate `anti-ai-guidance.md` companion doc shared across writing preset skills? If companion doc, it is a new file under `examples/writing/context/` and requires an ADR note (or amendment to ADR-015 to document the companion-doc pattern). If inline, no architectural change needed. This is an architectural decision — not a spec pre-selection.
+
+2. **OQ-2 — Daily-briefing invocation contract (W2):** Is daily-briefing invoked as (a) a runtime "give me my brief now" command, (b) automatically triggered at session start via global-instructions proactive rule, or (c) both? The current global-instructions PA block uses "offer automatically" language (lines 15–19), which is proactive-offer, not auto-execute. The expanded SKILL.md should clarify whether the skill auto-fires or waits for user confirmation. @architect to rule on whether the existing global-instructions wording is sufficient or needs amendment.
+
+3. **OQ-3 — ENFORCED_PRESETS for PA preset (W2):** Confirm whether `examples/personal-assistant/.claude/skills/*/SKILL.md` is currently in the CI `ENFORCED_PRESETS` allowlist in `.github/workflows/quality.yml`. If yes, W2 expansion is CI-enforced immediately. If no, @dev must add it at the same commit as the expansion per ADR-015 v1.3.3 precedent (CI-red-avoidance rule).
+
+4. **OQ-4 — Registry annotation placement (W3):** The current `curated-skills-registry.md` uses a fixed-column markdown table. Adding `disposition: covered-by-runtime` requires a placement decision: (a) new `disposition` column on all rows (clean but changes every row), (b) separate annotation block below each affected row (minimal diff), or (c) strike-through + annotation comment (visually clear, no schema change). Option (b) is the spec's preference per the roadmap's "safer than removal" guidance, but @architect should confirm.
+
+5. **OQ-5 — ADR-028 migration path (W4):** Three candidate paths for existing lock entries: (a) backfill `content_sha256` on next `/sync-agency` run (requires v2.4 `/sync-agency` code change), (b) manual migration step in v2.4 CHANGELOG, (c) new-entries-only (existing entries tolerate null/absent `content_sha256` until regenerated). @architect to select the migration path and encode it in ADR-028 spec scaffold. @pm recommends option (c) as the lowest-risk path for a PROPOSED ADR, but defers to @architect.
+
+---
+
+### v2.3.0 Stub Registry
+
+Reference: 12 stubs across 4 presets. After v2.3.0, 2 stubs move to full depth:
+
+| Preset | Skill | Current depth | v2.3.0 disposition | v2.4+ target |
+|--------|-------|---------------|---------------------|--------------|
+| writing | voice-matching | 16-line stub | **EXPAND to full depth (W1)** | Done |
+| writing | editing-pass | 16-line stub | No change | TBD |
+| writing | outline-generator | 16-line stub | No change | TBD |
+| creative | creative-brief | 16-line stub | No change | TBD |
+| creative | feedback-synthesizer | 16-line stub | No change | TBD |
+| creative | ideation-partner | 16-line stub | No change | TBD |
+| business-admin | action-items | 16-line stub | **ANNOTATE: covered-by-runtime (W3)** | No expansion planned |
+| business-admin | doc-summary | 16-line stub | **ANNOTATE: covered-by-runtime (W3)** | No expansion planned |
+| business-admin | email-drafting | 16-line stub | No change | TBD |
+| personal-assistant | **daily-briefing** | 16-line stub | **EXPAND to full depth (W2)** | Done |
+| personal-assistant | follow-up-tracker | 16-line stub | No change | TBD |
+| personal-assistant | spend-awareness | 16-line stub | No change | TBD |
+
+---
+
+### Routing Notes
+
+**Classification:** STANDARD. No external content detection signals fired. No external URLs, no derived-from language, no external framework attribution in this cycle's scope. No `/legal` review required before `/design`.
+
+**P5 carry-forward note (non-blocking):** The v2.2 retro introduced pattern P5 (Git-State Divergence — Cycle Authored on Stale Base). A Council self-improve cycle was recommended to add a `check-base-sync.sh` guard. This is NOT a v2.3.0 deliverable. It is logged here so the v2.3.0 Phase 1 base-verification step is performed manually by @architect (same organic check that caught it in v2.2).
+
+**Next step:** Run `/design` (Phase 1, @architect). OQ-1 through OQ-5 are the primary Phase 1 decisions.
+

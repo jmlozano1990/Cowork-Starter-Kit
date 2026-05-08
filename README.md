@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.3.0-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -145,9 +145,11 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## Next up — v2.3: Writing + PA Stub Depth Expansion
+## Next up — v2.4: First External Skill Import + ADR-028 Implementation
 
-v2.2 ships the D2 stopword filter (role-generation quality fix), D3 migration annotation (SETUP-CHECKLIST), Objective field in the personal-assistant starter profile, and the v2.2 skills roadmap (12-stub ROI verdicts + persona×JTBD coverage matrix + ranked v2.3+ recommendations). v2.3 will expand the highest-ROI stub skills to full 9-section ADR-015 depth, starting with voice-matching and daily-briefing (ranked #1 and #2 in the v2.2 skills roadmap). First external skill import (contract-review from evolsb/claude-legal-skill, conditional on ADR-028 implementation) is the secondary v2.3 milestone.
+v2.3 ships voice-matching (writing preset, full 9-section ADR-015 depth), daily-briefing (personal-assistant preset, full 9-section ADR-015 depth), registry disposition annotations for doc-summary and action-items, and ADR-028 PROPOSED spec scaffold for the `content_sha256` per-file integrity field.
+
+**Next up (v2.4):** First external skill import (Rank 3 / Rank 5 candidate from skills-roadmap.md) + ADR-028 `content_sha256` implementation.
 
 ---
 

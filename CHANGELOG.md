@@ -4,6 +4,34 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.3.0] — 2026-05-08
+
+**v2.3 — Top-2 Stub Expansion + ADR-028 Spec Scaffold**
+
+### W1 — voice-matching SKILL.md depth expansion (writing preset)
+
+- **voice-matching → full ADR-015 9-section depth (71 lines):** Replaces 18-line stub with complete skill: When to use, Triggers (4 bullets), Instructions (5 steps), Output format, Quality criteria, Anti-patterns (5 named anti-AI patterns), Example (input/output/meta-note), Writing-profile integration, Example prompts. Imperative-voice convention throughout (C-v2.3-7). 5 named anti-AI patterns: averaging to generic, ignoring samples, em-dash flood, hedged-language overuse, generic transitions (C-v2.3-3). Always consults `context/writing-profile.md` regardless of output length.
+
+### W2 — daily-briefing SKILL.md depth expansion (personal-assistant preset)
+
+- **daily-briefing → full ADR-015 9-section depth (100 lines):** Replaces 18-line stub with complete skill: When to use, Triggers (4 bullets mirroring PA global-instructions lines 16–18), Instructions (7 steps incl. proactive-offer confirmation gate + graceful-degradation ladder), Output format (4-section fixed schema: Intention/Priorities/Time blocks/Protect), Quality criteria, Anti-patterns, Example (vault state + intention questions + 4-section output), Writing-profile integration (tiered: Intention always; Priorities/blocks neutral), Example prompts. Graceful-degradation ladder: Calendar→Tasks→People→ask-user (C-v2.3-8).
+
+### W3 — registry disposition annotations (curated-skills-registry.md)
+
+- **doc-summary annotation:** `disposition: covered-by-runtime` blockquote immediately after doc-summary row. Reason: meeting-notes + Anthropic runtime DOCX/PDF skills + general Claude summarization are sufficient; no in-tree expansion planned.
+- **action-items annotation:** `disposition: covered-by-runtime` blockquote immediately after action-items row. Reason: meeting-notes skill already extracts action items as a workflow step; no standalone in-tree expansion planned.
+- CI cardinality grep count unchanged at 22 (annotations contain no `| builtin` or `| https://` patterns).
+
+### W4 — ADR-028 PROPOSED spec scaffold (docs/architecture.md, landed at Phase 1)
+
+- **ADR-028: `content_sha256` per-file integrity field for `cowork.lock.json`** (PROPOSED, implementation deferred to v2.4). Specifies: 64-char lowercase hex per-file content hash, optional on pre-v2.4 entries / required on new entries (option (c) new-entries-only migration), reader contract ("presence implies enforcement; absence implies tolerated"), JSON example, CI verification step prose for v2.4.
+
+### W5 — orphan-item closeout
+
+- Orphan commits `a7aa1cb` and `02bdf21` confirmed resolved on main per pipeline.md Phase 0 + Phase 1 rows. No file changes required.
+
+---
+
 ## [2.2.0] — 2026-05-08
 
 **v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery**

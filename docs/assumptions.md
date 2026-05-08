@@ -9,7 +9,7 @@ Every assumption in the product spec is catalogued here with:
 
 Assumptions are grouped by domain. Review this register before Phase 1 (architecture) and before any preset ships.
 
-Last updated: v1.2 — 2026-04-17T00:00:00Z
+Last updated: v2.3.0 — 2026-05-08T00:00:00Z
 
 ---
 
@@ -420,3 +420,37 @@ _Added: 2026-05-08T00:00:00Z — v2.2 Carry-Forward Closeout + Skills Roadmap Di
 **Assumption:** The W2 roadmap is a planning artifact (prose + tables), not an architectural decision. @dev can produce it from v2.2 research files and personas.md without requiring a Phase 1 ADR or Phase 2 review. The roadmap does not modify any existing architecture surfaces.
 **Risk:** MEDIUM. If @dev's roadmap analysis produces a recommendation that contradicts an existing ADR or implies an architectural change in v2.2 scope, @pm must review before Phase 5. Gate: if skills-roadmap.md contains any statement implying a v2.2-cycle architectural commitment, escalate to @architect before Phase 5 sign-off.
 **Validation path:** @qa Phase 5 confirms that skills-roadmap.md contains no v2.2-cycle architectural commitments — it is a v2.3+ planning artifact only.
+
+---
+
+## v2.3.0 Assumptions
+
+### A-v2.3-1 — daily-briefing file format is plain markdown [CONFIRMED]
+**ID:** A-v2.3-1
+**Confidence:** [CONFIRMED]
+**Assumption:** Casey's vault (and all PA preset users by default) uses plain markdown files in Calendar/, Tasks/, and People/ folders. No Obsidian-specific syntax (wikilinks, frontmatter-parsed tasks) and no YAML-only formats are assumed.
+**Source:** Consistent with v1.3.2 PA preset design, existing stub's "read Calendar/, Tasks/, and People/ folders" instruction, and global-instructions.md which references no file-parsing libraries.
+**Risk:** LOW. If a user's vault uses Obsidian-specific syntax, the skill may produce partial output. The spec's graceful-degradation AC (AC-DB-4) handles missing folders; Obsidian-syntax tolerance is a future enhancement.
+**Validation path:** @qa AC-DB-4 verifiable by inspection. No runtime test needed at Phase 5 for format tolerance edge case — a note in the Anti-patterns section covers the user expectation.
+
+### A-v2.3-2 — ADR-028 scope is spec-scaffold only, no implementation [CONFIRMED]
+**ID:** A-v2.3-2
+**Confidence:** [CONFIRMED]
+**Assumption:** ADR-028 section in docs/architecture.md is PROPOSED status only. No changes to `cowork.lock.json`, `sync-agency.yml`, `quality.yml`, or any runtime script. v2.4 executes the implementation.
+**Source:** User's Option B cycle scope decision. WILL-NOT-DO #2 in spec.
+**Risk:** NONE for this cycle. Risk shifts to v2.4: if ADR-028 scope changes between v2.3.0 scaffold and v2.4 implementation, the spec scaffold may need revision. The PROPOSED status explicitly permits this.
+**Validation path:** AC-OOS-1 and AC-OOS-2 confirm no implementation artifacts. @qa verifiable at Phase 5.
+
+### A-v2.3-3 — PA preset ENFORCED_PRESETS allowlist status [ESTIMATED]
+**ID:** A-v2.3-3
+**Confidence:** [ESTIMATED]
+**Assumption:** The PA preset skill path (`examples/personal-assistant/.claude/skills/*/SKILL.md`) is already in the `ENFORCED_PRESETS` CI allowlist in `.github/workflows/quality.yml`. This would be consistent with the pattern from ADR-015 v1.3.3 (Writing preset was added to ENFORCED_PRESETS at the same commit as the first full-depth skill in that preset).
+**Risk:** MEDIUM. If PA preset is NOT in ENFORCED_PRESETS, W2 (daily-briefing expansion) will not be CI-enforced until @dev adds it. @dev adding it at the same commit is the correct pattern — but failing to add it means the 9-section floor has no CI enforcement for the PA preset, creating a compliance gap.
+**Validation path:** @architect must check at Phase 1. OQ-3 in spec.md.
+
+### A-v2.3-4 — voice-matching anti-AI guidance: inline vs companion-doc [UNTESTED]
+**ID:** A-v2.3-4
+**Confidence:** [UNTESTED]
+**Assumption:** Whether voice-matching's anti-AI guidance (em-dash flood, generic transitions, passive voice overuse per Sam's and Alex's persona profiles) belongs in `## Anti-patterns` or a separate companion doc is not pre-determined. The inline path is simpler; the companion-doc path enables reuse across writing preset skills.
+**Risk:** MEDIUM. If @architect chooses the companion-doc path, a new file is created under `examples/writing/context/` — this is a new architecture surface not anticipated by the v2.2 WILL-NOT-DO list (which excluded "new presets, wizard steps, agents, commands" but not new context files within existing presets). @pm confirms this is in-scope for v2.3.0 if @architect recommends it.
+**Validation path:** OQ-1 in spec.md resolved at Phase 1. @dev implements per @architect ruling.
