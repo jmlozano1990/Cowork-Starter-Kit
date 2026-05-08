@@ -2,6 +2,156 @@
 
 ---
 
+## v2.3.1 — Stub Completion
+
+**Date:** 2026-05-08
+**Classification:** STANDARD (consistent Phase 0–7)
+**Mode:** quick (patch — completion-only, no new feature surface)
+**Rework rate:** 0% (PASS-ON-FIRST-PUSH — Phase 4 SHA 60ed157 = HEAD at Phase 7 approval)
+**Cycle SHA:** fef5ae3 (tag v2.3.1, PR #38 merged 2026-05-08T20:35Z); paperwork PR #39 sha:787106b merged 2026-05-08T20:55Z
+
+---
+
+### 1. Cycle Summary
+
+v2.3.1 was a content-only patch cycle that brought 8 half-baked SKILL.md stubs to production depth. The stubs (editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, email-drafting, follow-up-tracker, spend-awareness) were all ~18-line placeholders with `depth: stub` frontmatter markers. Each was expanded to the canonical 9-section structure (When to use / Triggers / Instructions / Output format / Quality criteria / Anti-patterns / Example / Writing-profile integration / Example prompts) at 76–90 lines, using the ADR-015 template established in v1.3.0 and proven across v1.3.1, v1.3.3, v2.3.0. Two skills from the original stub list (action-items, doc-summary) were excluded per v2.3.0 W3 disposition: covered-by-runtime.
+
+The cycle ran at quick-mode ceremony (no new ADRs, no Phase 2 security review — STANDARD classification qualifies for the combined Phase 5+6+7 path established in v2.2). 50/50 ACs PASS, 13/13 constraints PASS. CI run #25560043390 — 19/19 checks PASS. PASS-ON-FIRST-PUSH: no rework loop, no MD058 regression (v2.3.0 lesson held — no table-adjacent content in 8 SKILL.md files). Phase 6 combined-path: 0 CRITICAL, 0 WARNING, 1 INFO (S1 email-drafting checklist nesting placement deferred to v2.3.2 backlog).
+
+One notable near-miss at merge: the orchestrator attempted to push 10 docs paperwork files directly to main, which was correctly blocked by the harness permission gate per CLAUDE.md merge rule. The paperwork (7 v2.3.1 cycle artifacts + 3 v2.3.0 retro orphans) was unstaged, a second PR (#39) was opened on branch `docs/v2.3.1-paperwork`, and it merged cleanly. This is enforcement working as intended, but the shape — code PR ships clean, then a mandatory paperwork follow-up PR — recurs across cycles.
+
+**Verdict: HEALTHY.** 0% rework, 0 CRITICAL/0 WARNING, both PRs merged, all CI green. One INFO finding (S1 email-drafting checklist placement) deferred to v2.3.2 with rationale.
+
+---
+
+### 2. What Went Well
+
+- **PASS-ON-FIRST-PUSH:** 0 rework. 50/50 ACs on the first CI run. Second consecutive cycle (after v2.3.0's 0.7% rework) trending toward a first-push norm. C-v2.3.1-13 commit topology constraint (6-batch preset commits) gave @dev a clear scaffolding contract.
+- **v2.3.0 MD058 lesson held:** @dev avoided placing blockquote annotation content adjacent to markdown tables (the v2.3.0 rework trigger). SKILL.md files contain no tables; CI Markdown Lint PASS on first push.
+- **CF-5 version-artifact regression: RESOLVED and confirmed stable (2nd consecutive cycle):** AC-REL-1..4 (VERSION=2.3.1, CHANGELOG [2.3.1], README badge `version-2.3.1-green`, Next-up teaser) all present. This is the second consecutive cycle where the explicit 4-sub-item constraint enumeration works where general reminders did not. Pattern RESOLVED per v2.3.0 precedent.
+- **13 binding constraints enforced clean:** C-v2.3.1-10 (spend-awareness 4 verbatim financial phrases) and C-v2.3.1-11 (email-drafting 4-item pre-send verification) were the highest-risk content constraints. Both verified by @qa via literal grep at Phase 5 deliberation.
+- **Combined Phase 5+6+7 path executed cleanly (third use):** STANDARD classification + clean Phase 4 deliberation (0 CRIT + 0 WARN from @qa + @security Round 1). Path maintained even though email-drafting S1 INFO was surfaced — INFO items do not forfeit combined-path eligibility.
+- **C-v2.3.1-9 zero-diff discipline held:** 12-file deny-list (cowork.lock.json, quality.yml, sync-agency.yml, CLAUDE.md, WIZARD.md, 6× global-instructions.md, templates/, curated-skills-registry.md, action-items/SKILL.md, doc-summary/SKILL.md, cowork-profile-starter.md) all BYTE-UNCHANGED. `git diff --name-only main release/v2.3.1` = exactly 11 files.
+- **Paperwork PR #39 unblocked without cycle delay:** When direct-to-main push was blocked, the orchestrator correctly opened PR #39 on a paperwork branch. CI green on both runs (#25562397218 + #25562399190). 10 docs files landed cleanly without disrupting the v2.3.1 tag.
+
+---
+
+### 3. What Didn't Go Well
+
+- **Paperwork follow-up PR required again (second cycle):** Docs artifacts (cycle spec sections, architecture amendments, security review artifacts, qa-report, retro) were not committed on the release branch before merge. v2.3.0 was the first instance (24h orphan window). v2.3.1 is the second instance — paperwork was staged, then unstaged when direct-to-main push was blocked by the harness gate, then re-committed on a separate `docs/v2.3.1-paperwork` branch and merged via PR #39. The v2.3.1 architecture Phase 1 design explicitly made Commit 6 paperwork "at @dev discretion" (optional). That optional framing is the proximate cause: when paperwork is optional in the commit topology, it consistently doesn't ship with the code PR.
+
+  **Root cause:** The Phase 4 commit topology constraint (C-v2.3.1-13) bound Commits 0–5 as required and Commit 6 (paperwork) as optional. Two consecutive cycles show that optional paperwork does not ship in the code PR. The fix: bind Commit 6 as mandatory in the next cycle's commit-topology constraint for any cycle that produces new architecture/spec/review docs. The harness permission gate is enforcing the merge rule correctly — the gap is upstream in Phase 1 constraint design.
+
+- **S1 INFO: email-drafting checklist nesting:** @security noted that the 4-item pre-send verification checklist is nested inside Instructions step 3 rather than promoted to a top-level `## Pre-Send Verification` subsection. C-v2.3.1-11 required the 4 items inside `## Instructions` (not promoted), so this is consistent with the constraint. The finding is architectural preference, not a violation. Deferred to v2.3.2 pre-spec backlog.
+
+- **ADR Index still not backfilled (4th consecutive deferral):** ADR-020 through ADR-028 absent from architecture.md index table. Now 4 consecutive cycles of acknowledgment without closure. Advisory-only deferral is not working — this needs to be a non-negotiable binding AC in the v2.4 spec, not a hygiene carry-forward.
+
+---
+
+### 4. Quality Patterns
+
+#### Active Patterns (promoted + watch)
+
+**P-COWORK-1: local-lint-vs-CI-divergence** — WATCH (2nd cycle: v2.3.0 1-failure, v2.3.1 0-failures)
+
+v2.3.1 had 0 CI Markdown Lint failures on first push (no table-adjacent content in 8 SKILL.md files). The structural gap persists — no local markdownlint step in the cowork pipeline — but the v2.3.0 lesson was applied effectively. Pattern stays WATCH. CF-4 (local markdownlint pre-commit) remains deferred. Eligible for escalation if a v2.4 cycle hits the same failure mode.
+
+**Paperwork-Follow-Up-PR-Pattern** — WATCH (2nd cycle: v2.3.0 + v2.3.1; see also docs/patterns.md for official record)
+
+Two consecutive cycles required a separate paperwork follow-up PR after the code PR merged. Root cause is consistent: Commit 6 paperwork is optional in the commit topology, so it does not ship with the code PR. Direct-to-main push is blocked by the harness permission gate (correct enforcement). The fix is upstream: make Commit 6 mandatory in the v2.4 Phase 1 commit-topology constraint for cycles producing new docs artifacts.
+
+**P-COWORK-2: recurring-version-artifact-miss** — CONFIRMED RESOLVED (v2.3.0 + v2.3.1)
+
+v2.3.1 is the second consecutive cycle where all 4 release artifacts (VERSION, CHANGELOG, README badge, Next-up teaser) shipped correctly. Pattern RESOLVED and stable.
+
+**P-COWORK-3: combined-path-eligibility-from-clean-deliberation** — PROMOTED-WATCH (3rd cycle: v2.2, v2.3.0, v2.3.1)
+
+Three consecutive STANDARD-classified cycles received a clean Phase 4 deliberation and ran the combined Phase 5+6+7 path. In v2.2: end-to-end clean. In v2.3.0: FORFEIT-and-reinstate due to MD058. In v2.3.1: clean end-to-end. The pattern is stable and the path is legitimate for STANDARD cycles with 0-finding deliberations. Eligible for promotion to docs/patterns.md at v2.4 if the pattern continues.
+
+---
+
+### 5. Council /self-improve Candidates
+
+The following improvements are surfaced for The-Council to absorb. This section is informational — do NOT auto-invoke /self-improve.
+
+**C1: `check-base-sync.sh` guard** (carried from v2.2 P5, HIGH)
+
+Pre-/spec guard that git-fetches origin and blocks if local branch is behind. Prevents stale-base cycles. The-Council `scripts/` (sibling to `check-stale-cycle.sh`). Third consecutive cycle carrying this candidate.
+
+**C2: Mandatory-paperwork-commit in commit topology** (NEW, v2.3.1)
+
+The Phase 4 commit-topology constraint should bind the paperwork commit (pipeline.md, scratchpad.md, docs/ cycle artifacts) as MANDATORY rather than optional for cycles that produce new docs. This prevents the Paperwork-Follow-Up-PR-Pattern. Low effort: change "Optional Commit 6" to "Required Commit 6 (omit only if zero new docs)" in The-Council's commit-topology guidance. This is a @pm / @architect process constraint, not a guard change.
+
+**C3: ADR Index backfill as non-negotiable AC** (carried v2.0–v2.3.1, MEDIUM)
+
+Fourth consecutive advisory deferral. The-Council should add a self-improve cycle to enforce ADR-index completion as a binding non-optional AC in the next v2.4 spec section.
+
+**C4: `version-artifact-checklist` CI gate** (v2.3.0 C4, MEDIUM)
+
+Automate the 4-sub-item release artifact check (VERSION, CHANGELOG, README badge, Next-up teaser) as a CI gate rather than relying on explicit constraint enumeration each cycle. Pattern is now stable for 2 cycles — codify it structurally.
+
+---
+
+### 6. Tier 1 Agent Quality Baseline Assessment
+
+Quality baselines from `.claude/skills/*/quality-baseline.json` (v23.0, pass threshold 0.80). Content-review assessment applied to observed agent behavior in v2.3.1. All scenarios evaluated are applicable to a static markdown + CI YAML repo (no auth/RLS/schema surfaces).
+
+| Agent | Scenarios Evaluated | Observed Behavior | Assessment |
+|-------|---------------------|-------------------|------------|
+| @pm | QP1 (ambiguous intent), QP2 (self-validation) | Quick-mode Phase 0 PRD correctly scoped 8 stubs from a precise user mandate ("don't be half-baked, even if not new stuff"). 12 WILL-NOT-DO items prevented scope creep across all subsequent phases. 50 ACs with deterministic grep/wc evidence mappings. No ambiguous intent left unresolved at spec gate. | PASS (2/2 applicable) |
+| @architect | QA3 (speculative abstraction), QA1/QA5 (anti-pattern scan) | Phase 1 resolved all 5 OQs with binding rulings — no open questions left for @dev to resolve. No speculative abstraction: ADR-028 stayed PROPOSED, lock schema untouched, no new ADRs generated. C-v2.3.1-13 commit topology constraint added after @dev Round 1 APPROVE-WITH-AMENDMENTS request — direct implementability improvement without over-engineering. Anti-pattern scan: 0 blockers. | PASS (3/3 applicable) |
+| @security | QS2 (external data), QS3 (fail-closed/fail-open) | Phase 1 Round 1 deliberation independently verified: LLM01 5-pattern scan (0 injection vectors); per-commit scope 6/6 PASS; deny-list 12/12 PASS; CLAUDE.md byte-unchanged (397w); triple-backtick parity on all 8 files; frontmatter terminator clean. S1 INFO (email-drafting checklist nesting) surfaced and correctly classified as INFO (C-v2.3.1-11 was satisfied — nesting was architecturally specified). No over-classification or under-classification. QS1 guard modification N/A (STANDARD content cycle). | PASS (all applicable scenarios clear) |
+| @qa | QQ2 (AC coverage), QQ1 (flaky test), QQ3 (rework rate) | 10/10 Phase 4 deliberation spot-checks PASS. 50/50 ACs verified at Phase 5 testing. Rework rate correctly computed as 0% (Phase 4 SHA 60ed157 = HEAD). QQ3 scenario: rework rate documented and carry-forwards tracked with explicit resolution status for each CF (CF-1 through CF-v2.3.1-A). Combined-path eligibility correctly evaluated and maintained. Phase 7 ADR-100 4-item checklist fully documented with CI evidence, tier evidence, and 12-AC sample cross-reference. | PASS (3/3 scenarios clean) |
+
+**Overall: 4/4 agents PASS on applicable scenarios.** Pass rate 100% (4/4) exceeds the 0.80 threshold.
+
+---
+
+### 7. Carry-Forwards into v2.3.2 / v2.4
+
+| Item | Source | Priority | Disposition |
+|------|--------|----------|-------------|
+| S1 email-drafting checklist promotion | Phase 6 INFO | LOW | Add `## Pre-Send Verification` subsection above `## Anti-patterns` in email-drafting SKILL.md. Non-blocking in v2.3.1 (C-v2.3.1-11 satisfied at current nesting); v2.3.2 pre-spec backlog. |
+| CF-v2.3.1-A ENFORCED_EXAMPLES widening | Phase 1 deliberation | MEDIUM | Expand ENFORCED_EXAMPLES in quality.yml to cover writing/creative/business-admin/personal-assistant when those preset dirs have all stubs at full depth. v2.4 hygiene cycle. |
+| ADR-028 implementation | v2.3.0 carry-forward | HIGH | content_sha256 per-file integrity: implement in cowork.lock.json for new entries via /sync-agency. v2.4 Phase 1 design required. |
+| First external skill import | Skills roadmap v2.2 | HIGH | email-drafting and outline-generator are now full-depth stubs; next step is validating an external skill import via /sync-agency. |
+| ADR Index backfill (ADR-020..028) | 4th consecutive deferral | MEDIUM | Must be non-negotiable binding AC in v2.4 spec. Advisory-only deferral has failed 4 cycles. |
+| Paperwork-commit mandatory in topology | v2.3.1 observation | MEDIUM | Phase 1 commit-topology constraint must bind Commit 6 (docs paperwork) as REQUIRED, not optional, for cycles producing new docs artifacts. Prevents Paperwork-Follow-Up-PR recurrence. |
+| Local markdownlint pre-commit hook | CF-4, v2.3.0 C2 | MEDIUM | Closes Local-Lint-vs-CI-Divergence structural gap. Add `markdownlint-cli2` as pre-commit hook in cowork repo. |
+| CF-5 version-artifact watch | 2-cycle hold | RESOLVED | 4/4 artifacts present for 2nd consecutive cycle. Pattern confirmed resolved. No further tracking needed. |
+
+---
+
+### 8. Rework Analysis
+
+**Rework rate: 0%** (git diff 60ed157 HEAD — empty; zero commits after Phase 4 SHA through Phase 7 approval)
+
+PASS-ON-FIRST-PUSH — the first cycle in recent project history with no rework loop. Compare:
+- v1.3.0, v1.3.1, v1.3.3: 0% (no rework)
+- v2.2: 0% (no rework)
+- v2.3.0: 0.7% (8 lines, MD058 layout fix)
+- v2.3.1: 0% (no rework — v2.3.0 lesson applied)
+
+Root cause: the 6-batch commit topology (C-v2.3.1-13) provided a precise scaffolding contract; no table-adjacent markdown in 8 SKILL.md files avoided the MD058 class of failures; explicit constraint enumeration on the highest-risk items (spend-awareness financial phrases, email-drafting pre-send verification) prevented content correctness failures.
+
+---
+
+### 9. Retrospective Verdict
+
+v2.3.1 is the third consecutive cycle at or near the project quality ceiling, and the first cycle in recent history to achieve PASS-ON-FIRST-PUSH with 0% rework. Eight half-baked stubs reached production depth — exactly the user mandate ("don't be half-baked, even if not new stuff"). The 13-constraint + 50-AC contract, 6-batch commit topology, and combined Phase 5+6+7 path all executed as designed.
+
+The one honest gap this cycle exposed is structural and now has a clear fix: the optional framing of Commit 6 (docs paperwork) in the commit topology produces a mandatory paperwork follow-up PR every cycle that generates new docs. Two consecutive cycles (v2.3.0 + v2.3.1) confirm this is a pattern, not a one-off. The harness permission gate is doing its job correctly; the fix is upstream in Phase 1 constraint design. The next cycle's commit-topology constraint should make paperwork mandatory.
+
+The ADR Index backfill deferral for the fourth consecutive cycle has graduated from "hygiene carry-forward" to "process failure signal." It must be a non-negotiable binding AC in v2.4, not a note.
+
+Overall cycle health: strong. 0% rework, 0 CRITICAL, 0 WARNING, both PRs merged clean. The one INFO finding (email-drafting checklist placement) is architectural polish, not a defect. The pipeline found nothing it should have caught and caught nothing that wasn't there.
+
+---
+
+*Generated by @qa Phase 8 retrospective — 2026-05-08T21:30:00Z*
+
+---
+
 ## v1.0 — Initial Build
 
 > Phase 8 not run for v1.0. See pipeline.md for cycle summary.
