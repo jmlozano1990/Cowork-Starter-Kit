@@ -395,3 +395,28 @@ _Added: 2026-05-06T00:00:00Z — v2.0 Dynamic Workspace Architect via agency-age
 **Mitigation:** N/A — confirmed.
 **Validation path:** At Phase 4, @dev confirms no open issues labeled v2.0.1 remain on GitHub. If any are found open (GitHub label lag), they are closed by @dev with a comment referencing the resolving CHANGELOG entry — no code change required.
 
+
+## v2.2 Assumptions
+
+_Added: 2026-05-08T00:00:00Z — v2.2 Carry-Forward Closeout + Skills Roadmap Discovery_
+
+### A-v2.2-1 — Anthropic runtime hosted skills remain available in Claude Code / Claude.ai sessions [ESTIMATED — LOW risk]
+**ID:** A-v2.2-1
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** The Anthropic-hosted XLSX/PPTX/DOCX/PDF skills (referenced in WIZARD.md §Also and SETUP-CHECKLIST.md §63) remain available to Claude Code and Claude.ai sessions throughout v2.2 and v2.3 planning. The W2 coverage matrix treats these as RUNTIME coverage, not EMPTY gaps.
+**Risk:** LOW. If Anthropic deprecates these hosted skills, J7 (data/spreadsheet) and J9 (slides) shift from RUNTIME to EMPTY in the coverage matrix — upgrading the urgency of external skill import or in-tree development. This would not block v2.2 delivery, but would make v2.3 recommendations more urgent.
+**Validation path:** W2 author (@dev at Phase 4) should verify at time of writing that the hosted skills are still accessible. If deprecated, update matrix cells from RUNTIME to EMPTY and re-score the v2.3 candidate list accordingly.
+
+### A-v2.2-2 — Stopword list of ~50 common English words is sufficient for all current stub descriptions [ESTIMATED — LOW risk]
+**ID:** A-v2.2-2
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** The 12 stub skill descriptions currently in the registry are either (a) substantive (contain real keywords beyond stopwords) or (b) placeholder/stopword-only. A 50-word stopword filter is sufficient to distinguish these two cases for all current and near-future stub descriptions.
+**Risk:** LOW. If a stub description has exactly one marginally meaningful word surrounded by stopwords, the filter may produce false positive (real description incorrectly triggering fallback). A borderline case would need a second @qa fixture beyond the primary "the a of" case.
+**Validation path:** @dev at Phase 4 must test the stopword filter against all 12 current stub descriptions and confirm no false positives or false negatives.
+
+### A-v2.2-3 — W2 skills-roadmap.md will not require @architect input at Phase 4 [ESTIMATED — MEDIUM risk]
+**ID:** A-v2.2-3
+**Confidence:** [ESTIMATED — MEDIUM risk]
+**Assumption:** The W2 roadmap is a planning artifact (prose + tables), not an architectural decision. @dev can produce it from v2.2 research files and personas.md without requiring a Phase 1 ADR or Phase 2 review. The roadmap does not modify any existing architecture surfaces.
+**Risk:** MEDIUM. If @dev's roadmap analysis produces a recommendation that contradicts an existing ADR or implies an architectural change in v2.2 scope, @pm must review before Phase 5. Gate: if skills-roadmap.md contains any statement implying a v2.2-cycle architectural commitment, escalate to @architect before Phase 5 sign-off.
+**Validation path:** @qa Phase 5 confirms that skills-roadmap.md contains no v2.2-cycle architectural commitments — it is a v2.3+ planning artifact only.

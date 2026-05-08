@@ -2491,3 +2491,305 @@ Files affected: `.cowork-allowlist.json`
 - [CONFIRMED] The 10-entry allowlist subset maps to real `agency-agents/specialized/` directories — upstream-verified
 - [ESTIMATED] `jq -s '.'` on the JSONL accumulator is sufficient to compose valid JSON array — standard jq usage, no edge cases expected
 - [UNTESTED] Concurrent workflow run collision on `/tmp` — mitigated by run-ID suffix in accumulator filename
+## v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
+
+> **Cycle:** v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
+> **Status:** Phase 0 — Requirements
+> **Date:** 2026-05-08T00:00:00Z
+> **Mode:** deep / full
+> **Classification:** STANDARD (not COMPLIANCE-SENSITIVE — no external content import, no schema changes, no LLM-instruction surface changes beyond D2 in-place fix)
+> **Builds on:** v2.1 (FSM v2 + Content Audit + presets/ removal)
+> **ADRs from prior cycles:** ADR-028 (doc-only, v2.1), ADR-029, ADR-030, ADR-031, ADR-032, ADR-033 all ACCEPTED and stable
+
+---
+
+### Problem
+
+v2.1 shipped at 1% rework with two intentionally deferred INFO carry-forwards (D2, D3) and one pre-v2.1 example artifact gap (CFP). These are low-severity but will drift further if not addressed. In parallel, the v2.2 pre-spec research phase (two-pass skill landscape scan — initial + runtime-coverage re-scan) produced a full view of the skills gap landscape without finding a first-source candidate that meets the best-in-class bar set by the user.
+
+**Situation after research:** The initial scan recommended Weizhena/Deep-Research-skills for J8 (live web research). The re-scan with the runtime-coverage filter (Anthropic-hosted XLSX/PPTX/DOCX/PDF skills + Claude.ai Research mode) revised the recommendation: Weizhena provides ~20–30% lift over native Research mode, which does not meet the user's "best of all options" bar. No MIT-licensed, best-in-class candidate for any EMPTY gap (J7, J8, J9) cleared both the quality and license vetting filters simultaneously. The strongest remaining candidates (evolsb/contract-review, ComposioHQ/meeting-insights-analyzer) are v2.3-ready but have narrow persona coverage and high adapter cost respectively — insufficient justification to implement ADR-028 (multi-source trust architecture) in the same cycle.
+
+**User guidance (verbatim):** "I dont want to randomly add more and more tasks. I want that it provides more options and the best skill of all the options. If we are not finding any interesting skills then why do we do the work of enabling extra sources? We could invest this cycle in to polish pending work and to maybe, analyze which cases we can cover or if we need to develop any skill to cover gaps."
+
+v2.2 responds to this guidance with two bounded workstreams: W1 closes the three carry-forward items; W2 produces the skills roadmap that makes v2.3 a confident, targeted decision rather than a speculative one.
+
+---
+
+### Target Users
+
+Same personas as v2.1 — no changes. v2.2 is an infrastructure and planning cycle; no end-user-visible features ship.
+
+**Primary (W2 planning beneficiary):** Riley (The Prosumer Builder) — most impacted by the J7/J8/J9 gaps and the stub skill gaps in writing/creative/personal-assistant presets.
+**Secondary:** Maria (Knowledge Worker) — benefits from improved skill coverage in business-admin (action-items, doc-summary) and potential contract-review gap fill in v2.3.
+**Indirect (roadmap consumer):** All 5 personas (Alex, Maria, Sam, Riley, Morgan) — W2 maps their full JTBD space and surfaces what's missing.
+
+Full persona profiles: see `docs/personas.md`.
+
+---
+
+### Retro Carry-Forward Review (B8 process — v2.2)
+
+Items from v2.1 retro §10 Carry-Forward Items relevant to v2.2:
+
+| Item | Source | Priority | v2.2 Disposition |
+|------|--------|----------|-----------------|
+| D2: AC-W2-9 stopword edge case | Phase 4 deliberation | LOW | **FIX in W1** — expand keyword gate with stopword filter |
+| D3: residual `presets/` in SETUP-CHECKLIST.md | Phase 4 deliberation | LOW | **FIX in W1** — sweep with migration-context annotation |
+| ADR-028 implementation (multi-source trust) | ADR-028 (doc-only v2.1) | MEDIUM | **DEFER** — no qualified first source found; ADR-028 remains doc-only |
+| Multi-source upstream | v2.0 WILL-NOT-DO carry | MEDIUM | **DEFER** — same rationale; Path C chosen per re-scan §4 |
+| Token instrumentation gap | Persistent (all cycles) | LOW | **DEFER** — no structural fix identified |
+| cowork-profile-starter.md Objective field | Phase 5 INFO | LOW | **FIX in W1** — add Objective field (CFP item) |
+
+---
+
+### Core Features (MVP)
+
+#### W1 — Polish: Carry-Forward Closeout
+
+Three mechanical fixes. No architectural decisions required.
+
+---
+
+**W1-F1: D2 — AC-W2-9 Stopword Edge Case Fix**
+
+The verbatim-fallback rule in WIZARD.md §Phase 1 Role-Generation Rule (lines ~218–220) fires when an LLM-generated role line does not contain at least one keyword from the source skill's `description` field. The edge case: if the description contains only common English stopwords ("the", "a", "of", "and", "to", "is", etc.), the keyword gate trivially passes because any generated role line will contain at least one stopword. The wizard generates a generic role line unchallenged for these stub skills.
+
+**Fix shape:** Expand the keyword extraction logic with a stopword filter — before testing for keyword presence, strip the ~50 most common English stopwords from the description. If the resulting filtered keyword set is empty (description was all stopwords), the verbatim fallback fires unconditionally. Stopword list is hand-curated (~50 most common English stopwords as a bash array), not an external library dependency.
+
+**Affected files:** WIZARD.md §Phase 1 Role-Generation Rule (in-place edit, not a new block).
+
+**AC-D2:** WIZARD.md §Phase 1 Role-Generation Rule keyword extraction logic strips stopwords before testing for keyword presence. A skill whose `description` contains only stopwords (e.g., "the a of and") triggers the verbatim-fallback unconditionally. @qa Phase 5 fixture: skill description = "the a of" → verbatim fallback fires with truncated description.
+
+---
+
+**W1-F2: D3 — SETUP-CHECKLIST.md presets/ Reference Cleanup**
+
+ADR-032 (v2.1) explicitly excluded SETUP-CHECKLIST.md from the v2.1 presets/ sweep because the remaining references were inside a "broken symlink upgrade note" warning block — contextually appropriate at the time. That migration block is now stale: v2.1 shipped, the symlink is gone, and users encountering the block for the first time have no v2.0.x history to make the warning relevant.
+
+**Fix shape:** Sweep the migration-guidance block with an explicit migration-context comment. Add a datestamp or "v2.1 migration complete" annotation to signal that the block is historical context, not active guidance. Retain the content (audit trail value) but annotate it as superseded.
+
+**Affected files:** SETUP-CHECKLIST.md (migration-guidance block annotation only — no content removal).
+
+**AC-D3:** SETUP-CHECKLIST.md migration-guidance block containing `presets/` references is annotated with a visible "v2.1 migration complete — historical reference only" marker. @qa Phase 5 verifies: grep for `presets/` in SETUP-CHECKLIST.md returns only lines within the annotated historical block.
+
+---
+
+**W1-F3: CFP — cowork-profile-starter.md Objective Field**
+
+`examples/personal-assistant/cowork-profile-starter.md` is a static example artifact that predates v2.1. v2.1 added the `Objective` field to the canonical cowork-profile.md template (WIZARD.md Step 1 output — AC-W2-6). The static example did not receive this update. The gap is cosmetic (the canonical template is correct) but creates a confusing discrepancy for users who study the example files.
+
+**Fix shape:** Add an `Objective` field to the static example file, with an example value appropriate for the personal-assistant persona (Casey archetype).
+
+**Affected files:** `examples/personal-assistant/cowork-profile-starter.md`.
+
+**AC-CFP:** `examples/personal-assistant/cowork-profile-starter.md` contains an `Objective:` field. The field value is a concrete example objective appropriate for the personal-assistant preset. @qa Phase 5 verifies: grep for `Objective:` in the file returns exactly one match.
+
+---
+
+#### W2 — Skills Roadmap Discovery
+
+A planning workstream. The deliverable is `docs/skills-roadmap.md` — a structured document consumed by v2.3+ planning cycles. No skill expansion, removal, or external import happens in v2.2. The roadmap IS the deliverable.
+
+**W2 is implemented by @dev at Phase 4.** Phase 0 specifies the acceptance criteria only.
+
+---
+
+**W2-F1: Per-Stub ROI Scan (12 stubs across 4 presets)**
+
+For each of the 12 stub skills (writing: editing-pass, outline-generator, voice-matching; creative: creative-brief, feedback-synthesizer, ideation-partner; business-admin: action-items, doc-summary, email-drafting; personal-assistant: daily-briefing, follow-up-tracker, spend-awareness), assign one of four verdicts:
+
+- **COVER-BY-RUNTIME** — Anthropic's runtime hosted skills (XLSX/PPTX/DOCX/PDF) or Claude.ai Research mode already cover this JTBD adequately. Stub can be removed or kept as lightweight trigger without expansion.
+- **COVER-BY-EXTERNAL** — A vetted external SKILL.md candidate from the v2.2 re-scan covers this JTBD better than internal development. Stub removal + external import in v2.3.
+- **EXPAND-IN-TREE** — No adequate external candidate exists and the JTBD is genuinely under-served. Internal expansion to 9-section ADR-015 depth is warranted in v2.3+.
+- **REMOVE** — JTBD is too narrow, persona coverage too low, or ROI insufficient. Stub removal in v2.3+ without replacement.
+
+Each verdict must include a one-line justification referencing: (a) persona coverage, (b) runtime coverage check, (c) external candidate availability.
+
+**AC-RM-1:** `docs/skills-roadmap.md` exists with the three sections specified below (Per-stub ROI, Persona×JTBD matrix, Gap analysis + v2.3+ ranked list).
+
+**AC-RM-2:** Each of the 12 stubs has exactly one verdict (COVER-BY-RUNTIME / COVER-BY-EXTERNAL / EXPAND-IN-TREE / REMOVE) with a one-line justification. No stub is left without a verdict.
+
+---
+
+**W2-F2: Persona × JTBD Coverage Matrix**
+
+Produce a complete coverage matrix: 5 personas (Alex, Maria, Sam, Riley, Morgan) × top 15–20 JTBDs from `docs/personas.md`. For each cell: FULL (skill directly satisfies), PARTIAL (adjacent but incomplete), RUNTIME (covered by Anthropic hosted skill or Research mode), or EMPTY (no coverage).
+
+Coverage sources to consider: 21 builtin skills + Anthropic runtime hosted skills (XLSX/PPTX/DOCX/PDF) + Research mode + WebSearch + general Claude capability. The runtime filter applied in the re-scan is authoritative — a JTBD covered by runtime at parity with a skill is RUNTIME, not EMPTY.
+
+**AC-RM-3:** Persona × JTBD matrix is complete — no missing cells. Empty cells are explicitly flagged as gaps (EMPTY). Runtime-covered cells are labeled RUNTIME (not EMPTY). Matrix has ≥15 JTBD rows and covers all 5 personas.
+
+---
+
+**W2-F3: Gap Analysis + v2.3+ Ranked Recommendations**
+
+For each EMPTY cell from W2-F2: assess whether it represents a real gap or a niche. For real gaps: identify whether a vetted external SKILL.md exists or whether in-tree development is warranted. Apply the user's explicit decision rule: "If we can find skills that cover the stubs they can be removed, if there is no valid skill and they are needed then maybe we expand them. If no ROI they are removed."
+
+Rank v2.3+ candidate cycles by: (persona_coverage × frequency_of_need × output_quality_lift) / development_cost. Output a ranked list of 3–7 candidate cycles. Each candidate must specify: target JTBD(s), external source or in-tree build, persona coverage, estimated development cost (S/M/L), and go/no-go recommendation.
+
+Candidates from the v2.2 research to evaluate (already partially scored — use scores as starting point, not gospel):
+
+| Candidate | Source | License | Verdict in research | v2.3 signal |
+|-----------|--------|---------|---------------------|-------------|
+| `meeting-insights-analyzer` | ComposioHQ/awesome-claude-skills | Apache 2.0 | KEEP (conditional) — high adapter cost | v2.3 candidate |
+| `contract-review` | evolsb/claude-legal-skill | MIT | KEEP (conditional) — narrow persona coverage | v2.3 candidate (Riley/Maria) |
+| `data-narrative-builder` | nimrodfisher/data-analytics-skills | UNCONFIRMED | Blocked by license | v2.3 if license confirmed |
+| `decision-matrix` | lyndonkl/claude | NULL (no LICENSE) | Eliminated at vetting gate | v2.3 if maintainer adds MIT |
+
+**AC-RM-4:** Ranked v2.3+ candidate list contains 3–7 entries, each with: target JTBD(s), source (external repo name + URL or "in-tree build"), license status, persona coverage count (N of 5), estimated development cost (S/M/L), and go/no-go recommendation with one-line rationale.
+
+---
+
+#### Release Artifacts (per ADR-033)
+
+**AC-REL-1:** `VERSION` file updated to `2.2.0`.
+**AC-REL-2:** `CHANGELOG.md` gains a `[2.2.0]` section documenting: W1 carry-forward closeouts (D2, D3, CFP) and W2 skills roadmap deliverable.
+**AC-REL-3:** `README.md` version badge updated to `2.2.0`.
+**AC-REL-4:** `README.md` "Next up" teaser updated to reflect v2.3 headline: "v2.3 — First External Skill Source + Stub Expansion" (or equivalent based on W2 recommendations; let @pm finalize wording after W2 is produced at Phase 4).
+
+---
+
+### Out of Scope (v2.2)
+
+1. **ADR-028 implementation** — multi-source trust anchor (content_sha256 second hash) deferred; no first-source consumer identified in two-pass research scan.
+2. **Multi-source enablement** — `sources[]` array in cowork.lock.json schema deferred per YAGNI; revisit when v2.3+ identifies an external skill worth importing.
+3. **Any external skill import** — Weizhena, Composio, evolsb, nimrodfisher, lyndonkl — none qualified for v2.2; revisit in v2.3+ from the roadmap.
+4. **Stub expansion** — writing/creative/business-admin/personal-assistant 9-section depth expansion analyzed in W2 discovery, executed in v2.3+ if W2 so recommends.
+5. **Stub removal** — same: decided in W2 discovery, executed in v2.3+.
+6. **New builtin skill development** — even if a gap is identified in W2, the build happens in v2.3+.
+7. **Riley --upgrade flow Phase 2, MCP registry source, automated PR vetting** — all multi-source dependent, deferred.
+8. **Token instrumentation gap** (model: "unknown" in metrics.json) — no structural fix identified; leaving as-is.
+9. **Schema changes** to cowork.lock.json or cowork-profile.md.
+10. **New LLM-instruction surface changes** — CLAUDE.md / WIZARD.md word budget unchanged except D2 fix at §Phase 1 Role-Generation Rule (small in-place edit, not a new prompt block).
+
+---
+
+### Technical Constraints
+
+- **Stack:** Bash-only for all logic changes (D2 stopword filter = bash array; no Python, no npm).
+- **CLAUDE.md word budget:** Hard cap 400 words, soft target 370. D2 edit is in WIZARD.md, not CLAUDE.md — no word-budget impact. Verify post-edit that WIZARD.md is not at a capacity limit.
+- **ADR-015 depth standard:** Not applicable to v2.2 (no skill expansion). Referenced for W2-F1 verdict context only.
+- **Affected files:** WIZARD.md (D2 only), SETUP-CHECKLIST.md (D3 only), `examples/personal-assistant/cowork-profile-starter.md` (CFP only), `docs/skills-roadmap.md` (new), VERSION, CHANGELOG.md, README.md.
+- **No new CI workflow changes** — existing CI is sufficient. No Phase 4.5 required.
+- **No security-sensitive surfaces** — D2 is a behavioral fix to an existing rule, not a new rule; CLASSIFICATION: STANDARD.
+
+---
+
+### Edge Cases
+
+1. **D2 — description with mixed stopword/keyword content:** If a description contains 2 stopwords + 1 real keyword ("the a synthesis"), the filter strips stopwords correctly and leaves "synthesis" — verbatim fallback does NOT fire. Correct behavior.
+2. **D2 — description is empty string:** An empty description produces an empty filtered keyword set → verbatim fallback fires unconditionally. @qa must verify this case does not cause the WIZARD.md block to error (bash array empty check).
+3. **D3 — future presets/ reference added by accident:** The annotation makes the historical block clearly demarcated, but a future author could still add a new `presets/` reference outside the block. @qa Phase 5 should verify that the only `presets/` lines remaining are inside the annotated block.
+4. **CFP — Objective field content mismatch:** The static example's Objective value must not conflict with the canonical WIZARD.md Step 1 template format. @dev must copy the Objective field format verbatim from WIZARD.md Step 1 output template, not invent a new format.
+5. **W2 — stub verdict changes between v2.2 and v2.3:** The roadmap is a planning artifact, not a binding contract. v2.3 @pm re-evaluates verdicts at Phase 0. AC-RM-2 does not prevent v2.3 from reversing a W2-F1 verdict if new information emerges.
+
+---
+
+### User Stories
+
+- As Riley, I trust that the wizard's role descriptions for stub skills are not trivially bypassed by stopword-only descriptions — even if the skill's description is placeholder-quality, I still see a meaningful fallback.
+- As a project maintainer, I can read SETUP-CHECKLIST.md without confusion about whether the `presets/` migration warning is still actionable — the annotation tells me it's historical.
+- As Alex (setting up personal-assistant workspace), I see a cowork-profile-starter.md example that reflects the current v2.1+ template including the Objective field — the example matches what the wizard produces.
+- As a v2.3 planner (@pm), I can read `docs/skills-roadmap.md` and know exactly which stubs are worth expanding, which gaps are real vs. runtime-covered, and which external candidates are ready for import — without re-running the skill landscape research.
+
+---
+
+### Acceptance Criteria
+
+**W1 — Polish:**
+- [ ] AC-D2: WIZARD.md §Phase 1 Role-Generation Rule expanded with stopword filter; skill description containing only stopwords triggers verbatim fallback unconditionally. @qa fixture: `description = "the a of"` → fallback fires with truncated description.
+- [ ] AC-D3: SETUP-CHECKLIST.md migration-guidance block containing `presets/` references is annotated with "v2.1 migration complete — historical reference only" marker. All `presets/` references in SETUP-CHECKLIST.md are inside the annotated block.
+- [ ] AC-CFP: `examples/personal-assistant/cowork-profile-starter.md` contains an `Objective:` field with a concrete example value. Field format matches WIZARD.md Step 1 output template.
+
+**W2 — Skills Roadmap:**
+- [ ] AC-RM-1: `docs/skills-roadmap.md` exists with three sections: (1) Per-stub ROI scan, (2) Persona×JTBD coverage matrix, (3) Gap analysis + v2.3+ ranked recommendations.
+- [ ] AC-RM-2: All 12 stubs have exactly one verdict (COVER-BY-RUNTIME / COVER-BY-EXTERNAL / EXPAND-IN-TREE / REMOVE) with one-line justification.
+- [ ] AC-RM-3: Persona×JTBD matrix is complete (≥15 rows, 5 persona columns, no missing cells; EMPTY vs RUNTIME explicitly distinguished).
+- [ ] AC-RM-4: Ranked v2.3+ candidate list has 3–7 entries with: target JTBD(s), source, license, persona coverage count, development cost (S/M/L), go/no-go.
+
+**Release Artifacts:**
+- [ ] AC-REL-1: `VERSION` = `2.2.0`
+- [ ] AC-REL-2: `CHANGELOG.md` has `[2.2.0]` section covering W1 + W2 deliverables.
+- [ ] AC-REL-3: `README.md` badge shows `2.2.0`.
+- [ ] AC-REL-4: `README.md` "Next up" teaser references v2.3 headline from W2 recommendations.
+
+---
+
+### Success Metrics
+
+- **Primary:** All three carry-forward items (D2, D3, CFP) confirmed closed at Phase 5 with zero rework — 0% rework target.
+- **Secondary:** `docs/skills-roadmap.md` consumed by v2.3 @pm without requiring re-research — roadmap is self-contained and complete.
+- **Guard rail:** CLAUDE.md word count ≤ 400 after D2 edit (edit is in WIZARD.md, not CLAUDE.md — but verify no overflow occurred).
+- **Out-of-scope enforcement:** @qa Phase 5 must confirm zero ADR-028 implementation code, zero external skill files, and zero stub expansion content landed in v2.2.
+
+---
+
+### Assumptions (v2.2)
+
+### A-v2.2-1 — Anthropic runtime hosted skills remain available in Claude Code / Claude.ai sessions [ESTIMATED — LOW risk]
+**ID:** A-v2.2-1
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** The Anthropic-hosted XLSX/PPTX/DOCX/PDF skills (referenced in WIZARD.md §Also and SETUP-CHECKLIST.md §63) remain available to Claude Code and Claude.ai sessions throughout v2.2 and v2.3 planning. The W2 coverage matrix treats these as RUNTIME coverage, not EMPTY gaps.
+**Risk:** LOW. If Anthropic deprecates these hosted skills, J7 (data/spreadsheet) and J9 (slides) shift from RUNTIME to EMPTY in the coverage matrix — upgrading the urgency of external skill import or in-tree development. This would not block v2.2 delivery (the roadmap can note the risk), but would make the v2.3 stub-expansion or external-import recommendation more urgent.
+**Validation path:** W2 author (@dev at Phase 4) should verify at time of writing that the hosted skills are still accessible. If deprecated, update matrix cells from RUNTIME to EMPTY and re-score the v2.3 candidate list accordingly.
+
+### A-v2.2-2 — Stopword list of ~50 common English words is sufficient for all current stub descriptions [ESTIMATED — LOW risk]
+**ID:** A-v2.2-2
+**Confidence:** [ESTIMATED — LOW risk]
+**Assumption:** The 12 stub skill descriptions currently in the registry are either (a) substantive (contain real keywords beyond stopwords) or (b) placeholder/stopword-only. A 50-word stopword filter is sufficient to distinguish these two cases for all current and near-future stub descriptions. No stub currently has a description that is borderline — one or two meaningful words surrounded by stopwords.
+**Risk:** LOW. If a stub description has exactly one marginally meaningful word surrounded by stopwords ("the a brief summary of text"), the filter may or may not strip "brief" and "summary" depending on implementation. The @qa fixture (description = "the a of") covers the pure-stopword case. A borderline case would need a second fixture.
+**Validation path:** @dev at Phase 4 must test the stopword filter against all 12 current stub descriptions in the registry and confirm no false positives (real description incorrectly triggering fallback) or false negatives (stopword-only description incorrectly passing).
+
+### A-v2.2-3 — W2 skills-roadmap.md will not require @architect input at Phase 4 [ESTIMATED — MEDIUM risk]
+**ID:** A-v2.2-3
+**Confidence:** [ESTIMATED — MEDIUM risk]
+**Assumption:** The W2 roadmap is a planning artifact (prose + tables), not an architectural decision. @dev can produce it from the v2.2 research files (`docs/research/v2.2-skill-landscape.md`) and personas.md without requiring a Phase 1 ADR or Phase 2 review. The roadmap does not modify any existing architecture surfaces.
+**Risk:** MEDIUM. If @dev's roadmap analysis produces a recommendation that contradicts an existing ADR (e.g., recommends stub removal in a way that conflicts with ADR-015 depth standard, or recommends an external source that requires ADR-028 implementation ahead of schedule), @pm must review before Phase 5. The gate: if skills-roadmap.md contains any statement that implies an architectural change in v2.2, escalate to @architect before Phase 5 sign-off.
+**Validation path:** @qa Phase 5 should confirm that skills-roadmap.md contains no v2.2-cycle architectural commitments — it is a v2.3+ planning artifact only.
+
+---
+
+### WILL-NOT-DO (v2.2)
+
+1. ADR-028 implementation (multi-source trust anchor — content_sha256 second hash) — deferred until a real multi-source consumer exists
+2. Multi-source enablement (sources[] array in cowork.lock.json) — deferred per YAGNI; revisit when v2.3+ identifies an external skill worth importing
+3. Any external skill import (Weizhena, Composio, evolsb, etc.) — none qualified for v2.2; revisit in v2.3+ from the roadmap
+4. Stub expansion (writing 9-section content for any of the 12 stubs) — analyzed in v2.2 discovery, expanded in v2.3+ if W2 says so
+5. Stub removal — same: decided in v2.2 discovery, executed in v2.3+
+6. New builtin skill development — even if a gap is identified in W2, the build happens in v2.3+
+7. Riley --upgrade flow Phase 2, MCP registry source, automated PR vetting — all multi-source dependent, deferred
+8. Token instrumentation gap (model: "unknown" in metrics.json) — no structural fix identified, leaving as-is
+9. Schema changes to cowork.lock.json or cowork-profile.md
+10. Any LLM-instruction surface changes (CLAUDE.md / WIZARD.md word budget unchanged except D2 fix at §Phase 1 Role-Generation Rule)
+
+---
+
+### YAGNI Rationale (for traceability)
+
+Initial v2.2 scope plan: multi-source enablement + ADR-028 implementation + first external skill (Weizhena/Deep-Research-skills). Scope was revised through two-pass pre-spec research:
+
+- **Pass 1 (initial scan):** Recommended Weizhena for J8 (live web research). License confirmed MIT. 4-of-6 persona coverage.
+- **Pass 2 (runtime-coverage re-scan):** Weizhena provides ~20–30% lift over Claude.ai's native Research mode, which does not meet the "best of all options" bar. Re-scan found one new candidate (evolsb/contract-review, MIT) but narrow persona coverage (Riley + Maria only). lyndonkl/decision-matrix — strong content, 5 personas — disqualified by missing license.
+- **User guidance:** Confirmed Path C (architecture-only, defer first external source to v2.3) after re-scan findings presented.
+- **Result:** v2.2 pivots to polish + discovery; multi-source infrastructure deferred until a real consumer (v2.3+ qualified candidate) is identified. This avoids shipping ADR-028 implementation for a source that doesn't meet the bar.
+
+---
+
+### Stub Registry (v2.2 — unchanged from v2.1)
+
+Reference: 12 stubs across 4 presets (no changes in v2.2):
+
+| Preset | Skill | Current depth | v2.2 disposition | v2.3+ target |
+|--------|-------|---------------|-----------------|--------------|
+| writing | editing-pass | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| writing | outline-generator | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| writing | voice-matching | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| creative | creative-brief | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| creative | feedback-synthesizer | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| creative | ideation-partner | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| business-admin | action-items | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| business-admin | doc-summary | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| business-admin | email-drafting | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| personal-assistant | daily-briefing | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| personal-assistant | follow-up-tracker | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+| personal-assistant | spend-awareness | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |

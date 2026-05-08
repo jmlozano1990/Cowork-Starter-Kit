@@ -3957,3 +3957,103 @@ The outer loop at lines 173–241 (`echo "$CATEGORY_LISTING" | jq -r '...' | whi
 
 Zero anti-patterns. Phase 1 clean.
 
+# v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
+
+## Phase 1 v2.2 — No ADR Required
+
+**Date:** 2026-05-08T00:00:00Z
+**Cycle:** v2.2 (CLASSIFICATION: STANDARD)
+**Outcome:** Outcome A — no new ADR. ADR index unchanged at ADR-033 (last new ADR was v2.1 Round 2).
+
+### Decision Trigger Walk
+
+The v2.2 spec was reviewed against the standard architectural-decision triggers. None warrant ADR-grade documentation. Summary:
+
+| # | Trigger | Result | Rationale |
+|---|---------|--------|-----------|
+| 1 | Schema change | NO | WILL-NOT-DO #9 — no `cowork.lock.json` or `cowork-profile.md` schema changes. |
+| 2 | Auth surface | NO | None touched. |
+| 3 | New external dependency | NO | D2 stopword list is a hand-curated bash array (~50 words). No package, no fetch, no third-party source. |
+| 4 | New trust anchor / supply-chain | NO | ADR-028 implementation deferred (WILL-NOT-DO #1). No external skill import (WILL-NOT-DO #3). |
+| 5 | Cross-cutting pattern (runtime-coverage filter) | DEFER | The Pass-2 "runtime parity vs. skill" filter that pivoted v2.2 scope is a research-curation discipline, not yet an architectural commitment. One cycle of evidence is insufficient to ADR-codify; revisit in v2.3 once the W2 roadmap shows whether the filter generalizes beyond the four runtime-hosted categories. YAGNI. |
+| 6 | Schema/contract for `docs/skills-roadmap.md` | NO | The v2.2 ACs (AC-RM-1..4) already specify the three sections, the four verdict tokens (`COVER-BY-RUNTIME` / `COVER-BY-EXTERNAL` / `EXPAND-IN-TREE` / `REMOVE`), and the ranked-list field set (target JTBD, source, license, persona coverage N/5, dev cost S/M/L, go/no-go + rationale). The ACs ARE the contract; a parallel ADR would be redundant. The roadmap is a planning artifact consumed by v2.3 @pm at Phase 0 — not an executable schema. |
+| 7 | LLM-instruction surface change | NO (de-minimis) | D2 is an in-place behavioral refinement to the WIZARD.md §Phase 1 Role-Generation Rule already specified by ADR-030. It tightens the keyword-presence test; it does not introduce a new instruction surface, change the prompt's authority model, or alter ADR-019 data-locality posture. Spec WILL-NOT-DO #10 is explicit. |
+
+### W1 Mechanical Fix Surfaces (no decisions, recorded for traceability)
+
+- **D2 (AC-D2):** WIZARD.md §Phase 1 Role-Generation Rule keyword-presence test gains a stopword strip BEFORE the keyword-presence check. If the filtered set is empty, verbatim fallback fires unconditionally. ADR-030 contract preserved (no new prompt, no new field, no role-generation logic change beyond the gate refinement).
+- **D3 (AC-D3):** SETUP-CHECKLIST.md migration block annotated "v2.1 migration complete — historical reference only." Architectural impact: zero. Default option (a) confirmed at Phase 0; user did not override.
+- **CFP (AC-CFP):** `examples/personal-assistant/cowork-profile-starter.md` gains an `Objective:` field. Format must match WIZARD.md Step 1 output template byte-for-byte (per ADR-031). Static-example sync only.
+
+### D2 Stopword List — Concrete Specification (pre-empts @dev OBJECT)
+
+To remove implementation discretion at Phase 4, the v2.2 stopword list is fixed here as a bash array. @dev copies this verbatim; no expansion or re-curation:
+
+```bash
+STOPWORDS=(
+  a an and are as at be been being but by
+  can do does for from had has have he her his
+  i if in into is it its me my no nor not
+  of on or our she so than that the their them
+  there they this to up us was we were what when
+  where which who will with would you your
+)
+```
+
+Count: 64 tokens (lowercased, alpha-only, ASCII). Match is case-insensitive on the description: lowercase the description and tokenize on `[^a-z]+` before filtering. If the resulting filtered token list is empty, the verbatim fallback fires. Implementation surface: WIZARD.md §Phase 1 Role-Generation Rule only (the role-generation block introduced at v2.1 Phase 4 — see Precondition below).
+
+### W1 Precondition — v2.1 Ship Verified
+
+**Finding (Phase 1, post-recovery):** v2.1 has shipped. `VERSION` = `2.1.0`; tag `v2.1.0` is at `8bda56b` on origin/main and is the base of `release/v2.2`. The WIZARD.md §Phase 1 Role-Generation Rule (AC-W2-9) referenced by AC-D2 is present at line 218. AC-D2's target block exists; @dev Phase 4 can apply the D2 stopword strip directly with no sequencing wait.
+
+**Phase 1 history note:** an earlier draft of this Phase 1 (authored against a stale local checkout where local `main` had diverged from origin/main and v2.1 had not yet been pulled) flagged a sequencing precondition. Recovery completed before deliberation: working tree was reset to origin/main (8bda56b), `release/v2.2` branch was created from there, and v2.2 deltas were re-applied on the v2.1 base. Sequencing precondition is resolved; retained note in scratchpad for audit trail.
+
+### W2 — No Architectural Surface
+
+The W2 deliverable (`docs/skills-roadmap.md`) is a planning artifact: prose + tables + ranked recommendations. It modifies no existing surface, introduces no new file under `.claude/`, no entry in CI, and no contract that future implementation must conform to beyond the AC-defined structure. Per A-v2.2-3 (MEDIUM risk), if @dev's roadmap analysis surfaces a recommendation that would imply a v2.2 architectural change (e.g., requires ADR-028 implementation ahead of schedule, or recommends in-cycle stub removal), @dev MUST escalate to @architect before Phase 5 sign-off. The escalation gate is the v2.2 architectural firewall — not a v2.3 commitment.
+
+### Assumption Status (carried into Phase 2)
+
+- **A-v2.2-1 (Anthropic runtime hosted skills remain available)** — UNVALIDATED at Phase 1. Validation deferred to W2 author at Phase 4 (per spec validation path). @security at Phase 2 should confirm this assumption introduces no hidden architectural dependency — the runtime filter is a research-discipline applied during scoping, not a runtime contract. If runtime skills deprecate post-v2.2, the W2 matrix re-scores in v2.3 (RUNTIME → EMPTY); v2.2 ship is unaffected.
+- **A-v2.2-2 (50-word stopword list sufficient)** — Phase 1 specifies a concrete 64-token list (above). Validation at @dev Phase 4 against all 12 current stub descriptions in the registry, with `description = "the a of"` as the @qa fixture. The 64-token list slightly exceeds the spec's "~50 most common" qualifier — accepted as a sufficiency margin, not over-engineering (one bash array, ~5 lines).
+- **A-v2.2-3 (W2 roadmap is non-architectural)** — Reaffirmed at Phase 1. Escalation gate documented above. If @dev's W2 output stays within AC-RM-1..4, no @architect re-engagement is needed.
+
+### Anti-Pattern Scan (v2.2)
+
+| Pattern | Present? | Notes |
+|---------|----------|-------|
+| God Class/Module | NO | No new modules. WIZARD.md, SETUP-CHECKLIST.md, and the static example each gain a localized edit. |
+| Circular Dependencies | NO | No new dependency edges. |
+| Leaky Abstraction | NO | D2 strengthens an existing gate without exposing internals. |
+| Premature Optimization | NO | YAGNI explicitly applied to ADR-028 implementation, multi-source sources[], and external imports (WILL-NOT-DO 1–3). |
+| Over-Engineering | NO | Outcome A (no ADR) was deliberately chosen; W2 schema captured by ACs only. |
+| Tight Coupling | NO | Stopword list is local to D2; no cross-file coupling introduced. |
+| Missing Separation of Concerns | NO | W1 = implementation-tier polish; W2 = planning-tier discovery. Cleanly separated. |
+| N+1 Query Pattern | NO | Stopword filter is O(tokens-in-description); runs once per skill match. |
+| Destructive Migration | NO | D3 is annotation only; no content removal. |
+
+**Phase 1 clean.** Zero blocking anti-patterns.
+
+### v2.2 Open Issues for Phase 2 (@security)
+
+Cycle is STANDARD-classified, but @security still runs Phase 2. Items to specifically confirm:
+
+1. **A-v2.2-1 hidden-dependency check.** Confirm the Anthropic-runtime-coverage assumption used to scope-down v2.2 does not introduce a runtime architectural dependency. Expectation: it does not (the filter is a research-curation criterion, not a runtime contract). If @security disagrees, escalate to @architect for a curation-policy ADR in v2.3.
+2. **D2 stopword filter — regex injection surface.** Input source for the keyword test is the skill `description` field in registered SKILL.md frontmatter. Per v2.0 ADR-019 + S1 (8-pattern content-scan in `/sync-agency`), this field is treated as data and CI-vetted via SCAN_PATTERNS. Confirm that adding a bash-array containment test (no regex, no `eval`, no string interpolation into a shell command) preserves the existing posture. Expected verdict: null risk.
+3. **W2 planning-artifact integrity.** Confirm `docs/skills-roadmap.md` does not sneak any LLM-instruction surface (e.g., a "recommended prompt for v2.3" block). Expected: it should be analytical prose + tables only. If @dev's Phase 4 output includes any verbatim prompt or instruction block, @security flags before Phase 5.
+4. **D3 annotation language.** Cosmetic, but confirm the "v2.1 migration complete — historical reference only" marker is unambiguously historical (not interpretable as active guidance). Optional.
+
+@security may treat the rest of v2.2 (CFP cosmetic field add, version bumps per ADR-033) as low-risk, no new surfaces.
+
+### Phase 4 Implementation Map (for @dev)
+
+- **D2:** Edit WIZARD.md §Phase 1 Role-Generation Rule (the block introduced at v2.1 Phase 4). Insert the 64-token `STOPWORDS` array (verbatim above). Strip stopwords from the description's tokenized form before the keyword-presence check. Empty filtered set ⇒ unconditional verbatim fallback.
+- **D3:** Annotate the SETUP-CHECKLIST.md migration block with a clearly-marked "v2.1 migration complete — historical reference only" header line. Retain content for audit trail.
+- **CFP:** Append an `Objective:` field to `examples/personal-assistant/cowork-profile-starter.md`. Format MUST match WIZARD.md Step 1 output template (per ADR-031) byte-for-byte. Concrete value: an objective appropriate for the personal-assistant persona (Casey archetype) — e.g., `Objective: Stay on top of household, family, and personal logistics so nothing important falls through the cracks.` (@dev may rephrase within the 1-sentence, persona-fit constraint.)
+- **W2:** Produce `docs/skills-roadmap.md` per AC-RM-1..4. Verdict tokens fixed: `COVER-BY-RUNTIME` / `COVER-BY-EXTERNAL` / `EXPAND-IN-TREE` / `REMOVE`. Escalation gate: any recommendation implying a v2.2 architectural change → @architect before Phase 5.
+- **Release artifacts (per ADR-033):** VERSION → `2.2.0`; CHANGELOG.md → `[2.2.0]` section covering D2 + D3 + CFP + W2; README.md badge → `2.2.0`; README.md "Next up" teaser → references v2.3 headline ("First External Skill Source + Stub Expansion" or @pm-finalized wording after W2 is produced).
+
+### v2.2 Architecture Phase 1 Summary
+
+No new ADRs. ADR index unchanged at ADR-033. v2.2 is a polish + planning cycle: three localized mechanical fixes (D2/D3/CFP) under existing ADR contracts, plus a planning artifact (skills-roadmap.md) whose contract is fully specified by spec ACs. The runtime-coverage curation filter that reshaped v2.2 scope is recorded as DEFER (revisit v2.3+ after one more cycle of evidence). 64-token stopword list specified inline to remove @dev Phase 4 discretion. v2.1 ship verified on `release/v2.2` base (`8bda56b`, tag `v2.1.0`); AC-D2 target block (WIZARD.md §Phase 1 Role-Generation Rule, line 218) confirmed present. Schema impact: NONE. Auth: NONE. CLAUDE.md word budget: NOT TOUCHED (D2 is in WIZARD.md, not CLAUDE.md). Anti-pattern scan: 0 blockers.
+
