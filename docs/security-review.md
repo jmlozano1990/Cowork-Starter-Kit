@@ -1526,3 +1526,74 @@ If any of (a)–(d) fails → escalate to full OWASP+LLM Top 10 audit per securi
 ### Summary
 
 v2.2 introduces no new attack surface. Three localized W1 mechanical fixes (D2/D3/CFP) refine existing surfaces without expanding them; D2 specifically narrows wizard role-generation behavior, which is the security-positive direction. The W2 planning artifact (`docs/skills-roadmap.md`) does not yet exist and is verified to have no ingest path in CI, scripts, CLAUDE.md, or WIZARD.md — its integrity reduces to a Phase 6 content grep (S1 INFO). All four Phase 1 deliberation verdicts confirmed: A-v2.2-1 NULL, D2 NULL, W2 PASS-with-watch, D3 PASS. **Decision: PASS — 0 CRITICAL, 0 WARNING, 1 INFO. Phase 3 may proceed.** Abbreviated Phase 6 audit eligible per the four-check gate above.
+
+---
+
+# Security Audit — v2.2 Carry-Forward Closeout + Skills Roadmap (Phase 6)
+
+## Phase: 6 (abbreviated 4-point, STANDARD classification)
+## Date: 2026-05-08T08:30:00Z
+## Status: PASS — 0 CRITICAL, 0 WARNING, 0 INFO
+## Classification: STANDARD (verified at HEAD ac88189)
+## Combined-path: eligible
+## HEAD: ac88189 (release/v2.2, 6 commits)
+
+## Findings Summary
+| ID | Severity | Phase | Surface | Description |
+|----|----------|-------|---------|-------------|
+
+(zero data rows — abbreviated audit gate (a)/(b)/(c)/(d) all PASS at HEAD)
+
+## Abbreviated-Audit Gate Verification (re-run at HEAD ac88189)
+
+| Gate | Check | Result |
+|------|-------|--------|
+| (a) | S1 grep watch on `docs/skills-roadmap.md`: triple-backtick / "you are" / "your role" / "recommended prompt" | **PASS** — `grep -ciE '\`\`\`\|you are\|your role\|recommended prompt' docs/skills-roadmap.md` = 0 |
+| (b) | D2 in WIZARD.md §Phase 1 Role-Generation Rule uses bash-array containment — no `grep -P`, no `=~`, no `eval`, no `$(...)` | **PASS** — D2 commit 3cca464 adds 12 prose lines (lines 222–232) specifying STOPWORDS array + tokenization rule + verification example; zero forbidden-pattern hits |
+| (c) | No new dependencies | **PASS** — `git diff origin/main..HEAD --stat` = 12 files, all docs/config-prose; zero `package.json` / `package-lock` / `requirements.txt` / `go.mod` / `Cargo.toml` / `Pipfile` / `Gemfile` matches |
+| (d) | No new auth surface | **PASS** — no `scope_allow` changes; no new credentials; token/secret matches in diff are prose mentions in security-review.md / architecture.md describing pre-existing v2.0 SCAN_PATTERNS chokepoint, not new auth surface |
+
+All four gates PASS → abbreviated audit verdict applies. No escalation to full OWASP+LLM Top 10 walk.
+
+## Phase 2 Preservation Constraints (re-verified at HEAD)
+
+| Constraint | Result |
+|------------|--------|
+| SCAN_PATTERNS at `.github/workflows/sync-agency.yml` L143–152/220 byte-unchanged | **PASS** — `git diff origin/main..HEAD -- .github/workflows/sync-agency.yml .cowork-allowlist.json` = 0 lines |
+| `.cowork-allowlist.json` 10-entry seed + 9 blocked_patterns + 1 blocked_files intact | **PASS** — `jq` confirms allowed=10, blocked_patterns=9, blocked_files=1 |
+| `presets/` symlink absent | **PASS** — `ls -la presets` returns "No such file or directory" |
+| `CLAUDE.md` ≤ 400 words (D2 edit landed in WIZARD.md, no spillover) | **PASS** — `wc -w CLAUDE.md` = 397 |
+| CFP `Objective:` field byte-matches WIZARD.md L130 template per ADR-031 | **PASS** — both files use `**Objective:** ` prefix; cowork-profile-starter.md L5 populated with starter objective string per spec edge case #4 |
+
+## Per-Commit Scope Verification (no scope smuggling)
+
+| Commit | Expected scope | Actual files | Result |
+|--------|----------------|--------------|--------|
+| 94e3725 docs | spec.md, architecture.md, assumptions.md, research/v2.2-skill-landscape.md, security-review.md | 5 files exactly as expected | **PASS** |
+| 3cca464 D2 | WIZARD.md only | WIZARD.md +12 lines | **PASS** |
+| b816c80 D3 | SETUP-CHECKLIST.md only | SETUP-CHECKLIST.md +2 lines | **PASS** |
+| 79dde6c CFP | examples/personal-assistant/cowork-profile-starter.md only | exact, +1 line | **PASS** |
+| 8888ee4 W2 | docs/skills-roadmap.md only (new file) | exact, +210 lines new file | **PASS** |
+| ac88189 release | VERSION + CHANGELOG.md + README.md | exact 3 files | **PASS** |
+
+Zero cross-commit drift. No file appears outside its declared commit. No CI workflow / allowlist / scope_allow / settings.json modification anywhere in the cycle.
+
+## OWASP / LLM Top 10 (light pass — STANDARD)
+
+- **A03 Injection:** D2 implementation is prose specifying bash-array containment with explicit "no grep -P, no regex from input, no eval" annotation. No new injection surface. **PASS.**
+- **A05 Security Misconfiguration:** No CI/workflow/allowlist changes. **PASS.**
+- **A06 Vulnerable Components:** Zero new dependencies. **PASS.**
+- **A08 Software & Data Integrity:** SCAN_PATTERNS + `.cowork-allowlist.json` byte-unchanged. ADR-028 lock chain untouched. **PASS.**
+- **LLM01 Prompt Injection:** `docs/skills-roadmap.md` is prose+tables only (210 lines, zero triple-backtick blocks, zero "you are"/"your role"/"recommended prompt" hits). Not in any wizard/CI ingest path (re-confirmed Phase 2). **PASS.**
+- **LLM08 Excessive Agency:** D2 narrows wizard role-generation behavior (verbatim fallback fires unconditionally on stopword-only descriptions). Narrowing is the security-positive direction. **PASS.**
+- All other categories: N/A or unchanged from v2.1 shipped state.
+
+## Decision
+
+**PASS — 0 CRITICAL, 0 WARNING, 0 INFO (abbreviated audit).** Phase 7 may proceed via combined audit+approve path.
+
+S1 (Phase 2 INFO carry-forward — Phase 6 grep watch) is RESOLVED in-cycle: independently re-verified zero hits at HEAD ac88189. No carry-forwards to v2.2.x or v2.3.
+
+## Note: Phase 6 Agent Scope
+
+Performed by @security with `scope_allow=[]`. Findings persisted by orchestrator. Read-only audit; no implementation files touched.

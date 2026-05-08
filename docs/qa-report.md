@@ -2459,3 +2459,96 @@ All 4 ADR-100 evidence items satisfied:
 S1 RESOLVED: live jq-diff confirms amendment matches `.cowork-allowlist.json`. No open CRITICALs. Phase 6 Findings Summary table present in security-review.md. Classification SECURITY-SENSITIVE consistent. ISO 8601 timestamps: PASS (all pipeline entries use ISO 8601 UTC format). Rework rate: 11% (docs-only, S1 fix). qa_issues_prevented: blocker=0 issue=2 info=2.
 
 No auto-fail triggers present. S1 rework is documented honestly — pipeline found the issue, rework was required and completed.
+
+---
+
+# QA Report — v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
+
+## Phase: 7
+## Date: 2026-05-08T10:15:00Z
+## Status: APPROVED
+
+### Unit Tests
+- Total: 13
+- Passing: 13
+- Failing: 0
+
+### E2E Tests
+- Total: 0
+- Passing: 0
+- Failing: 0
+- Note: Docs/planning cycle — no runtime E2E surface.
+
+### Rework Rate
+- Phase 4 SHA: ac88189
+- `git diff ac88189 HEAD` = 0 lines. No commits after Phase 4 SHA.
+- **Rework rate: 0%**
+
+### qa_issues_prevented
+- Blocker: 0
+- Issue: 0
+- Info: 1 (S1 Phase 2 INFO carry-forward resolved in-cycle via deliberation process; would have been a Phase 6 minor finding without early resolution)
+
+### ADR-100 Flip-to-APPROVED Evidence
+
+**Item 1 — Test Output Excerpt:**
+Phase 5 CI run 25540555785: 13/13 PASS. Sample: AC-D2 (64-token STOPWORDS fixture 'the a of' → fallback fires), AC-RM-3 (20 JTBD rows × 6 persona cols), AC-REL-1 (VERSION=2.2.0). CI: completed success (run 25540555785).
+
+**Item 2 — Cycle-Tier Evidence:**
+Docs/planning tier. `git diff origin/main..release/v2.2 --stat`: 12 files changed, 1106 insertions, 4 deletions. All changes are .md files + VERSION + CHANGELOG + README badge. No src/, no schema, no auth, no RLS changes. Phase 5 CI green (run 25540555785). Phase 6 abbreviated audit eligible — all 4 pre-conditions (a/b/c/d) confirmed PASS.
+
+**Item 3 — Spec-to-Code Cross-Reference (11 ACs):**
+- AC-D2: WIZARD.md §Phase 1 Role-Generation Rule (commit 3cca464, +12 lines) — 64-token STOPWORDS constant present; injection grep = 0 hits
+- AC-D3: SETUP-CHECKLIST.md L146 blockquote annotation "v2.1 migration complete — historical reference only"; presets/ refs confined to annotated block
+- AC-CFP: `**Objective:**` at L5 of examples/personal-assistant/cowork-profile-starter.md; format matches WIZARD.md L130 template
+- AC-RM-1: docs/skills-roadmap.md present; 3 sections confirmed (§Discovery, §Evaluation, §Roadmap)
+- AC-RM-2: 12 stub verdicts across skill groups (EXPAND-IN-TREE / COVER-BY-RUNTIME)
+- AC-RM-3: 20 JTBD rows (req ≥15), 6 persona columns (req ≥5 — Casey added as 6th)
+- AC-RM-4: 5 ranked candidates (#1–#5), within 3–7 range; all 6 required fields per candidate
+- AC-REL-1: VERSION = 2.2.0 (`cat VERSION`)
+- AC-REL-2: CHANGELOG.md `## [2.2.0]` header present
+- AC-REL-3: README badge = `version-2.2.0-green`
+- AC-REL-4: README "Next up" → v2.3 teaser present
+
+**Item 4 — Prior-Cycle Carry-Forward Confirmation:**
+- S1 (Phase 2 INFO, skills-roadmap.md LLM-instruction grep watch): RESOLVED — Phase 6 grep returned 0 hits. Confirmed by Phase 4 deliberation and Phase 6 audit.
+- D2 (v2.1 Phase 6 INFO, stopword edge case AC-W2-9): CLOSED — WIZARD.md commit 3cca464 implements 64-token STOPWORDS with fallback.
+- D3 (v2.1 Phase 6 INFO, residual presets/ in append-only files): CLOSED — SETUP-CHECKLIST.md annotated in commit b816c80.
+- v2.0 S3 (single trust anchor): DEFERRED per ADR-028; doc-only in v2.1; implementation v2.2+. Explicitly accepted by user at Phase 3 gate v2.2. No new scope change.
+
+### Classification Cross-Check
+- Phase 5 Classification: STANDARD
+- Phase 6 independent classification: STANDARD (abbreviated audit eligible)
+- Cross-check: PASS — no auth/payment/RLS/migration/permission changes detected in Phase 4 diff.
+
+### Security Review Check
+- Phase 6 Findings Summary table: PRESENT in docs/security-review.md (zero rows — no Phase 6 new findings for v2.2; table header present, not absent)
+- Open CRITICALs: 0
+- Phase 6 status: DONE at 2026-05-08T09:45:00Z
+
+### ISO 8601 Timestamp Verification
+- Phase 5: 2026-05-08T09:00:00Z — PASS
+- Phase 6: 2026-05-08T09:45:00Z — PASS
+- All pipeline entries for v2.2 cycle use ISO 8601 UTC format. No date-only entries.
+
+### Auto-Fail Trigger Scan
+- "zero issues" without documentation: NOT PRESENT
+- Perfect/100% scores without evidence: NOT PRESENT
+- Specs claimed implemented but absent from code: NOT PRESENT
+- Marketing superlatives: NOT PRESENT
+- Result: CLEAN
+
+### Issues Found
+- None open. All carry-forwards from v2.1 resolved or explicitly deferred.
+
+### Verdict
+
+**APPROVED**
+
+All 4 ADR-100 Flip-to-APPROVED evidence items satisfied:
+1. Test output: 13/13 PASS, CI run 25540555785, including AC-D2 stopword fixture and AC-RM-3 20×6 matrix
+2. Cycle-tier: Docs/planning tier — 12 files, all .md/VERSION/CHANGELOG/badge. No security-sensitive surface. Phase 5 CI green + Phase 6 abbreviated audit PASS.
+3. Spec-to-code: All 11 ACs verified via commit references, grep results, and direct file inspection (evidence above)
+4. Carry-forwards: D2 CLOSED, D3 CLOSED, S1 RESOLVED in-cycle. v2.0 S3 DEFERRED with documented rationale and user acceptance at Phase 3.
+
+No open CRITICALs. Phase 6 Findings Summary table present. Classification STANDARD confirmed independently by Phase 5 and Phase 6. ISO 8601 timestamps: PASS. Rework rate: 0%. qa_issues_prevented: blocker=0 issue=0 info=1.
