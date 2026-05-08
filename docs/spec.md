@@ -2491,6 +2491,338 @@ Files affected: `.cowork-allowlist.json`
 - [CONFIRMED] The 10-entry allowlist subset maps to real `agency-agents/specialized/` directories — upstream-verified
 - [ESTIMATED] `jq -s '.'` on the JSONL accumulator is sufficient to compose valid JSON array — standard jq usage, no edge cases expected
 - [UNTESTED] Concurrent workflow run collision on `/tmp` — mitigated by run-ID suffix in accumulator filename
+## v2.1 — Bundled: FSM v2 Team-Composition Refinement + S3 ADR + Content Audit
+
+**Mode:** full / deep
+**Classification:** SECURITY-SENSITIVE (mandated — Phase 6 audit MUST be full OWASP + LLM Top 10)
+**Workstreams:** (1) S3 ADR (second trust anchor architecture), (2) FSM v2 team-composition wizard redesign, (3) Content audit + open-issue triage
+
+---
+
+### Headline JTBD (User Signal, v2.1)
+
+> **"I want a workspace that can compose a custom team of agents and skills around whatever objective I bring — without me knowing what the pieces are called."**
+
+This is the North Star for FSM v2. The user explicitly identified this as the most important feature: not "add resume logic" or "add multi-category disambiguation," but the conversational **ease of flowing from objective → assembled team**. Resume-after-interrupt and multi-category disambiguation are execution tactics that serve this JTBD, not the JTBD itself.
+
+The current wizard routes to presets (Study, Research, Writing, etc.) or upstream categories (academic, marketing, etc.). The user's mental model does not start there. The user starts with an **objective** — "I'm preparing for a product launch," "I'm starting a consulting engagement," "I want to get on top of my finances this quarter." The wizard must travel from objective → assembled agent/skill team, not from preset-menu → configuration.
+
+**What this means for v2.1:**
+- The FSM conversation should begin by understanding the objective, not the category.
+- The output of the wizard should feel like "I've assembled a team for you" — a composed skill set scoped to the objective — not "here are the files you've copied from examples/."
+- Resume-after-interrupt is required so the compose-team flow can survive natural interruptions without losing objective context.
+- Multi-category disambiguation must be framed as "I found agents/skills across N areas for your objective — confirm the team" rather than "choose a preset."
+
+---
+
+### Problem
+
+Three open architectural gaps block v2.1 from shipping as a coherent product:
+
+1. **S3 Trust Anchor (carry-forward from v2.0 Phase 2):** The cowork.lock.json is the sole trust anchor for upstream content. ADR-020 accepted this as "trust the CI-vetted lock" for v2.0 but explicitly deferred a second-hash mechanism to v2.1 multi-source. A second trust anchor must be architecturally specified in v2.1 before multi-source becomes real in v2.1+.
+
+2. **FSM v2 Conversational Flow Gap:** The current wizard in CLAUDE.md maps goals to preset examples or upstream categories. The user's core JTBD ("compose-team-for-objective") is not met. The wizard dead-ends at category selection and file-copy steps; it does not assemble a coherent team narrative or allow the user to engage with the selection as a team composition rather than a file operation.
+
+3. **Content Drift + Audit Debt:** 12 skills remain at 16-line stub format across 4 presets (writing, creative, business-admin, personal-assistant). WIZARD.md contains v1.2 entry-point notes. The presets/ symlink, per ADR-026, is scheduled for removal in v2.1.0.
+
+---
+
+### Target Users
+
+**Primary:** Riley (The Prosumer Builder) — directly validated by the user signal. Riley's JTBD was already partially specified in v2.0 but the **team-composition narrative** dimension was underspecified. v2.1 sharpens Riley's JTBD to match the user signal.
+
+**Secondary:** Morgan (new persona — see personas.md v2.1 section) — the objective-first user who does not think in domain categories. Morgan is Riley without the technical context. Where Riley says "I need academic + marketing + product for a launch," Morgan says "I'm launching something, I need help." Morgan's success path requires the wizard to meet them at objective-level language, not category-level language.
+
+**Supporting:** Jordan, Alex, Maria. The FSM improvements must not break single-category, single-objective flows for these personas.
+
+---
+
+### Core Features (MVP)
+
+#### Workstream 1 — S3 ADR: Second Trust Anchor Architecture
+
+**W1-F1: ADR-028 — Second Trust Anchor for Upstream Content**
+
+Specify the second trust anchor mechanism for upstream content integrity. Implementation deferred to v2.2+ (when multi-source becomes real), but the architectural decision must be made in v2.1 to close the S3 carry-forward.
+
+**Mechanism trade-off analysis (for @architect to decide ADR):**
+
+| Mechanism | Pros | Cons | Fit |
+|-----------|------|------|-----|
+| **Cosign (Sigstore)** | Industry standard; supports keyless signatures; transparent log (Rekor); no key management needed | Requires cosign CLI in CI; agency-agents upstream must sign artifacts; external dependency on Sigstore public instance | BEST FIT for v2.2+ when multi-source is real; too heavy for v2.1 doc-only ADR |
+| **File-hash registry** | Simple; no external dependencies; already have SHA-256 in lock file pattern | Lock file IS the hash registry — circular; attacker who compromises lock also compromises hash | REJECTED — same single-point failure as current state |
+| **Pinned-digest (content-addressable)** | Lock file could store expected `sha256(file_content)` alongside `sha256(git_SHA)` — independent verification | Requires 2-pass fetch in sync-agency (fetch, hash, compare expected); adds ~30s to workflow | PREFERRED for v2.1 ADR — additive to existing lock schema, no external dependency, implementable in bash |
+
+**Recommendation (present to @architect):** ADR-028 should specify pinned-digest as the v2.1 architectural decision: extend `cowork.lock.json` `files[]` schema with `content_sha256` field (SHA-256 of file content, computed at sync-agency fetch time). At install time, the wizard verifies `sha256(downloaded_file_content) == lock.files[].content_sha256`. This creates a second, independent hash alongside the commit-SHA anchor — neither alone is sufficient, both must pass.
+
+**AC for W1-F1:**
+- AC-W1-1: ADR-028 committed to `docs/architecture.md` — specifies mechanism, lock schema extension, install-time verification step, and "implementation v2.2+" deferral marker.
+- AC-W1-2: ADR-028 explicitly addresses the v2.0 S3 carry-forward (lock-as-sole-anchor) — @security can confirm S3 as architecturally resolved at v2.1 Phase 2.
+- AC-W1-3: ADR-028 does NOT trigger any code changes in v2.1 — doc-only deliverable.
+- AC-W1-4: `docs/architecture.md` ADR index updated to include ADR-028.
+
+---
+
+#### Workstream 2 — FSM v2: Team-Composition Wizard Redesign
+
+**W2-F1: Objective-First Goal Entry**
+
+Reframe Phase 1 of the CLAUDE.md wizard from "goal discovery (maps to category)" to "objective discovery (maps to team)." The user's first input describes what they are trying to accomplish (an objective), not which domain category they belong to.
+
+Current state (CLAUDE.md Phase 1): "What would you like to use this workspace for? Describe your goal..."
+Target state: "What are you working on right now? Describe the objective — I'll assemble the right team for it."
+
+The wizard must then route:
+- Objective matches one category → "For [objective], I'd suggest the [category] team: [Skill A], [Skill B], [Skill C]. Does that sound right?"
+- Objective spans categories → "For [objective], I'd assemble a cross-functional team: [Skill A from category X], [Skill B from category Y]. Here's the team — want to adjust any of it?"
+- Objective is novel → "I'll build a [objective] workspace from scratch with these capabilities..."
+
+**AC for W2-F1:**
+- AC-W2-1: CLAUDE.md Phase 1 opening prompt is rewritten to use objective-first language ("what are you working on" not "which category").
+- AC-W2-2: The wizard's response to a multi-category objective presents a "team" framing (names specific skills/agents assembled) rather than a "category list" framing.
+- AC-W2-3: Single-category objectives (Alex/Jordan/Casey paths) still produce a clean flow with no multi-category disambiguation prompt shown.
+- AC-W2-4: CLAUDE.md word count must remain ≤ 400 words (CI hard cap); target ≤ 370 words (soft cap, buffer for WIZARD.md overflow).
+
+**W2-F2: Resume-After-Interrupt with Objective Context Preservation**
+
+When a setup session is interrupted, the wizard must preserve the objective context — not just the preset/category — so that on resume, the team-composition narrative can be continued.
+
+Current state: WIZARD.md fallback asks "What preset were we working on?" and reads cowork-profile.md.
+Target state: Resume path asks "What objective were we working on?" and restores the team-composition state (objective + assembled team so far + install progress).
+
+**AC for W2-F2:**
+- AC-W2-5: WIZARD.md "Fallback — if the wizard is interrupted" section updated. Resume prompt asks for the objective, not the preset. If cowork-profile.md exists, reads the Goal field to restore context.
+- AC-W2-6: The cowork-profile.md template (WIZARD.md Step 1 output) gains an `Objective` field alongside `Goal preset` — captures the user's stated objective verbatim for resume context.
+- AC-W2-7: Resume path can complete a partial install (N of M team skills already installed) by checking which cowork-profile fields are populated and which skills are already present.
+
+**W2-F3: Multi-Category Disambiguation as Team Confirmation**
+
+The ADR-021 multi-category disambiguation step (already architected) must be reframed as a team-confirmation UX rather than a category-selection menu.
+
+Current ADR-021 UX: "I found content across 4 categories for 'product launch.' Which should be the primary focus, or should I set up all four?"
+Target UX: "For your [objective], I'd bring in these team members: [list of skills with brief role descriptions]. Want me to set up the full team, or would you adjust the lineup?"
+
+This is a WIZARD.md + CLAUDE.md content change, not an architectural change (ADR-021 FSM structure remains valid).
+
+**AC for W2-F3:**
+- AC-W2-8: Multi-category disambiguation prompt in CLAUDE.md (or referenced WIZARD.md section) uses team-framing language ("team members," "assemble for your objective") rather than category-list language.
+- AC-W2-9: Each presented skill/agent in the disambiguation step has a one-line role description (what it does for this specific objective) — not a generic registry description. **Fallback rule:** if the LLM-generated role line does not contain at least one keyword from the source skill's `description` field, the wizard MUST fall back to the verbatim `description` (truncated to ≤12 words). @qa Phase 5 verifies via Riley product-launch and Morgan novel-objective stress-test fixtures.
+- AC-W2-10: Stop-anywhere UX preserved (per ADR-021) — user can confirm partial team without being forced to complete all categories.
+
+**W2-F4: WIZARD.md Terminology Drift Fix**
+
+WIZARD.md line 3 contains a v1.2 entry-point note referencing "preset" terminology. This must be updated to reflect v2.0 vocabulary (examples, upstream agency-agents) and the objective-first framing.
+
+**AC for W2-F4:**
+- AC-W2-11: WIZARD.md line 3 note updated — removes "v1.2 entry point" and "preset" references; reflects current primary flow (CLAUDE.md objective-first → /setup-wizard) and v2.0 vocabulary.
+- AC-W2-12: WIZARD.md Q1 Goal selection prompt updated — if not already done, "Personal Assistant" added to the 7-option list (v1.4 carry-forward still present in WIZARD.md Q1).
+
+---
+
+#### Workstream 3 — Content Audit + Issue Triage
+
+**W3-F1: Stub-State Skill Documentation (Audit Only — No Expansion)**
+
+Document the 12 skills currently at 16-line stub format. No expansion in v2.1. Stubs are a known state, not a bug. Document which presets/skills are stubbed, the depth target format (9-section ADR-015), and the v2.2+ schedule for depth expansion (analogous to v1.3.x depth-cycle pattern for Study/Research/PM).
+
+Stubbed skills (confirmed from audit):
+- **writing:** editing-pass, outline-generator, voice-matching (3 stubs)
+- **creative:** creative-brief, feedback-synthesizer, ideation-partner (3 stubs)
+- **business-admin:** email-drafting, action-items, doc-summary (3 stubs) — note: doc-summary and action-items are in registry as `email-drafter`, `doc-summary`, `action-items`
+- **personal-assistant:** daily-briefing, follow-up-tracker, spend-awareness (3 stubs)
+
+**AC for W3-F1:**
+- AC-W3-1: `docs/spec.md` v2.1 section contains a stub-registry table listing all 12 stubs with preset, skill name, current line count, ADR-015 depth target, and planned expansion cycle.
+- AC-W3-2: No stub expansion work is included in v2.1 Phase 4 scope — @dev must not expand stubs.
+- AC-W3-3: At least one stub per preset (writing, creative, business-admin, personal-assistant) has a comment block added in its SKILL.md frontmatter noting `depth: stub` and `expansion: v2.2+` — enables CI detection of stub-state going forward.
+
+**W3-F2: Presets/ Symlink Removal (ADR-026 Scheduled)**
+
+Per ADR-026, the `presets/` symlink (pointing to `examples/`) is scheduled for removal in v2.1.0. Remove it.
+
+**AC for W3-F2:**
+- AC-W3-4: `presets/` symlink removed from repo root.
+- AC-W3-5: Any CI jobs referencing `presets/` path updated to use `examples/` path.
+- AC-W3-6: SETUP-CHECKLIST.md v2.1 section (or updated note) confirms the symlink is gone — users on v2.0.x upgrade path use `examples/` directly.
+
+**W3-F3: Open Issue Triage**
+
+Triage the 9 v2.0.1-labeled issues referenced in prior cycles. Based on discovery audit:
+
+| Issue | Description | v2.1 Disposition |
+|-------|-------------|------------------|
+| #14 | PR template creation | CLOSED — resolved in v2.0.2 (PULL_REQUEST_TEMPLATE.md created) |
+| #15 | Verbatim attribution CI | CLOSED — resolved in v2.0.2 (verbatim-attribution-rule-check CI job added) |
+| #16 | Heredoc delimiter randomization | CLOSED — superseded by ADR-027 in v2.0.1 (template extraction eliminates heredoc surface) |
+| #17 | Category namespace isolation in fetch loop | CLOSED — resolved in v2.0.2 (category/filename path staging) |
+| #18 | Workflow-level permissions read-all | CLOSED — resolved in v2.0.2 (permissions: read-all added) |
+| #19 | Windows symlink note | CLOSED — resolved in v2.0.2 (SETUP-CHECKLIST note added) |
+| #20 | ADR-023 amendment live category list | CLOSED — resolved in v2.0.2 (live 13-category list in ADR-023 amendment block) |
+| #21 | Concurrency group addition | CLOSED — resolved in v2.0.2 (concurrency: group: sync-agency added) |
+| #23 | Hallucinated Action SHA (BLOCKER) | CLOSED — resolved in v2.0.2 (SHA corrected to verified v7.0.6 commit) |
+
+**All 9 issues closed by v2.0.2.** No open issues carry into v2.1 as ACs.
+
+**AC for W3-F3:**
+- AC-W3-7: v2.1 spec contains the above triage table — provides audit trail that all 9 issues were resolved pre-v2.1 and are not re-scoped.
+- AC-W3-8: If any issue is found open on GitHub at Phase 4, @dev must close it with reference to the resolving commit — no code changes required.
+
+---
+
+### Out of Scope (v2.1)
+
+1. Stub-skill depth expansion (writing, creative, business-admin, personal-assistant) — reserved for v2.2+ depth-cycle
+2. Multi-source upstream (second content source beyond agency-agents) — reserved for v2.1+, ADR-028 is doc-only
+3. S3 cosign/Sigstore integration — architecturally selected as v2.2+ implementation (pinned-digest is the v2.1 ADR decision, not the implementation)
+4. curated-skills-registry.md Tier 2 entries — community-driven, no pipeline scope
+5. New upstream category additions to .cowork-allowlist.json — vetted only when agency-agents content confirmed present
+6. MCP registry as content source — backlog candidate for v2.2+
+7. Automated community PR vetting pipeline — backlog for v2.2+
+8. Riley --upgrade flow (ADR-026 Phase 2) — already spec'd in v2.0; implementation deferred to when multi-source is real
+
+---
+
+### Technical Constraints
+
+- Stack: Markdown (CLAUDE.md, WIZARD.md, skill SKILL.md files) + GitHub Actions YAML + JSON
+- CLAUDE.md word count hard cap: ≤ 400 words (CI enforced); soft target: ≤ 370 words
+- ADR-020 through ADR-027 bodies: UNCHANGED in v2.1 (ADR-028 is additive-only)
+- All wizard changes (CLAUDE.md, WIZARD.md) must be tested against the Riley product-launch stress-test (ADR-021 validation pattern) before Phase 7 approval
+- No new external runtime dependencies in Phase 4 scope
+- presets/ symlink removal (W3-F2) must be verified against CI path coverage — any job still referencing `presets/` must be updated before Phase 5 testing
+- SECURITY-SENSITIVE classification is mandatory for this cycle — Phase 6 audit is full OWASP + LLM Top 10; not abbreviated
+
+---
+
+### Edge Cases
+
+**E1 — CLAUDE.md objective-first rewrite exceeds word budget:** If W2-F1 rewrite pushes CLAUDE.md above 400 words, overflow moves to WIZARD.md (per ADR-021 precedent). The CI word-count check is the enforcement gate. @dev must confirm word count before committing.
+
+**E2 — Objective maps to zero upstream categories:** If a user describes an objective the wizard cannot map (e.g., "I want to organize my recipe collection"), the novel-goal flow must produce a useful workspace. The team-composition narrative should still work — "I'll build a [custom objective] workspace with these capabilities: [Skill A], [Skill B]..."
+
+**E3 — Resume finds partial cowork-profile.md:** If the user interrupted mid-wizard before completing cowork-profile.md (Goal field populated but Objective field absent), the resume path must degrade gracefully — ask for the objective if not found, rather than erroring.
+
+**E4 — Symlink removal breaks v2.0.x checkout compatibility:** Users who cloned on v2.0.x and have `presets/` in their local path will see a broken symlink on `git pull`. SETUP-CHECKLIST.md must warn about this as a v2.1.0 upgrade step: "If you see a broken `presets/` symlink, delete it — use `examples/` directly."
+
+**E5 — CI job references presets/ after symlink removal:** If any CI job (`quality.yml`, etc.) still globs `presets/*/` patterns, it will find nothing after symlink removal. @qa must run a CI path-coverage sweep at Phase 5.
+
+**E6 — ADR-028 content_sha256 field collides with existing lock schema:** The lock schema extension must be backward-compatible. Existing lock entries without `content_sha256` must be treated as unverified (not as failures) until the v2.2+ implementation computes the field for all entries.
+
+---
+
+### User Stories
+
+- As Riley, I can describe an objective ("I'm preparing for a product launch") and have the wizard assemble a team of skills/agents for that objective — without knowing what categories exist or which presets to pick.
+- As Riley, I can see which team members (skills) are being assembled for my objective, with a one-line description of each member's role for that specific objective.
+- As any user, I can be interrupted mid-setup and resume later without losing my objective context or having to re-choose categories.
+- As a security-conscious user (Riley), I know the assembled team content is double-verified: both the commit SHA and the file content hash must match the lock file.
+- As any user, I can confirm or adjust the proposed team before it is installed — I am not forced to accept the wizard's first suggestion.
+- As an operator auditing the repo, I can confirm all 12 stub-state skills are documented as stubs and no stub is accidentally presented to users as a fully-functional skill.
+
+---
+
+### Acceptance Criteria
+
+**Workstream 1 — S3 ADR:**
+- [ ] AC-W1-1: ADR-028 committed — specifies pinned-digest content_sha256 mechanism, lock schema extension, install-time verification, v2.2+ deferral
+- [ ] AC-W1-2: ADR-028 closes v2.0 S3 carry-forward — @security confirms at Phase 2
+- [ ] AC-W1-3: No code changes in v2.1 from ADR-028 (doc-only)
+- [ ] AC-W1-4: ADR index updated
+
+**Workstream 2 — FSM v2:**
+- [ ] AC-W2-1: CLAUDE.md Phase 1 uses objective-first language
+- [ ] AC-W2-2: Multi-category wizard response uses team-framing ("assemble," "team members") not category-list
+- [ ] AC-W2-3: Single-category flows (Alex/Jordan/Casey) unchanged — no multi-category prompt for unambiguous objectives
+- [ ] AC-W2-4: CLAUDE.md ≤ 400 words (CI hard cap); ≤ 370 words (soft target)
+- [ ] AC-W2-5: WIZARD.md resume section asks for objective, not preset
+- [ ] AC-W2-6: cowork-profile.md template gains `Objective` field
+- [ ] AC-W2-7: Resume path can complete partial install
+- [ ] AC-W2-8: Multi-category disambiguation prompt uses team language
+- [ ] AC-W2-9: Each presented team member has a one-line objective-specific role description (what it does for this specific objective) — not a generic registry description. **Fallback rule:** if the LLM-generated role line does not contain at least one keyword from the source skill's `description` field, the wizard MUST fall back to the verbatim `description` (truncated to ≤12 words). @qa Phase 5 verifies via Riley product-launch and Morgan novel-objective stress-test fixtures.
+- [ ] AC-W2-10: Stop-anywhere UX preserved
+- [ ] AC-W2-11: WIZARD.md v1.2 entry-point note removed/updated
+- [ ] AC-W2-12: WIZARD.md Q1 confirms Personal Assistant option is present
+
+**Workstream 3 — Content Audit:**
+- [ ] AC-W3-1: Stub-registry table in spec.md (this document, below)
+- [ ] AC-W3-2: No stub expansion in Phase 4
+- [ ] AC-W3-3: At least one stub SKILL.md per stub-preset gains `depth: stub` / `expansion: v2.2+` frontmatter
+- [ ] AC-W3-4: presets/ symlink removed
+- [ ] AC-W3-5: All CI jobs updated to use examples/ paths
+- [ ] AC-W3-6: SETUP-CHECKLIST.md symlink removal note added
+- [ ] AC-W3-7: Issue triage table present in spec
+- [ ] AC-W3-8: Any GitHub issues still open at Phase 4 are closed with resolving commit reference
+
+---
+
+### Stub Registry (Audit — v2.1)
+
+| Preset | Skill name | File path | Current lines | ADR-015 target | Planned expansion |
+|--------|-----------|-----------|---------------|----------------|-------------------|
+| writing | editing-pass | examples/writing/.claude/skills/editing-pass/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| writing | outline-generator | examples/writing/.claude/skills/outline-generator/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| writing | voice-matching | examples/writing/.claude/skills/voice-matching/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| creative | creative-brief | examples/creative/.claude/skills/creative-brief/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| creative | feedback-synthesizer | examples/creative/.claude/skills/feedback-synthesizer/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| creative | ideation-partner | examples/creative/.claude/skills/ideation-partner/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| business-admin | email-drafting | examples/business-admin/.claude/skills/email-drafting/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| business-admin | doc-summary | examples/business-admin/.claude/skills/doc-summary/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| business-admin | action-items | examples/business-admin/.claude/skills/action-items/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| personal-assistant | daily-briefing | examples/personal-assistant/.claude/skills/daily-briefing/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| personal-assistant | follow-up-tracker | examples/personal-assistant/.claude/skills/follow-up-tracker/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+| personal-assistant | spend-awareness | examples/personal-assistant/.claude/skills/spend-awareness/SKILL.md | 16 | 80–130 lines, 9 sections | v2.2+ |
+
+---
+
+### Success Metrics
+
+- **Primary (JTBD):** A user describing an objective in plain language receives a wizard response that names a specific team of skills assembled for that objective — validated by the Riley product-launch stress-test at Phase 5.
+- **Secondary (content integrity):** ADR-028 closes the S3 carry-forward — @security confirms at Phase 2 and Phase 6.
+- **Secondary (completeness):** All 12 stub skills have frontmatter depth markers and are documented in the stub registry — no stub is inadvertently presented as full-depth.
+- **Secondary (symlink hygiene):** `presets/` symlink is removed; CI confirms no presets/ path references remain active.
+- **Process metric:** All 9 prior issues confirmed closed pre-merge — no carry-forward backlog entering v2.2.
+
+---
+
+### Assumptions [confidence]
+
+- [CONFIRMED] All 9 open v2.0.1 issues (#14–#23 minus #13, #16) are resolved by v2.0.2 — CHANGELOG confirms each fix with commit reference.
+- [CONFIRMED] #16 is superseded by ADR-027 — @security confirmed in v2.0.1 Phase 2 review.
+- [CONFIRMED] #23 BLOCKER (SHA hallucination) resolved in v2.0.2.
+- [CONFIRMED] presets/ is currently a symlink to examples/ — per ADR-026 removal scheduled for v2.1.0.
+- [CONFIRMED] 12 skills are at 16-line stub format — line-count audit performed in v2.1 Phase 0 discovery.
+- [ESTIMATED] Pinned-digest (content_sha256) is the preferred mechanism for the second trust anchor — trade-off analysis in W1-F1; @architect decides final ADR-028 selection.
+- [ESTIMATED] Objective-first CLAUDE.md rewrite can fit within ≤ 370-word soft target — current CLAUDE.md is 363 words; rewrite replaces existing Phase 1 language rather than adding to it.
+- [UNTESTED] Morgan persona (objective-first user) — new persona added in v2.1; requires validation that the wizard's objective-first language serves users who don't know domain categories. Validation path: user acceptance at Phase 3 gate.
+- [UNTESTED] Resume-after-interrupt with Objective field in cowork-profile.md — current cowork-profile.md schema does not include Objective; schema change must be backward-compatible with v2.0.x profiles.
+
+---
+
+### WILL-NOT-DO (v2.1)
+
+To mitigate the thin-spread risk from three workstreams in a single cycle, the following are explicitly out of scope:
+
+1. Writing preset skill depth expansion (editing-pass, outline-generator, voice-matching)
+2. Creative preset skill depth expansion (creative-brief, feedback-synthesizer, ideation-partner)
+3. Business-admin preset skill depth expansion (email-drafting, doc-summary, action-items)
+4. Personal-assistant preset skill depth expansion (daily-briefing, follow-up-tracker, spend-awareness)
+5. S3 second trust anchor implementation (cosign, content_sha256 computation in sync-agency) — ADR-028 is doc-only
+6. Multi-source upstream integration — agency-agents remains the sole content source
+7. New allowlist categories — no additions to .cowork-allowlist.json beyond current 10-entry set
+8. New skills in curated-skills-registry.md — Tier 1 or Tier 2
+9. Riley --upgrade flow Phase 2 (ADR-026 second phase) — deferred until multi-source
+10. MCP integration of any kind
+
+---
+
+### Phase 3 Adjustments
+
+**Phase 3 Adjustment (2026-05-07):** AC-W2-9 amended per S12 (Phase 2 WARNING) to encode verbatim-fallback rule mechanically. ADR-030 implementation in Phase 4 must reference this AC.
+
+---
+
+---
+
 ## v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
 
 > **Cycle:** v2.2 — Carry-Forward Closeout + Skills Roadmap Discovery
@@ -2793,3 +3125,4 @@ Reference: 12 stubs across 4 presets (no changes in v2.2):
 | personal-assistant | daily-briefing | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
 | personal-assistant | follow-up-tracker | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
 | personal-assistant | spend-awareness | 16-line stub | No change — W2 verdict pending | TBD by W2-F1 |
+
