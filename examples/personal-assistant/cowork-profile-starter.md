@@ -2,6 +2,7 @@
 
 **Name:** [Your name]
 **Goal preset:** Personal Assistant
+**Objective:** Stay on top of household, family, and personal logistics so nothing important falls through the cracks.
 **Role / context:** [e.g., "Parent of two, managing household and personal finances"]
 **Daily routine:** [e.g., "Work from home Mon–Fri. Morning check-in, afternoon wrap-up."]
 **Tools in use:** [e.g., "Google Calendar, Gmail"]
