@@ -4,6 +4,29 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.3.1] — 2026-05-08
+
+### Changed
+- Expanded 8 SKILL.md files from stub (18 lines) to production depth (~70–130 lines, 9-section structure):
+  - `editing-pass` (writing)
+  - `outline-generator` (writing)
+  - `creative-brief` (creative)
+  - `feedback-synthesizer` (creative)
+  - `ideation-partner` (creative)
+  - `email-drafting` (business-admin)
+  - `follow-up-tracker` (personal-assistant)
+  - `spend-awareness` (personal-assistant)
+- All 8 files now match the canonical pattern set by `voice-matching`, `daily-briefing`, `meeting-notes`, `risk-assessment` (frontmatter with 4-bullet `trigger_examples`, 9-section body).
+
+### Notes
+- No new skills (curated-skills-registry.md cardinality unchanged at 22).
+- No registry annotation moves.
+- `action-items` and `doc-summary` remain `disposition: covered-by-runtime` (untouched per v2.3.0 W3).
+- ADR-028 stays PROPOSED (implementation still deferred to v2.4).
+- ENFORCED_EXAMPLES widening to writing/creative/business-admin/personal-assistant deferred to v2.4 hygiene cycle (CF-v2.3.1-A).
+
+---
+
 ## [2.3.0] — 2026-05-08
 
 **v2.3 — Top-2 Stub Expansion + ADR-028 Spec Scaffold**

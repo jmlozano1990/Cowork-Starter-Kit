@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.3.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.3.1-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -147,9 +147,9 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 ## Next up — v2.4: First External Skill Import + ADR-028 Implementation
 
-v2.3 ships voice-matching (writing preset, full 9-section ADR-015 depth), daily-briefing (personal-assistant preset, full 9-section ADR-015 depth), registry disposition annotations for doc-summary and action-items, and ADR-028 PROPOSED spec scaffold for the `content_sha256` per-file integrity field.
+v2.3.1 ships 8 SKILL.md expansions (editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, email-drafting, follow-up-tracker, spend-awareness) — all stubs expanded to full 9-section production depth matching the canonical pattern set by voice-matching and daily-briefing.
 
-**Next up (v2.4):** First external skill import (Rank 3 / Rank 5 candidate from skills-roadmap.md) + ADR-028 `content_sha256` implementation.
+**Next up (v2.4):** ADR-028 content_sha256 lock-schema implementation, first external skill import via /sync-agency, ADR Index backfill, local markdownlint pre-commit (closes the v2.3.0 MD058 gap).
 
 ---
 
