@@ -1,6 +1,8 @@
 ---
 name: outline-generator
 description: Create a structured, specific outline for any type of written content
+depth: stub
+expansion: v2.2+
 ---
 
 ## Outline Generator

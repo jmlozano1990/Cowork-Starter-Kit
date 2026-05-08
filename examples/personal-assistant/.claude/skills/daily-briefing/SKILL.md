@@ -1,6 +1,8 @@
 ---
 name: daily-briefing
 description: Summarize today's schedule, open tasks, and pending follow-ups into a concise morning brief from local files
+depth: stub
+expansion: v2.2+
 ---
 
 ## Daily Briefing

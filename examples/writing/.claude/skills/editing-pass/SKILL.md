@@ -1,6 +1,8 @@
 ---
 name: editing-pass
 description: Review a draft and return specific, actionable editing suggestions at the level the writer requests
+depth: stub
+expansion: v2.2+
 ---
 
 ## Editing Pass

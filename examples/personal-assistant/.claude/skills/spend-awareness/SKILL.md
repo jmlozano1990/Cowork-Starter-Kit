@@ -1,6 +1,8 @@
 ---
 name: spend-awareness
 description: Summarize pasted transaction data by category in plain language to surface spending patterns — descriptive only, does not provide investment advice, budgeting recommendations, or savings plans
+depth: stub
+expansion: v2.2+
 ---
 
 ## Spend Awareness

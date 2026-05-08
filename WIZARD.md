@@ -126,7 +126,8 @@ Create a file called `cowork-profile.md` in the user's workspace with this exact
 # My Cowork Profile
 
 **Name:** [Ask the user: "Last question — what's your name or what should I call you?"]
-**Goal preset:** [their selected preset]
+**Goal preset:** [their selected preset, or "custom" for novel objectives]
+**Objective:** [user's verbatim Phase 1 objective string, or empty if pre-v2.1 profile]
 **Role / context:** [their Q3 answer]
 **Tools in use:** [their Q4 answer]
 **Output format preference:** [their Q2 answer]
@@ -198,6 +199,35 @@ After completing all steps, say:
 
 ---
 
+## Phase 1 — Uncertainty Fallback
+
+If the user replies to CLAUDE.md Phase 1 with "not sure", "no idea", "?" or similar:
+
+Ask: "Three angles to start from:
+
+1. Learning something
+2. Shipping something
+3. Writing something
+
+Which is closest? Or just describe what's on your mind."
+
+Then resume CLAUDE.md Phase 1 routing with the user's clarified objective.
+
+---
+
+## Phase 1 — Role-Generation Rule (AC-W2-9)
+
+When generating a one-line role description per skill (ADR-030): if the generated role line does not contain at least one keyword from the source skill's `description` field, fall back to the verbatim `description` (truncated to ≤12 words) — never produce a role that is generic or unmoored from the skill's actual purpose.
+
+---
+
 ## Fallback — if the wizard is interrupted
 
-If the user returns and says "Let's continue the setup wizard" or similar, ask: "What preset were we working on?" then resume from where you left off. If they have a `cowork-profile.md` already, read it to restore context.
+If the user returns and says "Let's continue" or similar:
+
+1. Read `cowork-profile.md` if present.
+2. If `Objective:` is populated → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
+3. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
+4. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.
+
+**Partial install detection:** After recovering the objective, the wizard inspects `<workspace>/.claude/skills/` to see which team members are already installed. For each expected team skill not yet present, the wizard asks: "Still want [Skill] — [role]?" before re-running the install step. The user can drop, keep, or swap any pending member without re-doing the objective conversation.

@@ -1,6 +1,8 @@
 ---
 name: follow-up-tracker
 description: Log and surface pending commitments — things you owe others and things others owe you — from conversations, notes, and inbox snippets
+depth: stub
+expansion: v2.2+
 ---
 
 ## Follow-Up Tracker

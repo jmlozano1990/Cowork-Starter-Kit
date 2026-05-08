@@ -30,7 +30,7 @@ In your preset's `global-instructions.md`, include the following line in the wor
 Always ask for explicit confirmation before deleting, moving, or overwriting any file or folder.
 ```
 
-The CI safety-rule grep job checks for this exact string in every `presets/*/global-instructions.md` file. If it is missing, the CI job will fail and the PR cannot be merged.
+The CI safety-rule grep job checks for this exact string in every `examples/*/global-instructions.md` file. If it is missing, the CI job will fail and the PR cannot be merged.
 
 ---
 

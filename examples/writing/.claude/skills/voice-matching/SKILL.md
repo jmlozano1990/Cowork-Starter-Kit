@@ -1,6 +1,8 @@
 ---
 name: voice-matching
 description: Write new content in the user's established voice and style, based on samples from their previous work
+depth: stub
+expansion: v2.2+
 ---
 
 ## Voice Matching

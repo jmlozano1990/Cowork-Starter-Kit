@@ -14,17 +14,19 @@ Check if `cowork-profile.md` exists in this project folder.
 
 ## Onboarding
 
-### Phase 1 — Goal Discovery
+### Phase 1 — Objective & Team
 
-Ask: "What would you like to use this workspace for? Describe your goal — or type 'not sure' for suggestions."
+Ask: "What do you need help with? Tell me what you want this workspace to do for you — I'll assemble the right team."
 
-**If uncertain** ("not sure", "maybe"):
-"Three directions: 1. Study/Learning  2. Work/Projects  3. Writing/Creating — which fits?"
+**Route to a team:**
 
-**If goal matches an example** (study, research, writing, project, creative, business, personal-assistant) or upstream category (academic, marketing, engineering, etc.):
-"Sounds like [Category]. 1. Example  2. Upstream agency-agents  3. Scratch"
+- **Fits one area:** "For [objective]: [Skill] — [role]; [Skill] — [role]. Sound right?"
+- **Spans areas:** "For [objective], a cross-area team: [Skill] — [role]; [Skill] — [role]; [Skill] — [role]. Full team, or adjust?"
+- **Novel:** "I'll build a [objective] workspace from scratch: [Skill] — [role]; [Skill] — [role]. Continue?"
 
-**Novel goal:** "I'll build a [goal] workspace from scratch." Continue.
+Every branch names team members + objective-specific roles, then asks one yes/adjust question. Type `stop` anytime to exit with what's confirmed.
+
+If uncertain, see WIZARD.md §Phase 1 Uncertainty Fallback.
 
 ### Phase 2 — Profile
 

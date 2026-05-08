@@ -1,6 +1,8 @@
 ---
 name: doc-summary
 description: Extract the key insight and supporting points from any business document for fast understanding and decision-making
+depth: stub
+expansion: v2.2+
 ---
 
 ## Document Summary

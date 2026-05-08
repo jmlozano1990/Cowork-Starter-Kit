@@ -1,6 +1,8 @@
 ---
 name: action-items
 description: Identify and structure action items from a meeting, email thread, or document into a clear, owned list
+depth: stub
+expansion: v2.2+
 ---
 
 ## Action Item Extractor

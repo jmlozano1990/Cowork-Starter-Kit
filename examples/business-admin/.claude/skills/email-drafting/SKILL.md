@@ -1,6 +1,8 @@
 ---
 name: email-drafting
 description: Draft professional emails in the appropriate tone and format for the recipient and desired outcome
+depth: stub
+expansion: v2.2+
 ---
 
 ## Email Drafter

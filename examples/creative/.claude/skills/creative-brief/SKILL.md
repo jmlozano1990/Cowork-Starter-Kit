@@ -1,6 +1,8 @@
 ---
 name: creative-brief
 description: Structure a vague project problem into a clear, actionable creative brief with audience, principles, and constraints
+depth: stub
+expansion: v2.2+
 ---
 
 ## Creative Brief

@@ -1,6 +1,8 @@
 ---
 name: ideation-partner
 description: Generate a range of genuinely distinct creative directions for a project, brief, or open-ended creative problem
+depth: stub
+expansion: v2.2+
 ---
 
 ## Ideation Partner

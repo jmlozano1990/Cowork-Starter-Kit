@@ -1,6 +1,8 @@
 ---
 name: feedback-synthesizer
 description: Combine feedback from multiple sources into a clear, prioritized creative direction for the next iteration
+depth: stub
+expansion: v2.2+
 ---
 
 ## Feedback Synthesizer
