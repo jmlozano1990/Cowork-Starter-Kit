@@ -502,7 +502,7 @@ jobs:
           fi
           echo "CMP byte-mirror check passed — all pool/example skill pairs are byte-identical."
 
-      - name: MF-3 — skills/*/SKILL.md tools: vocabulary gate
+      - name: "MF-3 — skills/*/SKILL.md tools: vocabulary gate"
         run: |
           # ADR-029 v2.5: Closed vocabulary gate for tools: frontmatter field.
           # Allowed tokens: claude-code copilot cursor windsurf (no others at v2.5).
