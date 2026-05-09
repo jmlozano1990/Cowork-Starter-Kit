@@ -546,12 +546,16 @@ jobs:
 
       - name: MF-1 — selection-presets.md token vocabulary gate
         run: |
-          # S1 WARNING from v2.4 Phase 2 — MF-1 MUST-FIX.
+          # F4 v2.5 hardening (CF-v2.4-G / AC-F4-1): set -o pipefail + explicit empty-check
+          # replaces the '|| true' masking pattern. pipefail catches middle-segment pipeline
+          # failures; explicit BAD=0 assignment handles the 0-match case from grep -c.
+          # Per-step pipefail scope — does not affect other steps in the job.
+          set -o pipefail
           # selection-presets.md vocabulary gate (S1 WARNING from v2.4 Phase 2)
           if [ -f selection-presets.md ]; then
             BAD=$(awk '/^```preset$/,/^```$/' selection-presets.md \
               | grep -E '^(match_signals|skill_bundle): ' \
-              | grep -cE '[^a-z0-9, :_-]' || true)
+              | grep -cE '[^a-z0-9, :_-]') || BAD=0
             if [ "${BAD:-0}" -gt 0 ]; then
               echo "::error::selection-presets.md contains invalid token vocabulary (must match [a-z0-9, :_-])"
               exit 1
@@ -564,12 +568,45 @@ jobs:
 
       - name: MF-2 — curated-skills-registry.md goal_tags vocabulary gate
         run: |
-          # S2 WARNING from v2.4 Phase 2 — MF-2 MUST-FIX.
-          # curated-skills-registry.md goal_tags vocabulary gate (S2 WARNING from v2.4 Phase 2)
+          # F4 v2.5 hardening: set -o pipefail replaces '|| true' masking (CF-v2.4-G).
+          # MF-2 awk now uses structural header scan (CF-v2.4-B / MF-S2 MUST-FIX):
+          # finds goal_tags column by name, not position. If header absent, exits 2 (fail-closed).
+          # Per-step pipefail scope — does not affect other steps in the job.
+          set -o pipefail
           if [ -f curated-skills-registry.md ]; then
-            BAD=$(awk -F'|' '/^\| / && NR>2 { print $7 }' curated-skills-registry.md \
+            BAD=$(awk -F'|' '
+              {
+                # Structural header scan: find goal_tags column by name, not position (CF-v2.4-B / MF-S2)
+                # Scans all pipe-delimited rows for one whose cell exactly equals "goal_tags" (no backticks).
+                # Skips documentation-table rows where goal_tags appears with backticks (e.g. `goal_tags`).
+                if (header_seen == 0 && /^\| / && /goal_tags/) {
+                  found_col = 0
+                  for (i=1; i<=NF; i++) {
+                    cell = $i
+                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell)
+                    if (cell == "goal_tags") { found_col = i }
+                  }
+                  if (found_col > 0) {
+                    col = found_col
+                    header_seen = 1
+                  }
+                  # If found_col == 0, the row has goal_tags in backticks or inline — skip and keep scanning
+                  next
+                }
+                # Data rows: print goal_tags column value (only after header found)
+                if (header_seen == 1 && /^\| / && !/^\| *---/) {
+                  print $col
+                }
+              }
+              END {
+                if (header_seen == 0) {
+                  print "HEADER_MISSING_GOAL_TAGS" > "/dev/stderr"
+                  exit 2
+                }
+              }
+            ' curated-skills-registry.md \
               | grep -vE '^[[:space:]]*(goal_tags|---)' \
-              | grep -cE '[^a-z0-9, -]' || true)
+              | grep -cE '[^a-z0-9, -]') || BAD=0
             if [ "${BAD:-0}" -gt 0 ]; then
               echo "::error::curated-skills-registry.md goal_tags contains invalid token vocabulary in ${BAD} row(s)"
               exit 1
@@ -579,6 +616,45 @@ jobs:
             echo "::error::curated-skills-registry.md not found."
             exit 1
           fi
+
+      - name: MF-2 column reorder regression test (AC-F4-5)
+        run: |
+          # Verify MF-2 structural header scan finds goal_tags by name even when column is reordered.
+          # Fixture: tests/fixtures/registry-column-reorder.md has goal_tags at position 3 (not 6).
+          # A bad token 'BAD_TOKEN!' is injected in the goal_tags column — gate must fire.
+          set -o pipefail
+          if [ ! -f "tests/fixtures/registry-column-reorder.md" ]; then
+            echo "::error::Regression fixture missing: tests/fixtures/registry-column-reorder.md"
+            exit 1
+          fi
+          BAD=$(awk -F'|' '
+            {
+              if (header_seen == 0 && /^\| / && /goal_tags/) {
+                found_col = 0
+                for (i=1; i<=NF; i++) {
+                  cell = $i
+                  gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell)
+                  if (cell == "goal_tags") { found_col = i }
+                }
+                if (found_col > 0) { col = found_col; header_seen = 1 }
+                next
+              }
+              if (header_seen == 1 && /^\| / && !/^\| *---/) {
+                print $col
+              }
+            }
+            END {
+              if (header_seen == 0) { print "HEADER_MISSING_GOAL_TAGS" > "/dev/stderr"; exit 2 }
+            }
+          ' tests/fixtures/registry-column-reorder.md \
+            | grep -vE '^[[:space:]]*(goal_tags|---)' \
+            | grep -cE '[^a-z0-9, -]') || BAD=0
+          if [ "${BAD:-0}" -lt 1 ]; then
+            echo "::error::MF-2 column reorder regression test FAILED — BAD_TOKEN not detected when goal_tags column is reordered."
+            echo "This means MF-2 is using positional column index, not structural header scan."
+            exit 1
+          fi
+          echo "MF-2 column reorder regression test PASSED — goal_tags found by header name in reordered column, BAD=${BAD}."
 
       - name: Advisory notice for unenforced examples
         run: |
