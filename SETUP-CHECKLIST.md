@@ -1,8 +1,8 @@
 # Setup Checklist
 
-This is the **manual fallback path**. The primary v1.2 path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the wizard runs on first message. No paste required.
+This is the **manual fallback path**. The primary v2.4 path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message. No paste required.
 
-Use this checklist if you cannot open the repo folder directly as a Cowork Project and want preset-specific onboarding from message one. Complete every step in order.
+Use this checklist if you cannot open the repo folder directly as a Cowork Project and want preset-suggested onboarding from message one. Complete every step in order.
 
 ---
 
@@ -12,23 +12,23 @@ Use this checklist if you cannot open the repo folder directly as a Cowork Proje
 
 Open `examples/<preset-name>/project-instructions-starter.txt` from this repo. Copy its entire contents. Open Cowork and go to Project Settings > Custom Instructions. Paste the contents there and save.
 
-Replace `<preset-name>` with your goal preset: study, research, writing, project-management, creative, or business-admin.
+Replace `<preset-name>` with the preset closest to your goal: study, research, writing, project-management, creative, business-admin, or personal-assistant.
 
-This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork how to run your personalized onboarding interview automatically when you start talking.
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard will still ask your goal in your own words and may suggest that preset, narrow across overlapping presets, or compose a custom bundle; the preset you chose here is a starting suggestion, not a fixed assignment.
 
 **Step 2 — Create your Cowork Project**
 
-Open Cowork. Click "New Project". Name it after your preset (for example: "My Study Space" or "Research Workspace").
+Open Cowork. Click "New Project". Name it after your workspace goal (for example: "My Study Space" or "Research Workspace").
 
 **Step 3 — Assign your project folder**
 
 In Project Settings, assign your project folder:
 
 ```
-~/Documents/Claude/Projects/<preset-name>/
+~/Documents/Claude/Projects/<workspace-name>/
 ```
 
-Replace `<preset-name>` with your preset. If the folder doesn't exist yet, run `scripts/setup-folders.sh` (macOS) or `scripts/setup-folders.ps1` (Windows), or create it manually.
+Replace `<workspace-name>` with a name for your workspace. If the folder doesn't exist yet, run `scripts/setup-folders.sh` (macOS) or `scripts/setup-folders.ps1` (Windows), or create it manually.
 
 **Step 4 — Start a conversation — the wizard runs automatically**
 
@@ -51,10 +51,10 @@ Read the permission scope note for each connector before authorizing. Pay attent
 
 **Step 7 — Upload your skill ZIP**
 
-To upload the preset skill files:
+The Dynamic Workspace Architect installs skills from the unified pool automatically during the wizard Q&A (Steps 4–5). If you skipped the wizard or want to add skills manually:
 
-1. Zip the `.claude/skills/` folder from your preset: `examples/<preset-name>/.claude/skills/`
-2. The ZIP must have `skill-name/SKILL.md` at the root — no double-nesting
+1. Identify the skills you want from `skills/` — each skill lives at `skills/<slug>/SKILL.md`
+2. Zip the skill folders you want: the ZIP must have `skill-name/SKILL.md` at the root — no double-nesting
 3. Open Cowork Settings > Customize > Skills > click `+`
 4. Select the ZIP file
 
@@ -66,7 +66,7 @@ Anthropic's official pre-built document skills (PDF, PPTX, XLSX, DOCX) are avail
 
 Ask Cowork: "What skills do you have active?"
 
-Verify your preset skills appear in the response. If they don't appear, see "What if something goes wrong?" below.
+Verify your skills appear in the response. If they don't appear, see "What if something goes wrong?" below.
 
 **Step 9 — Try this now**
 
@@ -122,7 +122,7 @@ Type `/setup-wizard` again. The wizard will detect your existing profile and ask
 
 **Skill test failed (skills not loading)**
 
-Open `skills-as-prompts.md` in your preset folder. Copy the skill content you want and paste it at the start of your message: "Using this approach: [paste] — now help me with [task]."
+Open `examples/<preset-name>/skills-as-prompts.md` for the preset closest to your goal, or check `skills/<slug>/SKILL.md` directly in the unified pool. Copy the skill content you want and paste it at the start of your message: "Using this approach: [paste] — now help me with [task]."
 
 **Connector auth failed**
 
