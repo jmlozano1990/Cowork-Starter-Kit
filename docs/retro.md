@@ -2,6 +2,219 @@
 
 ---
 
+## v2.4 — Dynamic Workspace Architect
+
+**Date:** 2026-05-09
+**Classification:** SECURITY-SENSITIVE (consistent Phase 0–7)
+**Mode:** full (OWASP+LLM Top 10 mandatory — combined-path NOT eligible)
+**Rework rate:** 0% (PASS-ON-FIRST-PUSH — Phase 4 final SHA `77741c4` = HEAD at Phase 7 approval)
+**Cycle SHAs:** PR #41 `e5c152d` (code + early paperwork, merged 2026-05-09T09:45Z); PR #42 `8f1908f` (late paperwork + public-artifact refresh, merged 2026-05-09T10:00Z). Tag `v2.4.0` annotated.
+
+---
+
+### 1. Cycle Summary
+
+v2.4 delivered the architectural pivot that v1.2 promised but never shipped: replacing the 7-preset pick-list with a capability-based composition system. Users now describe an open-ended goal; the wizard routes to Path A (preset match), Path B (partial match with pool suggestions), or Path C (no preset match, full pool query). The unified `skills/` pool (20 SKILL.md consolidated from 7 siloed preset folders) serves as the single source of truth for both install-time bundle composition and CI enforcement. Two mandatory security gates shipped with the pivot: MF-1 (selection-presets vocab CI gate, banning non-`[a-z0-9, :_-]` tokens) and MF-2 (registry goal_tags vocab CI gate), both carried from Phase 2 as MUST-FIX items.
+
+Scope was 7 features and 33 ACs. The full audit found 0 CRITICAL, 0 WARNING, and 1 INFO (MF-1/MF-2 `grep -c || true` masking — non-exploitable in v2.4; carried to v2.5 as CF-v2.4-G). All Phase 2 carry-forwards resolved in-cycle. ADR Index backfill (ADR-020..028, 9 rows) closed its 4-cycle deferral streak — now a binding AC that delivered. @architect achieved Outcome B: 0 new ADRs on a fundamental architectural pivot, instead amending ADR-021 and ADR-016 with additive v2.4 blocks.
+
+The cycle ran at full ceremony with 11 total commits (8 binding topology + 3 CI-fix commits accepted via Option C in Phase 4 deliberation). F7 mandatory paperwork-commit topology was introduced — successfully bundling Phase 0/1/2 docs in PR #41, but Phase 5 and Phase 6 docs still required a follow-up PR #42. F7 achieved partial fix of the Paperwork-Follow-Up-PR-Pattern: down from 3 PRs (v2.3.1) to 2 PRs, but the temporal gap between @dev commit topology and Phase 5/6 output remains unresolved.
+
+Strategic significance: this cycle completes the v1.2 vision gap that was the reason v2.x was launched. The Dynamic Workspace Architect is now functional end-to-end.
+
+**Verdict: HEALTHY-with-strategic-significance.** 0% rework, 33/33 ACs PASS, 17/17 constraints PASS, 0 CRITICAL across Phase 2/4/6, both PRs merged clean, all CI green, 4-cycle ADR Index deferral closed, fundamental architectural pivot delivered at Outcome B discipline.
+
+---
+
+### 2. What Went Well
+
+- **PASS-ON-FIRST-PUSH:** 0% rework. 33/33 ACs on first CI run at Phase 4 SHA. Third cycle in the last four at 0% rework (v2.3.1 0%, v2.3.0 0.7%, v2.3.1 0%, v2.4 0%). First-push norm is established.
+- **F7 mandatory paperwork topology delivered:** Phase 0/1/2 cycle paperwork (spec, architecture, security-review-v2.4.md) successfully shipped inside PR #41 Commit 6 (marked REQUIRED per AC-F7-1). The Paperwork-Follow-Up-PR-Pattern improved from 3 PRs (v2.3.1) to 2 PRs. Progress is measurable.
+- **MF-1 and MF-2 CI gates functional:** Both vocab gates fire correctly on fault-injection tests (MF-1: BAD=1 on `;` poison; MF-2: BAD=1 on `$` in goal_tags cell). Both clean on live data (BAD=0). The `|| true` + `${BAD:-0}` pattern handles 0-match grep exit code correctly under bash -e. Phase 6 confirmed non-exploitable.
+- **ADR Index backfill delivered (closes 4-cycle deferral):** All 9 ADR-020..028 rows present in architecture.md ADR Index (AC-F6-1 through AC-F6-3 PASS). Advisory-only carries had failed 4 consecutive cycles. Binding AC + same-commit delivery worked.
+- **Outcome B architectural discipline:** @architect produced 0 new ADRs on a cycle that replaces the wizard's core routing model. ADR-021 and ADR-016 received additive v2.4 amendment blocks — technically correct (the decisions already captured the right scope, v2.4 extends them). Bundle estimate was wrong direction (−320L estimated; actual +1,758L additive) but the error was caught and corrected at amendment block A4 without blocking Phase 1 delivery.
+- **Phase 4 deliberation caught action-items/doc-summary scope ambiguity:** When the POOL CI gate flagged action-items and doc-summary as stubs requiring depth expansion, Phase 4 deliberation correctly ruled this was a JUSTIFIED in-spec consequence (CF-v2.3.1-A carry-forward) — not scope creep. The 3-fix-commit Option C was accepted and recorded, preventing ambiguity at Phase 5.
+- **@security Phase 2 produced actionable CI patch text:** Both MF-1 and MF-2 findings came with concrete regex patterns; @dev could implement without design ambiguity. All W-items from Phase 1 deliberation correctly carried to Phase 2 findings. Independent classification re-verification at every phase.
+- **SF-1/SF-2/SF-3 all folded in-cycle:** All three carry-forward obligations (STOPWORDS cross-reference, ADR-024 attribution numbered steps, URL rejection prose) embedded in WIZARD.md in Phase 4 — zero open SF carry-forwards exiting v2.4.
+
+---
+
+### 3. What Didn't Go Well
+
+- **F7 temporal gap — Phase 5/6 docs still require follow-up PR:** F7 solves the paperwork problem for docs authored before @dev commits (Phase 0/1/2). It cannot solve it for docs authored after Phase 4 — specifically qa-report-v2.4.md (written at Phase 5) and security-audit-v2.4.md (written at Phase 6). Both arrived in PR #42 as out-of-topology paperwork. This is a structural gap, not a process failure: the 8-commit topology must exist before Phase 5 begins, and Phase 5 output does not exist until after Phase 4 commits. The PR #42 paperwork follow-up is mandatory under the current model unless the topology is extended (Option: 9th commit added post-CI-green) or a "paperwork branch" auto-creation pattern is adopted at Phase 7 close.
+
+- **Public-artifact hygiene gap caught manually post-merge:** v2.4 shipped with README, SETUP-CHECKLIST, and CONTRIBUTING still describing the v1.2-era 7-preset pick-list model despite delivering a fundamental architectural pivot to goal-based routing. The user identified this before the retro; PR #42 absorbed the fix. No agent or CI gate detected the drift. This is the first cycle where this pattern was explicitly identified — public-facing artifacts (README, SETUP-CHECKLIST, CONTRIBUTING) were not updated to match the shipped architecture.
+
+- **@qa did not write Phase 5 Summary + Classification Signal to scratchpad:** The Phase 5 Classification Signal and Phase 5 Summary blocks were written post-hoc by the orchestrator after @qa completed Phase 5. This is a process miss by @qa (role obligation: write classification signal BEFORE completing Phase 5 report). Classified as INFO — no functional impact on the cycle, but the signal is meant to enable parallel @security Phase 6 launch. Recorded here for accountability.
+
+- **Verifier phrasing gaps (5 INFO items at Phase 5):** Constraint verifiers were authored against @architect's prose (e.g., `skills/<skill-name>/SKILL.md`) but @dev canonically used `skills/<slug>/SKILL.md`; one grep expected `'WIZARD.md Step 4'` literal but the stub uses backtick formatting. All 5 were verifier expectations not implementation defects — Phase 5 correctly classified them as INFO. However, if a verifier fires incorrectly in a future cycle on an actual defect because the grep pattern is wrong, it becomes a blocker. Constraint verifiers must match @dev's idioms at authoring time.
+
+- **CONTRIBUTING.md commit subject cosmetic bug:** Commit `21c6066` has subject "align SETUP-CHECKLIST.md with v2.4 wizard flow" but actually edited CONTRIBUTING.md (copy-paste error from the prior commit). Cosmetic, squash-merged. No functional impact. Filed as INFO for completeness.
+
+---
+
+### 4. AC Difficulty Assessment
+
+| Feature | ACs | Classification | Notes |
+|---------|-----|---------------|-------|
+| F1 — skills/ pool consolidation | AC-F1-1 through AC-F1-4 | Easy | Mechanical consolidation; file count and format were deterministic |
+| F2 — selection-presets.md | AC-F2-1 through AC-F2-3 | Easy | Fixed structure; 7 preset blocks with fixed key order |
+| F3 — dynamic goal matcher | AC-F3-1 through AC-F3-4 | Hard | 3-path routing prose required @qa to distinguish intent (Path C reachable without preset name); verifier fragility on phrase matching |
+| F4 — Q&A bundle customization | AC-F4-1 through AC-F4-5 | Easy | Prose-based; ≤3 suggestions constraint verified by prose inspection |
+| F5 — dynamic install step | AC-F5-1 through AC-F5-3 | Hard | ADR-024 attribution check numbered steps (SF-2 fold); slug format mismatch between verifier and implementation |
+| F6 — ADR Index backfill | AC-F6-1 through AC-F6-3 | Easy | Done at Phase 1; just required enforcement as binding AC |
+| F7 — mandatory paperwork-commit | AC-F7-1 through AC-F7-2 | Easy | Commit 6 present and labelled REQUIRED — AC passed; temporal gap is a design limitation not a v2.4 defect |
+| MF-1 + MF-2 | (constraints, not ACs) | Hard | grep-c exit-code edge case required 3 CI-fix commits; `|| true` + `${BAD:-0}` pattern non-obvious |
+| AC-ZD-1 to AC-ZD-3 | Zero-diff constraints | Easy | cmp exit-0 verification deterministic |
+| AC-REL-1 to AC-REL-4 | Release artifacts | Easy | ADR-033 pattern established in v2.1; executed cleanly |
+
+**Hardest AC:** AC-F5-1 (dynamic install step WIZARD.md Step 4 reference to `skills/<slug>/SKILL.md`) — implementation correct, verifier grep phrase was off due to slug vs skill-name convention mismatch. Required @qa to read the actual line rather than grep-pass.
+
+---
+
+### 5. Security Findings Summary
+
+| ID | Phase | Severity | Surface | Description | Resolution |
+|----|-------|----------|---------|-------------|------------|
+| (Phase 2 findings) | | | | | |
+| MF-1 | 2 | WARNING→MUST-FIX | configuration | selection-presets.md vocab had no CI gate; non-`[a-z0-9, :_-]` tokens could poison goal_tags matching | RESOLVED in Phase 4 — quality.yml MF-1 gate ships, fault-injection PASS |
+| MF-2 | 2 | WARNING→MUST-FIX | configuration | registry goal_tags column had no vocab CI gate | RESOLVED in Phase 4 — quality.yml MF-2 gate ships, fault-injection PASS |
+| SF-1/SF-2/SF-3 | 2 | INFO→SHOULD-FIX | configuration | STOPWORDS reuse cross-reference; attribution step ordering; URL rejection prose | All FOLDED in Phase 4 WIZARD.md |
+| (Phase 6 findings) | | | | | |
+| I1 / CF-v2.4-G | 6 | INFO | configuration | MF-1/MF-2 `grep -c \|\| true` masking — non-exploitable in v2.4; recommend pipefail or empty-pipeline assertion | DEFERRED v2.5; CF-v2.4-G generated; bundled with CF-v2.4-B |
+
+**Phase 6 result:** PASS — 0 CRITICAL, 0 WARNING, 1 INFO. Full OWASP A01-A10 + LLM01-LLM10 audit completed. All 6 Phase 2 audit handoff items re-verified. SECURITY-SENSITIVE classification confirmed independently.
+
+---
+
+### 6. Issues Prevented
+
+| Category | Count | Details |
+|----------|-------|---------|
+| Blocker | 0 | No blockers surfaced |
+| Issue | 0 | No issues surfaced |
+| Info | 6 | 5 verifier-phrasing gaps (Phase 5); 1 INFO I1 grep-c masking → CF-v2.4-G (Phase 6) |
+
+**Info detail:** All 5 Phase 5 INFO items were verifier expectations not matching @dev's idiomatic implementation (slug format, backtick formatting). Correctly classified as non-blocking. The Phase 6 INFO (I1) was correctly deferred to v2.5 CF-v2.4-G with @security confirmation it is non-exploitable at v2.4. If these info items had been treated as blockers, the cycle would have required a rework loop for false positives — @qa correctly held the INFO classification.
+
+---
+
+### 7. Tier 1 Agent Quality Baseline Assessment
+
+Quality baselines from `.claude/skills/*/quality-baseline.json` (v23.0, pass threshold 0.80). Content-review assessment applied (baselines are not live-injected for this static markdown repo).
+
+| Agent | Scenarios Evaluated | Observed Behavior | Assessment |
+|-------|---------------------|-------------------|------------|
+| @pm | QP1 (ambiguous intent), QP2 (self-validation gates), QP3 (conflicting requirements) | Standard-mode (upgraded from quick) PRD produced 33 ACs across 7 features. OQ-7 (slug source-of-truth) correctly surfaced for @architect resolution. SECURITY-SENSITIVE classification correct at Phase 0. 21 WILL-NOT-DO items constrained scope across all agents. Gate triage on carry-forwards defensible (ADR-028 deferred, ADR Index escalated to binding AC). No silent conflict resolutions. | PASS (3/3) |
+| @architect | QA3 (speculative abstraction), QA1 (anti-pattern scan), QA4 (API stability / Hyrum's Law), QA5 (deprecation) | Outcome B (0 new ADRs on fundamental pivot) is the highest Hyrum's Law discipline observed this project — existing ADR contracts absorbed the change without new abstractions. Anti-pattern scan 0 blockers. ADR Index backfill closed in same commit. Bundle delta estimate wrong direction (−320L vs +1,758L actual) — corrected at amendment A4 without phase delay. | PASS (4/5; delta-estimate miss is minor — corrected proactively) |
+| @security | QS1 (guard modification), QS2 (external data / prompt injection), QS3 (fail-closed/fail-open) | Phase 2 surfaced MF-1+MF-2 with concrete CI patch text (QS3 applied: vocab gate fail-open = WARNING). Phase 6 correctly identified `|| true` masking as INFO not WARNING (non-exploitable, upstream guards catch structural failure). Independent SECURITY-SENSITIVE re-verification at Phase 2 and Phase 6. All Phase 1 deliberation W-items correctly carried to Phase 2. No over- or under-classification observed. | PASS (3/3) |
+| @qa | QQ1 (flaky test), QQ2 (AC coverage), QQ3 (rework rate) | 33/33 ACs verified with grep/wc/cmp evidence at Phase 5. 17/17 constraints verified. QQ3: rework rate correctly computed as 0%, carry-forwards tracked with resolution status. ADR-100 4-item Phase 7 checklist fully executed. INFO items correctly classified (5 verifier gaps, not implementation defects). **Miss:** Phase 5 Classification Signal and Phase 5 Summary blocks written post-hoc by orchestrator (not by @qa in-cycle). Phase 7 ADR-100 checklist complete. | PASS with INFO (2.5/3 — Classification Signal miss is INFO, not a functional gap) |
+
+**Overall: 4/4 agents PASS on applicable scenarios.** Pass rate exceeds 0.80 threshold. @qa INFO recorded for accountability.
+
+---
+
+### 8. Quality Patterns
+
+#### Active Patterns
+
+**Paperwork-Follow-Up-PR-Pattern** — WATCH (3rd cycle: v2.3.0 + v2.3.1 + v2.4 in modified form)
+
+v2.4 introduced F7 mandatory-paperwork-commit topology (Commit 6 REQUIRED). This resolved the Phase 0/1/2 paperwork gap — those docs shipped in PR #41. However, Phase 5 (qa-report-v2.4.md) and Phase 6 (security-audit-v2.4.md) docs are authored after @dev's commit topology runs and still required PR #42. The pattern recurred in modified form. Down from 3 PRs (v2.3.1) to 2 PRs (v2.4) — measurable improvement, but not eliminated.
+
+**Root cause (new understanding):** F7 solves the problem for Phase 0/1/2 paperwork only. Phase 5/6 paperwork cannot be in the commit topology by definition — it does not exist when Phase 4 commits are authored. The fix requires extending the topology to a 9th "post-Phase-6" commit slot, or adopting a paperwork-branch auto-creation pattern at Phase 7 close. See Council /self-improve candidate C3.
+
+**F7-temporal-gap sub-pattern:** V2.4 resolves the 2-cycle "optional paperwork" root cause (now mandatory) but surfaces a deeper structural gap: Phase 5/6 reports are temporally incompatible with the Phase 4 commit topology. This sub-pattern is first-instance (1/3) — promoted to WATCH alongside the parent pattern.
+
+**Public-Artifact-Hygiene-Gap** — WATCH 1/3 (new pattern, first instance in v2.4)
+
+Major version / minor feature pivots can ship with README, SETUP-CHECKLIST, CONTRIBUTING, and GitHub release body still describing a prior-era architecture. v2.4 shipped a fundamental architectural pivot (7-preset pick-list → goal-based routing) but all public-facing docs still described the v1.2 preset model until PR #42 caught and fixed them manually after the user noticed post-merge. No agent or CI gate detected the drift before merge.
+
+Proposed mitigation: minor+ releases should trigger a mandatory public-artifact audit as part of the Phase 7 checklist. Council-side candidate: `council-public-artifact-hygiene` (HIGH priority, see Section 9).
+
+**Verifier-Phrasing-Gap** — WATCH 1/3 (new pattern, first instance in v2.4)
+
+Phase 5 surfaced 5 INFO findings where @qa constraint verifiers did not match @dev's actual implementation idiom. Example: verifier used `skills/<skill-name>/SKILL.md` (from @architect prose) but @dev canonically uses `skills/<slug>/SKILL.md`; another used `'WIZARD.md Step 4'` literal but implementation uses backtick formatting. All 5 were non-blocking INFO — implementation was correct, verifier grep was imprecise. However, imprecise verifiers can produce false-pass on an actual defect. Constraint verifiers authored at Phase 1 must use @dev's canonical idioms, not @architect's prose.
+
+Proposed mitigation: @architect verifier authoring checklist should include "match @dev's file-path and formatting conventions." Could be documented in architecture.md as a constraint-authoring guideline.
+
+**P-COWORK-1: local-lint-vs-CI-divergence** — WATCH (3rd cycle; v2.4 result: 0 MD058 failures)
+
+v2.4 had 0 CI Markdown Lint failures. No table-adjacent content in SKILL.md pool files, selection-presets.md uses fenced code blocks (exempt from MD058), no new tables added. Pattern stays WATCH. CF-v2.4-F (local markdownlint pre-commit) still deferred. Third consecutive cycle where the lesson held without a fix.
+
+**P-COWORK-3: combined-path-eligibility from clean deliberation** — NOT APPLICABLE this cycle
+
+v2.4 was SECURITY-SENSITIVE (locked out combined-path at Phase 0). Combined-path pattern observation paused. Pattern remains active for STANDARD cycles.
+
+---
+
+### 9. Council /self-improve Candidates
+
+The following improvements to The-Council are surfaced for the next `/self-improve` cycle. This section is text-only — do NOT auto-invoke /self-improve.
+
+**C1: `council-public-artifact-hygiene`** (HIGH — NEW, first surfaced v2.4)
+
+For any cycle shipping a minor or major version bump, Phase 7 must include a mandatory audit of all public-facing artifacts: README, SETUP-CHECKLIST (or equivalent), CONTRIBUTING, GitHub release body, repo description, and topics. Verifier should confirm these artifacts describe the current architecture, not a prior-era model. v2.4 shipped a fundamental pivot without updating any of these documents — user caught the drift manually post-merge. The fix (PR #42) was absorbed out-of-cycle. Proposed enforcement: add a release-artifact-prose-check step to the Phase 7 checklist that requires an explicit "public-facing docs describe current architecture" attestation. This subsumes the prior `council-release-notes-gap` candidate (MEDIUM, subsumed by C1).
+
+**C2: F7-temporal-gap fix — 9-commit topology or paperwork-branch pattern** (MEDIUM — NEW, first surfaced v2.4)
+
+F7 mandatory-paperwork-commit topology closes the Phase 0/1/2 paperwork gap but cannot close Phase 5/6 paperwork gap by definition. Two options:
+- Option A (9-commit topology): Add a binding Commit 8/9 for post-Phase-6 paperwork (qa-report, security-audit, pipeline.md Phase 5/6 rows), executed at Phase 7 close before final merge. PR review happens on the full artifact set.
+- Option B (paperwork-branch pattern): At Phase 7 APPROVED, auto-create a `docs/<cycle>-paperwork` branch, commit qa-report + security-audit + pipeline rows, open PR, merge immediately (CI green on paperwork-only branch is deterministic). Formalizes the follow-up pattern rather than eliminating it.
+This is a The-Council process constraint for @pm/@architect to encode in Phase 1 guidance. Recommend Option A for strongest ceremony. Estimate: 1 cycle to design + implement.
+
+**C3: `check-base-sync.sh` guard** (HIGH — carried from v2.3.1, v2.2, v2.1; 4th consecutive cycle)
+
+Pre-`/spec` guard that git-fetches origin and blocks if local branch is behind. Prevents stale-base cycles (documented in docs/patterns.md as "Git-State Divergence" pattern). Fourth consecutive carry. The-Council `scripts/` sibling to `check-stale-cycle.sh`. This must move from CARRY to IMPLEMENT.
+
+---
+
+### 10. Carry-Forwards into v2.5
+
+| Item | Source | Priority | Disposition |
+|------|--------|----------|-------------|
+| CF-v2.4-A: ADR-028 `content_sha256` impl | v2.4 WILL-NOT-DO | HIGH | Implement pinned-digest second trust anchor for cowork.lock.json entries. Pool foundation. |
+| CF-v2.4-B: MF-2 awk header-name lookup refactor | Phase 5 W-1 | MEDIUM | Replace positional `$7` with header-name-based lookup. Bundle with CF-v2.4-G. |
+| CF-v2.4-D: Selection-preset community PR contribution workflow | v2.4 WILL-NOT-DO | LOW | PR checklist + validator for community-contributed preset blocks. |
+| CF-v2.4-E: LLM-based goal matching | v2.4 WILL-NOT-DO | LOW | Only if keyword-match <80% in field testing. Backlog. |
+| CF-v2.4-F: Local markdownlint pre-commit hook | CF-4, v2.3.0+ | MEDIUM | Closes P-COWORK-1 structural tooling gap. |
+| CF-v2.4-G: MF-1/MF-2 grep-c bypass hardening | Phase 6 I1 | MEDIUM | `set -o pipefail` or empty-pipeline assertion. Bundle with CF-v2.4-B. |
+
+---
+
+### 11. Rework Analysis
+
+**Rework rate: 0%** (`git diff --stat 77741c4..HEAD` = empty; zero commits between Phase 4 final SHA and Phase 7 approval on branch release/v2.4.0)
+
+PASS-ON-FIRST-PUSH. The 3-fix-commit Option C exception (action-items/doc-summary expansion, CI depth:stub exemption revert, MF-1/MF-2 grep-c fix) was accepted as JUSTIFIED during Phase 4 deliberation — all three were CI-driven real-time fixes within spec scope, not scope changes. Net effect of fix commits was zero regression (fix commit 6935d40 fully reverted in 77741c4).
+
+Compare to recent cycles:
+- v2.3.1: 0% rework
+- v2.3.0: 0.7% rework (MD058 layout)
+- v2.2: 0% rework
+- v2.1: 1% rework (D1 templates sweep)
+- v1.2: 19% rework (first rework cycle, 2 blockers)
+
+The 0% norm is holding across 4 of the last 5 cycles. Architectural discipline (explicit constraint enumeration + commit topology + deliberation) continues to produce first-push correctness.
+
+---
+
+### 12. Retrospective Verdict
+
+v2.4 delivered the Dynamic Workspace Architect — the architectural pivot that defines the project's v2.x identity. The wizard now discovers goals rather than presenting a menu. The unified skills pool, 3-path routing, and dynamic install step are all operational. Thirty-three ACs, zero rework, zero CRITICAL findings across all phases, two PRs merged clean, and a 4-cycle ADR Index deferral closed — this is a cycle that delivered its mandate completely.
+
+Two structural observations merit attention at v2.5. First, F7 mandatory paperwork solved half the problem: Phase 0/1/2 docs now ship in the code PR, but Phase 5/6 reports still require a follow-up. The F7-temporal-gap sub-pattern is real and requires a design decision (9-commit topology or paperwork-branch pattern). Second, the public-artifact hygiene gap — README and SETUP-CHECKLIST describing the v1.2 model after a fundamental pivot — was found manually, not by any gate. For a project approaching a public launch, this is the kind of gap that erodes trust. The Council self-improve candidate C1 (`council-public-artifact-hygiene`) addresses this directly.
+
+The verifier-phrasing gap (5 INFO items) and the @qa Classification Signal miss are honest process findings, not cycle health threats. Both are correctable with minor adjustments to authoring guidelines.
+
+Overall cycle health: strong. The pipeline found what it should find, held classifications correctly, and delivered a strategically significant pivot with zero security regressions.
+
+---
+
+*Generated by @qa Phase 8 retrospective — 2026-05-09T10:30:00Z*
+
+---
+
 ## v2.3.1 — Stub Completion
 
 **Date:** 2026-05-08
