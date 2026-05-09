@@ -66,7 +66,7 @@ Each entry includes:
 
 | name | description | source_url | vetting_date | tier | goal_tags |
 |------|-------------|------------|--------------|------|-----------|
-| email-drafter | Drafts professional emails matched to audience, tone, and intent from short bullet notes | builtin | 2026-04-17 | 1 | business-admin |
+| email-drafting | Drafts professional emails matched to audience, tone, and intent from short bullet notes | builtin | 2026-04-17 | 1 | business-admin |
 | doc-summary | Summarizes long documents, reports, or proposals into executive-ready highlights | builtin | 2026-04-17 | 1 | business-admin,research,project-management |
 | action-items | Extracts clear, assigned, deadline-tagged action items from meeting notes or email threads | builtin | 2026-04-17 | 1 | business-admin,project-management |
 
