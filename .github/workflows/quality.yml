@@ -342,11 +342,6 @@ jobs:
             if [ ! -f "$skill_file" ]; then
               continue
             fi
-            # Skip files with depth: stub frontmatter (disposition: covered-by-runtime, expansion deferred).
-            if grep -qE "^depth: stub" "$skill_file"; then
-              echo "SKIPPED (depth: stub) pool file: $skill_file"
-              continue
-            fi
             skill_fail=0
             for section in "${REQUIRED_SECTIONS[@]}"; do
               if ! grep -qF "$section" "$skill_file"; then
