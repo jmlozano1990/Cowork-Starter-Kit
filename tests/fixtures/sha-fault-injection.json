@@ -1,0 +1,15 @@
+{
+  "$schema_version": "1.0",
+  "upstream": "msitarzewski/agency-agents",
+  "pinned_commit_sha": "783f6a72bfd7f3135700ac273c619d92821b419a",
+  "pinned_at": "2026-05-07T12:32:06Z",
+  "files": [
+    {
+      "path": "academic/academic-anthropologist.md",
+      "sha256": "2668602164abf574cb4e432a0cd40727a943de0b59864abb5b73956a0eb26146",
+      "content_sha256": "DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF",
+      "spdx": "MIT",
+      "requires_review": false
+    }
+  ]
+}

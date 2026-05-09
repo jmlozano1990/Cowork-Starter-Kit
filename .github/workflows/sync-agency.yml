@@ -215,6 +215,17 @@ jobs:
               # Compute SHA-256
               FILE_SHA256=$(sha256sum "/tmp/fetched-files/${category}/${filename}" | awk '{print $1}')
 
+              # ADR-028 v2.5: Verify content_sha256 integrity before accumulator append
+              # Ordered AFTER SHA-256 compute (line 216) and BEFORE accumulator append (line 237).
+              # Fail-closed: mismatch exits loop before any partial state reaches the lock rewrite.
+              OLD_CONTENT_SHA256=$(jq -r --arg p "$file_path" '.files[] | select(.path == $p) | .content_sha256 // "MISSING"' cowork.lock.json)
+              if [ "$OLD_CONTENT_SHA256" != "MISSING" ] && [ -n "$OLD_CONTENT_SHA256" ]; then
+                if [ "$FILE_SHA256" != "$OLD_CONTENT_SHA256" ]; then
+                  echo "::error::Integrity mismatch on ${file_path} — stored content_sha256=${OLD_CONTENT_SHA256} fetched=${FILE_SHA256}"
+                  exit 1
+                fi
+              fi
+
               # S1 Content scan — run all 8 patterns (bash array iteration — no subshell)
               FILE_FLAGGED=false
               for pattern in "${SCAN_PATTERNS[@]}"; do

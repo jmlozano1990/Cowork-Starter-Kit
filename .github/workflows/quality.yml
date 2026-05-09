@@ -836,3 +836,83 @@ jobs:
           else
             echo "PARTIAL: accumulator contains ${FETCHED_COUNT}/2 entries (network issue — non-blocking)"
           fi
+
+  lock-content-sha-fault-injection:
+    name: Lock Content-SHA Fault Injection (AC-F1-3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify integrity mismatch fires on poisoned content_sha256
+        run: |
+          set -euo pipefail
+          # ADR-028 fault-injection test: fixture has DEADBEEF content_sha256 on one entry.
+          # The verify logic must detect the mismatch and exit non-zero.
+          # Fixture lives at tests/fixtures/sha-fault-injection.json.
+          if [ ! -f "tests/fixtures/sha-fault-injection.json" ]; then
+            echo "::error::Fault-injection fixture missing: tests/fixtures/sha-fault-injection.json"
+            exit 1
+          fi
+          PINNED=$(jq -r '.pinned_commit_sha' tests/fixtures/sha-fault-injection.json)
+          UPSTREAM=$(jq -r '.upstream' tests/fixtures/sha-fault-injection.json)
+          MISMATCH=0
+          while IFS='|' read -r path stored_hash; do
+            if [ "$stored_hash" = "MISSING" ] || [ -z "$stored_hash" ]; then
+              continue
+            fi
+            TMPFILE=$(mktemp)
+            curl -sf "https://raw.githubusercontent.com/${UPSTREAM}/${PINNED}/${path}" -o "$TMPFILE" || {
+              echo "WARNING: Failed to fetch ${path} — skipping"
+              rm -f "$TMPFILE"
+              continue
+            }
+            ACTUAL=$(sha256sum "$TMPFILE" | awk '{print $1}')
+            rm -f "$TMPFILE"
+            if [ "$ACTUAL" != "$stored_hash" ]; then
+              echo "::error::Integrity mismatch on ${path} — stored content_sha256=${stored_hash} fetched=${ACTUAL}"
+              MISMATCH=1
+            fi
+          done < <(jq -r '.files[] | "\(.path)|\(.content_sha256 // "MISSING")"' tests/fixtures/sha-fault-injection.json)
+          if [ "$MISMATCH" -eq 0 ]; then
+            echo "::error::Fault-injection test FAILED — mismatch was NOT detected. Verify logic may be broken."
+            exit 1
+          fi
+          echo "Fault-injection test PASSED — integrity mismatch correctly detected on poisoned content_sha256."
+
+  lock-content-sha-cross-check:
+    name: lock-content-sha-cross-check (C-v2.5-19)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Cross-environment content_sha256 verification
+        run: |
+          set -euo pipefail
+          # ADR-028 deliberation A1: cross-environment trust anchor.
+          # Fetches each files[] entry from raw.githubusercontent.com at pinned_commit_sha
+          # in a clean GitHub-Actions runner. Asserts SHA-256 equality with stored content_sha256.
+          # Any mismatch fails the PR. Runs on every PR (not only sync-agency invocations).
+          PINNED=$(jq -r '.pinned_commit_sha' cowork.lock.json)
+          UPSTREAM=$(jq -r '.upstream' cowork.lock.json)
+          FAIL=0
+          CHECKED=0
+          while IFS='|' read -r path stored_hash; do
+            if [ "$stored_hash" = "MISSING" ] || [ -z "$stored_hash" ]; then
+              echo "INFO: ${path} has no content_sha256 (pre-v2.5 grace) — skipping"
+              continue
+            fi
+            curl -sf "https://raw.githubusercontent.com/${UPSTREAM}/${PINNED}/${path}" -o /tmp/x || {
+              echo "WARNING: Failed to fetch ${path} — skipping"
+              continue
+            }
+            ACTUAL=$(sha256sum /tmp/x | awk '{print $1}')
+            if [ "$ACTUAL" != "$stored_hash" ]; then
+              echo "::error::content_sha256 mismatch on ${path}: stored=${stored_hash} actual=${ACTUAL}"
+              FAIL=1
+            fi
+            CHECKED=$((CHECKED + 1))
+          done < <(jq -r '.files[] | "\(.path)|\(.content_sha256 // "MISSING")"' cowork.lock.json)
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::lock-content-sha-cross-check FAILED — content integrity cannot be verified."
+            exit 1
+          fi
+          echo "lock-content-sha-cross-check PASSED — ${CHECKED} entries verified in clean GHA runner."
