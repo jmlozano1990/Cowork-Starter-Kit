@@ -4,6 +4,32 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.5.0] — 2026-05-09
+
+### Added
+- ADR-028: `content_sha256` per-file integrity field backfilled across all 110 entries in `cowork.lock.json`. The sync workflow now verifies `content_sha256` on every pull before accumulating changes — mismatches abort with a CI error.
+- `tests/fixtures/sha-fault-injection.json` — CI fixture for lock-content-sha fault-injection test (asserts mismatch fires).
+- `lock-content-sha-fault-injection` CI job — regression test that the verify logic fires on the DEADBEEF fixture.
+- `lock-content-sha-cross-check` CI job — cross-environment trust anchor: recomputes SHA on PR and compares to lock (C-v2.5-19).
+- ADR-029: `tools:` SKILL.md frontmatter field — closed vocabulary `[claude-code, copilot, cursor, windsurf]`. Default-when-absent rule (assume `claude-code` at runtime). CI vocab gate (MF-3) enforces all pool skills declare an inline-array `tools:` value.
+- `tools: [claude-code]` added to all 20 skills in `skills/*/SKILL.md`. All 21 `examples/*/SKILL.md` byte-mirrored (ADR-018 research-synthesis exemption applied). MF-3 CI gate blocks vocab violations and multi-line YAML form (MF-S1 MUST-FIX).
+- ADR-030: Outbound contribution model — `upstream-contribution/` working directory convention, attribution-via-PR-description policy. First outbound submission: meeting-notes skill to `msitarzewski/agency-agents`.
+- `upstream-contribution/meeting-notes-upstream.md` — upstream-format version of meeting-notes skill. Writing-profile reference stripped (CF-L1-1). Attribution line in PR description (CF-L4-1).
+- Upstream contribution: https://github.com/msitarzewski/agency-agents/pull/521 — meeting-notes skill submitted to `project-management/` category.
+- MF-3 vocabulary gate in `quality.yml` — closed allowlist, multi-line YAML form rejected (MF-S1 MUST-FIX).
+- MF-1 hardening: `set -o pipefail` per-step scope + `|| BAD=0` pattern replaces `|| true` (CF-v2.4-G / AC-F4-1).
+- MF-2 hardening: structural header scan replacing positional `$7` (MF-S2 MUST-FIX / AC-F4-3). awk finds `goal_tags` column by name; skips backtick-wrapped documentation rows.
+- `tests/fixtures/registry-column-reorder.md` — regression fixture for MF-2 structural scan (goal_tags at column 3 with BAD_TOKEN).
+- `scripts/install-pre-commit.sh` — local markdownlint pre-commit hook installer. Closes the v2.3.0 MD058 gap. Same ruleset as CI `markdown-lint` step.
+- `docs/security-review-v2.5.md`, `docs/compliance-review-v2.5.md` — Phase 2 review documents for this cycle.
+
+### Changed
+- MF-2 awk now uses structural header scan (goal_tags found by column name, not positional index) — making it resilient to column-reorder in `curated-skills-registry.md`.
+- `quality.yml` `skill-depth-check` job: `upstream-contribution/` excluded from depth-check (follows upstream format, not Cowork 9-section template). ADR-016 v2.5 amendment.
+- `docs/architecture.md`: ADR-028 ACCEPTED, ADR-029, ADR-030, ADR-007 amendment (v2.5), ADR-016 amendment (v2.5) added.
+
+---
+
 ## [2.4.0] — 2026-05-08
 
 ### Added

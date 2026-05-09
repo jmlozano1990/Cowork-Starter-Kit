@@ -144,6 +144,42 @@ After a pipeline cycle reaches Phase 7 APPROVED, the release branch is ready for
 
 ---
 
+## Local Development
+
+### Pre-commit hook (markdownlint)
+
+Install the local markdownlint pre-commit hook to catch `MD058` and other violations before they reach CI:
+
+```bash
+bash scripts/install-pre-commit.sh
+```
+
+**Requirements:** Node.js + `markdownlint-cli` (`npm install -g markdownlint-cli`).
+
+The hook runs the same ruleset as the CI `markdown-lint` step (`.markdownlint.json` at repo root). If `.markdownlint.json` is absent, markdownlint defaults apply.
+
+**Manual procedure** (if you prefer not to use the script):
+
+```bash
+# 1. Install markdownlint-cli
+npm install -g markdownlint-cli
+
+# 2. Write the hook
+cat > .git/hooks/pre-commit <<'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+REPO_ROOT=$(git rev-parse --show-toplevel)
+markdownlint --config "${REPO_ROOT}/.markdownlint.json" "${REPO_ROOT}/**/*.md" --ignore "${REPO_ROOT}/node_modules"
+HOOK
+
+# 3. Make it executable
+chmod +x .git/hooks/pre-commit
+```
+
+To uninstall: `rm .git/hooks/pre-commit`. A backup of any overwritten hook is saved to `.git/hooks/pre-commit.bak`.
+
+---
+
 ## Running CI checks locally
 
 ```bash

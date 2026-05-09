@@ -44,9 +44,13 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-025 | THIRD-PARTY-NOTICES.md (F5 supplement) — RESOLVES L1-2 WARNING | ACCEPTED |
 | ADR-026 | Migration Story for v1.x Users (F6) | ACCEPTED |
 | ADR-027 | Heredoc-in-YAML Fix via Static Template Extraction (v2.0.1 F1) | ACCEPTED |
-| ADR-028 | `content_sha256` per-file integrity field for `cowork.lock.json` | PROPOSED (impl deferred to v2.5) |
+| ADR-028 | `content_sha256` per-file integrity field for `cowork.lock.json` | ACCEPTED (v2.5 — was PROPOSED in v2.3.0) |
 | ADR-021 (amendment v2.4) | Q1 routing replaced by 3-path dynamic goal matcher (open-ended discovery + keyword router) | ACCEPTED |
 | ADR-016 (amendment v2.4) | `skill-depth-check` covers `skills/` pool + `ENFORCED_EXAMPLES` widened to 7 + cmp byte-mirror assertion | ACCEPTED |
+| ADR-007 (amendment v2.5) | `tools:` optional frontmatter field with closed vocabulary `[claude-code, copilot, cursor, windsurf]` (informational at v2.5; routing semantics deferred to v3.0) | ACCEPTED |
+| ADR-029 | `tools:` SKILL.md frontmatter contract — closed vocabulary, default-when-absent rule, CI vocab gate, v3.0 routing intent | ACCEPTED |
+| ADR-030 | Outbound contribution model — first-time PR to upstream (`agency-agents`), `upstream-contribution/` working directory convention, attribution-via-PR-description policy (companion to ADR-024 inbound direction) | ACCEPTED |
+| ADR-016 (amendment v2.5) | `skill-depth-check` job adds `tools:` vocabulary gate + `upstream-contribution/` directory excluded from depth-check; MF-1/MF-2 hardening (`set -o pipefail` + awk header-name lookup replacing positional `$7`) | ACCEPTED |
 
 ---
 
@@ -5276,9 +5280,13 @@ The ADR Index table at the top of `docs/architecture.md` is amended in this cycl
 | ADR-025 | THIRD-PARTY-NOTICES.md (F5 supplement) — RESOLVES L1-2 WARNING | ACCEPTED |
 | ADR-026 | Migration Story for v1.x Users (F6) | ACCEPTED |
 | ADR-027 | Heredoc-in-YAML Fix via Static Template Extraction (v2.0.1 F1) | ACCEPTED |
-| ADR-028 | `content_sha256` per-file integrity field for `cowork.lock.json` | PROPOSED (impl deferred to v2.5) |
+| ADR-028 | `content_sha256` per-file integrity field for `cowork.lock.json` | ACCEPTED (v2.5 — was PROPOSED in v2.3.0) |
 | ADR-021 (amendment v2.4) | Q1 routing replaced by 3-path dynamic goal matcher (open-ended discovery + keyword router) | ACCEPTED |
 | ADR-016 (amendment v2.4) | `skill-depth-check` covers `skills/` pool + `ENFORCED_EXAMPLES` widened to 7 + cmp byte-mirror assertion | ACCEPTED |
+| ADR-007 (amendment v2.5) | `tools:` optional frontmatter field with closed vocabulary `[claude-code, copilot, cursor, windsurf]` (informational at v2.5; routing semantics deferred to v3.0) | ACCEPTED |
+| ADR-029 | `tools:` SKILL.md frontmatter contract — closed vocabulary, default-when-absent rule, CI vocab gate, v3.0 routing intent | ACCEPTED |
+| ADR-030 | Outbound contribution model — first-time PR to upstream (`agency-agents`), `upstream-contribution/` working directory convention, attribution-via-PR-description policy (companion to ADR-024 inbound direction) | ACCEPTED |
+| ADR-016 (amendment v2.5) | `skill-depth-check` job adds `tools:` vocabulary gate + `upstream-contribution/` directory excluded from depth-check; MF-1/MF-2 hardening (`set -o pipefail` + awk header-name lookup replacing positional `$7`) | ACCEPTED |
 ```
 
 This index update is performed in the SAME commit as the F6 paperwork (per F7). @dev replaces the existing index table block by exact-string substitution; the surrounding `# Architecture — Claude Cowork Config` heading and `## Overview` section are NOT touched.
@@ -5500,3 +5508,647 @@ done
 **Corrected net user-visible markdown delta: ~+1,758 lines net additive** (not net −320). Architecture.md delta unchanged at ~+540 lines. **@qa should expect a net-additive PR diff at Phase 5** — this is the inherent property of consolidation cycles: the source tree grows even when stubs deprecate, because canonical pool content (~1,880L) substantially exceeds removed stub content (~502L). Bundle ceiling exceedance vs informal <30KB target stands; the v2.4 acceptance is unchanged.
 
 **Round 1 close.** No further amendments. C-v2.4-1..15 catalog unchanged in count (15 top-level constraints). AC catalog unchanged. Files-in-scope unchanged (4 new + 16 modified = 20). Deny-list unchanged (18 entries). Combined-path eligibility unchanged (NOT eligible — SECURITY-SENSITIVE classification, FULL Phase 2 /review required). Ready for Phase 2 `/review`.
+
+---
+
+## v2.5 — v3.0-Gate Prep Architecture
+
+**Date:** 2026-05-09
+**Cycle:** v2.5 — ADR-028 implementation + `tools:` frontmatter + first upstream contribution
+**Classification:** SECURITY-SENSITIVE + COMPLIANCE-SENSITIVE
+**Spec source:** `docs/spec.md` (419L, 5 features F1-F5, 5 OQs, 33 ACs)
+**Compliance review:** `docs/compliance-review-v2.5.md` (PASS WITH WARNINGS — 0 CRITICAL · 1 WARNING · 6 INFO)
+**Bundle delta estimate:** ~35 files / +950L net additive (within v2.4 yardstick).
+
+This Phase 1 design body resolves all 5 spec OQs, lands ADR-028 ACCEPTED with implementation specifics, lands ADR-029 (`tools:` contract) and ADR-030 (outbound contribution) as new ADRs, applies amendments to ADR-007 and ADR-016, binds Phase 2 compliance MUST-FIX items as Phase-4 constraints, and enumerates the security review surface for Phase 2 `/review`.
+
+---
+
+### ADR-028: `content_sha256` Per-File Integrity (v2.5 Implementation)
+
+**Status:** ACCEPTED (was PROPOSED in v2.3.0; deferred in v2.3.1, v2.3.2, v2.4; implemented in v2.5).
+**Decision drivers:** F1 spec; CF-v2.4-A; ADR-020 lock contract preservation; A-v2.0-3 (LLM cannot natively compute SHA-256); zero-code constraint; sync-agency.yml pre-existing fetch+hash compute (lines 209–243).
+
+#### Context
+
+ADR-020 established `cowork.lock.json` with a per-file `sha256` field — but that hash is **written** at fetch time and **never read back**. In effect, `sha256` was an audit record, not an integrity check. If an attacker could replace upstream content between two pinned-commit fetches without rotating the commit SHA (an attack that requires either GitHub-side compromise or commit-SHA collision; both costly but not formally guaranteed), `sync-agency.yml` would silently re-fetch the modified content and overwrite the lock with the new hash. No alarm fires.
+
+ADR-028 closes this gap with a verify-before-overwrite step. The new field name is `content_sha256` (NOT a rename of `sha256`) so the change is purely additive. Both fields coexist in v2.5; the existing `sha256` write semantics are preserved byte-for-byte. v2.5 introduces a **separate** verify pass that compares the freshly-fetched bytes' SHA-256 against `content_sha256` before the lock is rewritten.
+
+The deferred-three-times status is closed by this ADR. Status flips PROPOSED → ACCEPTED.
+
+#### Decision (Field Placement and Schema)
+
+`content_sha256` is added as a sibling field to `sha256` on each `files[]` entry:
+
+```json
+{
+  "path": "academic/academic-anthropologist.md",
+  "sha256": "2668602164abf574cb4e432a0cd40727a943de0b59864abb5b73956a0eb26146",
+  "content_sha256": "2668602164abf574cb4e432a0cd40727a943de0b59864abb5b73956a0eb26146",
+  "spdx": "MIT",
+  "category": "academic"
+}
+```
+
+At v2.5 cutover, `content_sha256` equals `sha256` for every backfilled entry — they are computed against the same byte stream at the same pinned commit. They DIVERGE only on a tampered or post-hoc-modified upstream: if `sync-agency.yml`'s verify pass detects bytes whose SHA-256 differs from the stored `content_sha256`, the workflow fails; the lock is NOT rewritten.
+
+**Why two fields (vs. renaming `sha256`):** Forward-compatibility. v3.0 may evolve `sha256` into a multi-source-collision-resistance proof (e.g., `sha256` of a Merkle root over multi-source content), at which point `content_sha256` retains its narrow meaning ("hash of the bytes at the pinned commit"). Splitting now avoids a v3.0 schema migration.
+
+**Schema_version stays "1.0":** Additive field, no breaking change. Per-AC-F1-4: `jq -r '."$schema_version"' cowork.lock.json` MUST equal `1.0`. The reader-contract paragraph from v2.3.0 ADR-028's pre-emption (Round 1 A3) is unchanged: pre-v2.5 entries that lack `content_sha256` are tolerated; v2.5+ entries that declare `content_sha256` are strictly verified.
+
+#### Decision (sync-agency.yml Integration — resolves OQ-v2.5-1)
+
+**OQ-v2.5-1 ruling:** The verify step is a **new dedicated step inside the existing fetch job**, ordered AFTER the per-file SHA-256 compute (line 216) and BEFORE the JSONL accumulator append (line 237). Specifically the new pass:
+
+1. Reads `OLD_LOCK_CONTENT_SHA256` from `cowork.lock.json` for the current `file_path` via `jq`.
+2. If the entry has no `content_sha256` (pre-v2.5 entry — backfill grace), the verify pass logs an INFO and continues.
+3. If the entry has `content_sha256`, the pass compares it to the freshly computed `FILE_SHA256`.
+4. On mismatch: `echo "::error::Integrity mismatch on ${file_path} — stored content_sha256=<old> fetched=<new>"` AND `exit 1`. Workflow fails before lock rewrite.
+5. On match: continue. The accumulator appends an entry that carries the SAME `content_sha256` (it is byte-stable across re-fetches — that's the whole point).
+
+**Why inside the existing fetch job (not a new job):** The fetch job already holds `FILE_SHA256` in scope at line 216. A separate job would require either re-fetching every file or staging the freshly-fetched bytes through artifacts — both add cost and a new failure surface. The verify pass is a 6-line addition inside the existing per-file loop. Topology is minimal.
+
+**Why before accumulator append (not after):** Fail-closed semantics. If verify fails, the loop exits before any partial state is appended. The lock is only ever rewritten from a fully-verified accumulator.
+
+**SCAN_PATTERNS preservation (per AC-F1-5):** The 8-pattern security regex array at lines 143+ and the post-loop append at line 220 are both byte-unchanged. Verify lives in the lines BETWEEN them (between line 216 SHA-256 compute and line 237 accumulator append). `cmp` exit 0 on those exact line ranges before/after the PR.
+
+#### Decision (Initial Hash Population — resolves OQ-v2.5-2)
+
+**OQ-v2.5-2 ruling: Strategy (a) — @dev runs a one-time local backfill computation script and commits the values in the same PR that lands sync-agency.yml verify step.**
+
+Three approaches were considered:
+
+- **(a) Local backfill in the v2.5 PR:** @dev writes a small bash script (`scripts/backfill-content-sha256.sh` — opt-in dev tool, not shipped to users) that iterates `cowork.lock.json` `files[]`, fetches each file from `https://raw.githubusercontent.com/${UPSTREAM_REPO}/${pinned_commit_sha}/${path}`, computes SHA-256, and emits a patched lock file. @dev commits the patched lock file in the same PR as the verify step.
+- **(b) First post-merge sync-agency.yml run computes and writes:** Verify pass tolerates entries with no `content_sha256` (treats as backfill state), populates them, and writes the lock on the next bump.
+- **(c) Hybrid (b)+gate:** Like (b) but with a CI assertion that fires after a grace window if any entry lacks `content_sha256`.
+
+**Why (a) wins:**
+1. **Atomicity:** v2.5 ships in one PR with verify ON and 100% backfill. There is no "v2.5 deployed, but the lock isn't fully populated until next sync" half-state. The half-state in (b) creates an interpretive problem: which entries are "old grace" vs. "new tamper-evidence"?
+2. **No-force-push compatible:** Writing the backfill in the PR means the lock-file diff is reviewed by humans the same way as any other artifact. The pinned commit is unchanged; only the lock's contents are amended.
+3. **Smallest deployed-state surface:** With (a), every entry has `content_sha256` from v2.5.0 onward. Verify can be strict immediately. With (b), verify must carry a tolerance branch indefinitely (or at least until the next bump), which adds a code path that's hard to exit cleanly.
+4. **Failure isolation:** If the backfill script has a bug, the failure is local to the PR (visible diff, easy to fix). With (b), a bug in the post-merge first-run would land on `main` before detection.
+
+**Backfill script design (informational — not a v2.5 deliverable beyond running it once):**
+
+```bash
+#!/bin/bash
+# scripts/backfill-content-sha256.sh — one-shot backfill, used once at v2.5.
+# Reads cowork.lock.json, fetches each file at pinned_commit_sha, computes SHA-256,
+# writes content_sha256 into a sibling field. Idempotent: re-running produces no diff
+# if all entries already have correct content_sha256.
+set -euo pipefail
+PINNED=$(jq -r '.pinned_commit_sha' cowork.lock.json)
+UPSTREAM=$(jq -r '.upstream' cowork.lock.json)
+TMPDIR=$(mktemp -d); trap "rm -rf $TMPDIR" EXIT
+ENTRIES=$(jq -r '.files | to_entries[] | "\(.key)|\(.value.path)"' cowork.lock.json)
+while IFS='|' read -r idx path; do
+  curl -sf "https://raw.githubusercontent.com/${UPSTREAM}/${PINNED}/${path}" -o "${TMPDIR}/file"
+  HASH=$(sha256sum "${TMPDIR}/file" | awk '{print $1}')
+  jq --argjson i "$idx" --arg h "$HASH" '.files[$i].content_sha256 = $h' cowork.lock.json > "${TMPDIR}/out.json"
+  mv "${TMPDIR}/out.json" cowork.lock.json
+done <<< "$ENTRIES"
+```
+
+This script is NOT shipped (not added under `scripts/` in v2.5). @dev runs it locally, commits the resulting `cowork.lock.json` diff, and the script lives only in the PR description / commit message / this ADR for traceability.
+
+#### Decision (Edge Cases)
+
+**EC-1 (empty `files[]`):** If `cowork.lock.json` `files[]` is `[]`, the verify loop iterates zero times and exits 0 cleanly. The fetch loop in `sync-agency.yml` is already iteration-driven; no shell error fires on empty input. Per spec EC-1.
+
+**EC-2 (network fetch failure):** The existing fetch loop (line 211–214) already handles fetch failure with `|| { echo "WARNING..."; continue; }`. v2.5 keeps that semantics for fetch errors. The verify pass runs ONLY on successfully fetched bytes — if the fetch produced no file, the loop has already `continue`d. Distinct failure messages: "WARNING: Failed to fetch" (network) vs. "::error::Integrity mismatch" (verify) — `grep` differentiates the two in CI logs. Per spec EC-2.
+
+**Fault-injection (per AC-F1-3):** A test fixture is added — `tests/fixtures/sha-fault-injection.json` (a stripped lock file with a wrong `content_sha256` on one entry) plus a quality.yml step `lock-content-sha-fault-injection` that runs the verify logic against the fixture and asserts non-zero exit. The fixture lives outside `cowork.lock.json` so production lock state is never tampered with.
+
+**Reader contract (carried forward from v2.3.0 ADR-028 prose):** v2.5 readers MUST treat `content_sha256` as REQUIRED on all v2.5+ entries and OPTIONAL (grace) on pre-v2.5 entries. After the v2.5 backfill PR merges, ALL entries have `content_sha256`, so the grace branch is a no-op in practice. The branch is retained in code for future cycles that may add per-file entries via paths other than the backfill (e.g., manual hotfix adds).
+
+#### Consequences
+
+- `cowork.lock.json` grows by ~110 × one field (~80 bytes per entry) ≈ +8.8KB. Within budget.
+- `sync-agency.yml` gains ~15 lines (verify step) inside the existing fetch loop.
+- `quality.yml` gains a `lock-content-sha-fault-injection` step (~20 lines) plus the fault-injection fixture file.
+- `docs/architecture.md` carries this implementation record (~150L net add).
+- ADR-020 lock contract preserved. ADR-022 `/sync-agency` workflow scope amended (verify step is additive, not a rewrite).
+- v3.0 trigger: AC-F1-3 fault injection demonstrates verify works end-to-end.
+
+---
+
+### ADR-029: `tools:` SKILL.md Frontmatter Contract
+
+**Status:** ACCEPTED (NEW in v2.5).
+**Decision drivers:** F2 spec; v3.0 multi-tool reach scope; lock down vocabulary at v2.5 to avoid drift; informational-only at v2.5 (routing semantics deferred to v3.0).
+
+#### Context
+
+The Cowork wizard at v2.5 supports Claude Code only as a runtime target. v3.0 is expected to expand to additional agentic tools (Copilot, Cursor, Windsurf). When v3.0 ships, the wizard will need to filter or weight skill recommendations based on which tool the user is on. The current SKILL.md frontmatter has no machine-readable signal for tool compatibility.
+
+Adding a `tools:` field NOW (informational only) lets v2.5 establish the vocabulary contract before any consumer logic depends on it. This is a structural seam: v3.0 builds routing on top, v2.5 provides the substrate. Without v2.5's seam, v3.0 would either (a) author the field AND consumer logic in one cycle (large surface, hard to deliberate cleanly), or (b) ship without the field and require a rework cycle.
+
+The vocabulary `[claude-code, copilot, cursor, windsurf]` is deliberately closed. An open vocabulary (free-form strings, no validation) would invite drift: skill authors would write `copilot-chat` or `github-copilot` or `windsurf-ide`, and v3.0 would inherit a normalization tax. Closing the vocabulary at v2.5 forces canonicalization now.
+
+#### Decision (Field Contract)
+
+```yaml
+---
+name: meeting-notes
+description: ...
+tools: [claude-code]
+---
+```
+
+- **Field name:** `tools:` (lowercase, plural).
+- **Field type:** YAML list of strings.
+- **Vocabulary:** Closed allow-list at v2.5: `claude-code`, `copilot`, `cursor`, `windsurf`. Lowercase, hyphen-separated, no aliases.
+- **Default when absent:** `[claude-code]`. The wizard at v3.0 reads this default; CI at v2.5 treats absence as a CI failure (see decision below).
+- **Cardinality at v2.5:** All 20 skills receive `tools: [claude-code]`. No skill at v2.5 declares multi-tool support — declaring it would imply a validation claim that is not yet enforced.
+- **Placement:** Inside the existing YAML frontmatter block (between the opening `---` and closing `---`), positioned AFTER `description:` and BEFORE any other field. This is convention-only; readers must not depend on field order.
+
+**Why `tools` (plural) not `tool`:** The field is a list because future skills MAY validate against multiple tools. Even though v2.5 always populates `[claude-code]` (single-element list), the type is a list, not a scalar, so v3.0 doesn't migrate the field shape.
+
+**Why required at CI (not just default-when-absent at runtime):** Defaulting at runtime is a graceful-degradation pattern. Defaulting at CI is a contract-enforcement pattern. v2.5 chooses the latter for this specific reason: skills that lack `tools:` after v2.5 ship represent a documentation gap (the skill author didn't think about tool compatibility). CI presence-enforcement closes that gap. Per spec EC-3.
+
+#### Decision (CI Vocabulary Gate Placement — resolves OQ-v2.5-3)
+
+**OQ-v2.5-3 ruling:** New dedicated step in `quality.yml`, NOT an extension of MF-1.
+
+Rationale:
+1. **Surface separation:** MF-1 targets `selection-presets.md` token vocabulary. The new gate targets `skills/*/SKILL.md` frontmatter. Different files, different parse strategies (awk-fenced-block-extract vs. YAML-frontmatter-extract), different vocabularies. Bundling under MF-1 muddies the step's name and failure message.
+2. **Independent failability:** A skill author triggering MF-3 should see a failure message that names "tools vocabulary" without inheriting MF-1's "selection-presets.md" scaffolding.
+3. **Maintenance cost:** A separate step is ~20 lines; extending MF-1 is ~10 lines but adds branching logic. The branching is the hidden cost (any future MF-1 change risks breaking MF-3 and vice versa).
+
+**New step name:** `MF-3 — skills/*/SKILL.md tools: vocabulary gate` (positioned in `skill-depth-check` job, after the CMP byte-mirror step, before MF-1).
+
+**Implementation sketch:**
+
+```yaml
+- name: MF-3 — skills/*/SKILL.md tools: vocabulary gate
+  run: |
+    set -o pipefail
+    ALLOWED='claude-code copilot cursor windsurf'
+    BAD_FILES=""
+    for skill_md in skills/*/SKILL.md; do
+      # Extract YAML frontmatter (between first two ---) and find tools: line
+      TOOLS_LINE=$(awk '/^---$/{c++; next} c==1 && /^tools:/' "$skill_md")
+      if [ -z "$TOOLS_LINE" ]; then
+        echo "::error::${skill_md} missing tools: frontmatter field"
+        BAD_FILES="${BAD_FILES} ${skill_md}"
+        continue
+      fi
+      # Parse list: tools: [claude-code, copilot] → claude-code copilot
+      TOKENS=$(echo "$TOOLS_LINE" | sed -E 's/^tools:\s*\[//; s/\]\s*$//; s/,/ /g' | tr -d ' ' | tr ',' ' ')
+      for token in $TOKENS; do
+        # Re-add space-stripping safety
+        token=$(echo "$token" | tr -d '[:space:]')
+        if [ -z "$token" ]; then continue; fi
+        if ! echo "$ALLOWED" | grep -qw "$token"; then
+          echo "::error::${skill_md} tools: contains invalid token '${token}' (allowed: ${ALLOWED})"
+          BAD_FILES="${BAD_FILES} ${skill_md}"
+        fi
+      done
+    done
+    if [ -n "$BAD_FILES" ]; then
+      echo "::error::MF-3 vocabulary gate failed on:${BAD_FILES}"
+      exit 1
+    fi
+    echo "MF-3 tools: vocabulary gate passed (20 skills checked)."
+```
+
+This step uses `set -o pipefail` to demonstrate the F4 hardening pattern (see ADR-016 v2.5 amendment below) on the new step from day one.
+
+**Fault-injection coverage (per AC-F2-3):** Phase 4 deliverable — a fixture-based test that injects `tools: [unknown-tool]` into one SKILL.md, runs MF-3 in dry-run mode, asserts non-zero exit. @dev's call whether to fold into the same fault-injection step as F1 or keep separate; @architect leaves discretion.
+
+#### Decision (Default-When-Absent Rule)
+
+The default rule applies at WIZARD.md runtime ONLY, not at CI. CI requires the field present. The wizard, when reading a SKILL.md without `tools:`, treats it as `[claude-code]` and proceeds. This split (CI-strict, runtime-graceful) handles two distinct concerns:
+
+- CI strictness ensures shipped skills always declare their target tools.
+- Runtime grace handles edge cases like a user manually editing a SKILL.md to remove `tools:` mid-session — the wizard doesn't crash; it falls back to the default.
+
+#### Decision (v3.0 Routing Intent — explicit)
+
+**Forward-binding statement (read by v3.0 spec author):** v3.0 routing on `tools:` field is bound to read-only consumer semantics. The wizard MAY filter recommendations to skills declaring the user's tool, MAY weight presentation to favor skills with the user's tool, MAY warn when no skill matches. The wizard MUST NOT auto-translate or auto-reformat skill content based on `tools:` declaration. The field is declarative, not imperative.
+
+#### Consequences
+
+- 20 SKILL.md files modified (one frontmatter line each).
+- `quality.yml` gains MF-3 step (~25 lines).
+- ADR-007 receives an amendment block (next subsection).
+- ADR-016 receives an amendment block (next subsection — vocabulary gate added; `upstream-contribution/` excluded).
+- v3.0 inherits a closed vocabulary, no normalization tax.
+
+---
+
+### ADR-030: Outbound Contribution Model
+
+**Status:** ACCEPTED (NEW in v2.5).
+**Decision drivers:** F3 spec; first outbound contribution in project history; complement to ADR-024 (inbound attribution); v3.0 trigger clock; @compliance review L4-1 + L5-1 binding rulings.
+
+#### Context
+
+ADR-024 governs INBOUND attribution: when Cowork's wizard installs a third-party skill into a user's workspace, an attribution block is injected. ADR-024 is byte-stable in v2.5 (preserved from v2.0) and applies to the inbound direction only.
+
+The OUTBOUND direction — Cowork-original content submitted to an upstream repo as a PR — has no architectural record. F3 is the first outbound contribution. ADR-030 documents the model so future cycles do not re-litigate basic questions (which directory does the upstream-format file live in? does ADR-024 apply? is THIRD-PARTY-NOTICES.md updated? where does attribution go?).
+
+@compliance review L4-1 ruled: PR-description attribution is the correct mechanism; the skill file body follows upstream format conventions with no Cowork attribution block. @compliance L5-1 ruled: naming `agency-agents` / `cowork-starter-kit` in PR description, architecture.md, and CHANGELOG is permitted (descriptive attribution context); naming in README/SETUP-CHECKLIST/marketing remains forbidden by the no-competitor-naming-public rule. ADR-030 codifies these rulings.
+
+#### Decision (Working Directory Convention)
+
+**`upstream-contribution/`** at repo root holds the upstream-format version of any Cowork content authored for outbound submission. v2.5 ships exactly one file in this directory: `upstream-contribution/meeting-notes-upstream.md`.
+
+Rationale:
+1. **Tracked artifact:** Files under `upstream-contribution/` are committed to the Cowork repo. They are NOT submitted via push-to-upstream from this directory; @dev manually creates a PR on the upstream repo using the file's contents. Committing the source-of-truth in Cowork keeps a permanent record of what was submitted.
+2. **CI exclusion:** Files in `upstream-contribution/` follow upstream's format, NOT Cowork's 9-section template. They MUST be excluded from `skill-depth-check` (see ADR-016 v2.5 amendment below). The directory name is the boundary signal.
+3. **Discoverable:** A future contributor scanning the repo immediately sees that Cowork has an outbound contribution lineage. The directory name is self-documenting.
+4. **Not under `skills/`:** The skill pool is the wizard's runtime install source. Putting upstream-format files there would (a) confuse the wizard, (b) double the file count, (c) make the pool's semantics ambiguous. Separation is mandatory.
+
+#### Decision (Attribution Direction — binds @compliance L4-1)
+
+**The skill file body and frontmatter contain ZERO Cowork attribution.** The file follows upstream's format conventions. Adding a non-conforming attribution block would reduce merge likelihood and violate the upstream's PR norms.
+
+**The PR description MUST carry the attribution line:** `Originally authored for [cowork-starter-kit](https://github.com/JmLozano/cowork-starter-kit) and adapted to The Agency format.` (Exact template in `docs/compliance-review-v2.5.md` §L4-1.) This is a Phase-4 binding deliverable, NOT a CI-checkable artifact (the PR lives on a third-party repo). @qa verifies at Phase 5 by inspecting the PR description.
+
+**The CHANGELOG records the PR URL** per AC-F3-2: `Upstream contribution: [PR URL] — meeting-notes skill submitted to project-management category`.
+
+**The architecture.md F3 implementation note records the PR URL** per AC-F3-4: [msitarzewski/agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521) — meeting-notes skill submitted to `project-management/` category on 2026-05-09. PR opened by jmlozano1990 from branch `cowork-meeting-notes`. Status at Phase-4 close: OPEN.
+
+**The Cowork-side `upstream-contribution/meeting-notes-upstream.md`** MAY carry a top-of-file HTML comment as a provenance note (per @compliance SF-1 recommendation): `<!-- This file was authored for cowork-starter-kit and submitted to msitarzewski/agency-agents as a PR contribution. Cowork canonical version at skills/meeting-notes/SKILL.md. -->`. This is internal tracking, NOT injected into the upstream PR. Optional but recommended.
+
+#### Decision (THIRD-PARTY-NOTICES.md scope — binds @compliance L1-2)
+
+ADR-025 scopes THIRD-PARTY-NOTICES.md to inbound third-party content only. Outbound contributions (Cowork-authored content distributed to a third-party repo under an MIT grant) do NOT require a new entry. Cowork is the originating party, not the receiving party. No action on THIRD-PARTY-NOTICES.md for F3.
+
+#### Decision (Public-Copy Hygiene Exemption — binds @compliance L5-1)
+
+The F3 attribution context is EXEMPT from the `no-competitor-naming-public` rule for the following surfaces ONLY:
+
+| Surface | `agency-agents` / `msitarzewski` | `cowork-starter-kit` (own name) |
+|---------|----------------------------------|----------------------------------|
+| F3 PR title (on upstream repo) | PERMITTED | PERMITTED (attribution) |
+| F3 PR description body | PERMITTED | PERMITTED (attribution at bottom) |
+| `upstream-contribution/meeting-notes-upstream.md` body | OMIT (follow upstream format) | OMIT (follow upstream format) |
+| `upstream-contribution/meeting-notes-upstream.md` HTML comment | PERMITTED | PERMITTED |
+| `docs/architecture.md` F3 implementation note | PERMITTED | PERMITTED |
+| `CHANGELOG.md` v2.5.0 section | PERMITTED (PR URL contains repo path) | PERMITTED |
+| `docs/spec.md` | PERMITTED (already internal) | PERMITTED |
+| `THIRD-PARTY-NOTICES.md` | N/A (no new entry) | N/A |
+| `README.md` | OMIT (no promotional mention) | PERMITTED (own name) |
+| `SETUP-CHECKLIST.md` | OMIT | N/A |
+| Release notes / GitHub Release body | OMIT | PERMITTED |
+| Blog / LinkedIn / marketing | OMIT | PERMITTED |
+
+This exemption is scoped to F3 attribution context. It does NOT generalize to other features or future cycles.
+
+#### Decision (Format Bridge — Manual Rewrite, Not Scriptable)
+
+The upstream format is persona-centric (identity + capabilities + workflow + deliverables). Cowork's format is procedural (instructions + triggers + output + quality + anti-patterns + example). These are STRUCTURALLY different, not text-transformable.
+
+@dev authors `upstream-contribution/meeting-notes-upstream.md` from scratch using `skills/meeting-notes/SKILL.md` as the substantive source. The upstream format contract:
+
+```yaml
+---
+name: Meeting Notes Specialist
+description: <one-line>
+tools: Read, Write, Edit
+color: blue
+emoji: <emoji>
+vibe: <personality hook>
+---
+# Meeting Notes Specialist
+## Identity
+## Core Mission
+## Critical Rules
+## Technical Deliverables
+## Workflow Process
+## Communication Style
+## Learning and Memory
+## Success Metrics
+```
+
+Note: the upstream `tools:` field is COMMA-SEPARATED CAPITALIZED STRINGS (`Read, Write, Edit`) referring to Claude Code primitive tools, NOT Cowork's lowercase agent-tool vocabulary `[claude-code, copilot, cursor, windsurf]`. The two `tools:` fields are namespaced by file location and have no semantic overlap. v2.5's MF-3 vocab gate runs ONLY on `skills/*/SKILL.md` (Cowork pool), NOT on `upstream-contribution/` (excluded — see ADR-016 v2.5 amendment).
+
+#### Decision (Inbound Contamination Strip — binds @compliance L1-1 → CF-L1-1)
+
+`skills/meeting-notes/SKILL.md` contains a Writing Profile Integration section (lines ~103–108) referencing `context/writing-profile.md`. This is Cowork-specific infrastructure (per ADR-013) and MUST NOT appear in `upstream-contribution/meeting-notes-upstream.md` in any form (not as a filename reference, not rephrased as a generic "output style" hook, not as an oblique reference to "user's writing style file"). Strip entirely.
+
+The compliance verifier from CF-L1-1 is binding: `grep -i "writing.profile\|writing profile\|writing_profile" upstream-contribution/meeting-notes-upstream.md` MUST equal 0.
+
+#### Decision (v3.0 Trigger Clock)
+
+The PR open date starts a 60-day acknowledgment window. The v3.0 gate review evaluates outcome AFTER v2.5 ships; outcome categories are: (a) merged, (b) constructive feedback received, (c) silence, (d) rejected. (a) (b) (d) all satisfy AC-F3-5 (valid PR URL). Only (c) (silence past 60 days) influences the v3.0 gate decision. None of these outcomes affects v2.5 acceptance.
+
+#### Consequences
+
+- New directory `upstream-contribution/` (1 file at v2.5: `meeting-notes-upstream.md`).
+- ADR-024 inbound attribution preserved verbatim (no amendment).
+- ADR-025 THIRD-PARTY-NOTICES.md preserved verbatim (no amendment for outbound).
+- ADR-016 amended (next subsection) to exclude `upstream-contribution/` from depth-check.
+- CHANGELOG and architecture.md gain an F3 implementation note post-Phase-4.
+- 60-day v3.0 trigger clock starts at PR open.
+
+---
+
+### ADR-007 Amendment (v2.5): Optional `tools:` Frontmatter Field
+
+**Date:** 2026-05-09
+**Status:** ACCEPTED (amendment to ADR-007, original ACCEPTED 2026-04-15).
+**Scope:** ADR-007 v1.1 SKILL.md frontmatter contract gains an OPTIONAL `tools:` field at v2.5. The original frontmatter contract (`name:`, `description:`) is preserved byte-stable.
+
+The full contract for `tools:` lives in ADR-029 above. ADR-007's amendment is the cross-reference: a SKILL.md may now legitimately carry a `tools:` field. ADR-007's allowed-frontmatter-fields list is widened to include `tools:`. No other field is added or removed. No existing field's semantics change.
+
+**At v2.5,** all 20 skills in the Cowork pool carry `tools: [claude-code]`. The MF-3 CI gate (ADR-016 v2.5 amendment) requires the field present. The "default when absent" rule (ADR-029) applies at WIZARD.md runtime only — CI is strict.
+
+**Pre-v2.5 SKILL.md files** (any in git history) lack the field; they are pre-amendment artifacts and not retroactively rejected.
+
+---
+
+### ADR-016 Amendment (v2.5): Vocabulary Gate Addition + `upstream-contribution/` Exclusion + MF-1/MF-2 Hardening
+
+**Date:** 2026-05-09
+**Status:** ACCEPTED (amendment to ADR-016, original v1.3.0 + v1.3.1/v1.3.2/v1.3.3/v2.4 amendments).
+**Scope:** Three concurrent additions to the `skill-depth-check` job (and by extension `quality.yml`):
+
+1. **MF-3 vocabulary gate added** (per ADR-029).
+2. **`upstream-contribution/` directory excluded from `skill-depth-check`'s POOL loop and CMP loop** (per ADR-030).
+3. **MF-1 + MF-2 hardening** (resolves CF-v2.4-B + CF-v2.4-G; per F4 spec).
+
+#### Decision (MF-3 Vocabulary Gate)
+
+Implementation sketch documented in ADR-029 above. Position: inside `skill-depth-check` job, after CMP byte-mirror step, before MF-1. The job's existing 3-loop structure (POOL / EXAMPLES / CMP) gains a 4th step: MF-3.
+
+#### Decision (`upstream-contribution/` Exclusion — resolves OQ-v2.5-4)
+
+**OQ-v2.5-4 ruling:** `upstream-contribution/` is excluded from `skill-depth-check`'s POOL loop AND CMP loop via path-glob. The POOL loop's iteration is `for skill_file in skills/*/SKILL.md`; this glob does not match `upstream-contribution/*`, so no extra exclusion logic is needed. The CMP loop iterates `examples/<preset>/.claude/skills/<slug>/SKILL.md` — also no match. The MF-3 vocabulary gate iterates `skills/*/SKILL.md` — no match.
+
+**Therefore: `upstream-contribution/` is excluded by virtue of NOT being targeted, not by an explicit exclusion clause.** No `--exclude` flag, no `if` branch. This is the simplest correct topology; @dev MUST NOT add explicit exclusion logic that could mask a future regression where someone targets the directory inadvertently.
+
+**Defense-in-depth assertion:** A new `markdown-lint` job step (or a dedicated micro-step) checks that `upstream-contribution/` exists when `skills/meeting-notes/SKILL.md` declares it as the outbound target. This is a presence assertion, not a structural one. Implementation discretion left to @dev — not blocking.
+
+#### Decision (MF-1 + MF-2 Hardening — resolves OQ-v2.5-5)
+
+**OQ-v2.5-5 ruling:** `set -o pipefail` is applied **at the top of each MF-1 and MF-2 `run:` block** (NOT global YAML-level, NOT per-line). Scope is the step's bash invocation. This is the smallest scope that fixes the bug without affecting other steps.
+
+Rationale:
+- **Why `set -o pipefail` (Approach 1) over explicit empty-check (Approach 2):** Approach 1 is one line at the top of the step. Approach 2 is `if [ -z "$BAD" ]; then BAD=0; fi` AFTER each pipeline. Approach 1 catches the bug class (pipeline middle-segment failure); Approach 2 patches one symptom. Approach 1 is more durable.
+- **Why per-step (not global):** `set -o pipefail` at YAML-level would affect all steps in the job, including any that legitimately use `|| true` for non-error paths (e.g., the optional `mailmap` lookup or commit-graph queries — none currently in `quality.yml`, but the constraint must survive future steps). Per-step scoping is forward-safe.
+- **`|| true` removal:** With `pipefail` on, the trailing `|| true` is no longer needed (pipeline's exit code is now the rightmost non-zero). Remove from MF-1 and MF-2 `grep -c` lines per AC-F4-1, AC-F4-2.
+
+**MF-2 awk column-name lookup (CF-v2.4-B resolution):**
+
+Replace:
+```bash
+BAD=$(awk -F'|' '/^\| / && NR>2 { print $7 }' curated-skills-registry.md \
+  | grep -vE '^[[:space:]]*(goal_tags|---)' \
+  | grep -cE '[^a-z0-9, -]')
+```
+
+With (header-name lookup):
+```bash
+BAD=$(awk -F'|' '
+  NR==2 {
+    # Header row — find goal_tags column index
+    for (i=1; i<=NF; i++) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+      if ($i == "goal_tags") { col=i }
+    }
+    if (col == 0) { print "HEADER_MISSING_GOAL_TAGS" > "/dev/stderr"; exit 2 }
+    next
+  }
+  /^\| / && NR>2 && col > 0 { print $col }
+' curated-skills-registry.md \
+  | grep -vE '^[[:space:]]*(goal_tags|---)' \
+  | grep -cE '[^a-z0-9, -]')
+```
+
+If `goal_tags` header is absent, awk exits 2 and writes `HEADER_MISSING_GOAL_TAGS` to stderr. Combined with `set -o pipefail`, the step fails non-zero (per AC-F4-4 + spec EC-5: "fail-closed when header is absent"). Per AC-F4-3: `grep -c '\$7' .github/workflows/quality.yml` MUST equal 0 — no positional `$7` references remain.
+
+**Regression fixture (per AC-F4-5):** A test fixture `tests/fixtures/registry-column-reorder.md` (a `curated-skills-registry.md` copy with `goal_tags` moved from position 7 to position 4) plus a quality.yml step that runs the MF-2 logic against the fixture and asserts BAD=1 still fires for an injected bad token in the reordered column. @dev's call to fold into MF-3's fault-injection step or keep separate.
+
+#### Consequences
+
+- `quality.yml` `skill-depth-check` job grows by ~25 lines (MF-3) + ~15 lines (MF-2 awk header lookup) + 2 lines (`set -o pipefail` × 2) ≈ +42 lines.
+- `tests/fixtures/` gains 2 fixture files (`sha-fault-injection.json`, `registry-column-reorder.md`) — small (~1KB total).
+- `upstream-contribution/` directory introduced; CI naturally excludes via path-glob shape.
+- ADR-016's enforcement scope grows from "skills/ pool + 7 ENFORCED_EXAMPLES" to "skills/ pool + 7 ENFORCED_EXAMPLES + MF-3 vocabulary + MF-1/MF-2 hardened".
+
+---
+
+### Constraints Catalog (`C-v2.5-N`)
+
+The following constraints bind @dev for Phase 4. Each carries a copy-paste-ready @qa shell verifier. C-v2.5-1 through C-v2.5-15 are the v2.5 set.
+
+| ID | Constraint | Bound to AC | @qa verifier |
+|----|-----------|-------------|--------------|
+| C-v2.5-1 | `cowork.lock.json` MUST contain `content_sha256` field on every `files[]` entry, value = SHA-256 of upstream content at `pinned_commit_sha`. | AC-F1-1 | `[ "$(grep -c '"content_sha256"' cowork.lock.json)" = "$(jq '.files \| length' cowork.lock.json)" ]` |
+| C-v2.5-2 | `sync-agency.yml` MUST contain a verify step inside the existing fetch loop, ordered AFTER per-file SHA-256 compute (line 216) and BEFORE accumulator append (line 237). | AC-F1-2 | `[ "$(grep -c 'content_sha256' .github/workflows/sync-agency.yml)" -ge "2" ]` |
+| C-v2.5-3 | Fault-injection fixture present at `tests/fixtures/sha-fault-injection.json`; `quality.yml` runs verify logic against fixture and asserts non-zero exit. | AC-F1-3 | `ls tests/fixtures/sha-fault-injection.json && grep -c 'sha-fault-injection' .github/workflows/quality.yml \| awk '{exit ($1>=1)?0:1}'` |
+| C-v2.5-4 | `cowork.lock.json` `$schema_version` MUST equal `"1.0"` (byte-unchanged). | AC-F1-4, AC-ZD-1 | `[ "$(jq -r '.\"\$schema_version\"' cowork.lock.json)" = "1.0" ]` |
+| C-v2.5-5 | `sync-agency.yml` SCAN_PATTERNS array (lines 143–152) and accumulator append (line 237) byte-unchanged from v2.4 HEAD. | AC-F1-5, AC-ZD-2 | `git diff main -- .github/workflows/sync-agency.yml \| awk '/^[+-]/' \| grep -E 'SCAN_PATTERNS\|accumulator' \| wc -l \| grep -q '^0$'` |
+| C-v2.5-6 | All 20 SKILL.md in `skills/` MUST contain `tools:` frontmatter line. | AC-F2-1 | `[ "$(grep -rl '^tools:' skills/ \| wc -l)" = "20" ]` |
+| C-v2.5-7 | All 20 SKILL.md MUST set `tools: [claude-code]` exactly (closed vocab v2.5 default). | AC-F2-2 | `[ "$(grep -c 'tools: \[claude-code\]' skills/*/SKILL.md \| awk -F: '{s+=$2} END {print s}')" = "20" ]` |
+| C-v2.5-8 | `quality.yml` MUST contain new MF-3 step name containing `tools` token; gate fails on invalid token via fault-injection. | AC-F2-3 | `grep -E 'name:.*MF-3.*tools' .github/workflows/quality.yml \| wc -l \| awk '{exit ($1>=1)?0:1}'` |
+| C-v2.5-9 | `docs/architecture.md` MUST contain ADR-029 with explicit (a) field name `tools:`, (b) closed vocabulary list, (c) default-when-absent rule, (d) v3.0 routing intent. | AC-F2-4 | `[ "$(grep -c 'tools:' docs/architecture.md)" -ge "4" ]` AND `grep -q 'ADR-029' docs/architecture.md` |
+| C-v2.5-10 | `upstream-contribution/meeting-notes-upstream.md` exists with upstream flat persona-centric YAML frontmatter (open + close `---` fences). | AC-F3-1 | `[ "$(grep -c '^---$' upstream-contribution/meeting-notes-upstream.md)" = "2" ]` |
+| C-v2.5-11 (binds CF-L1-1) | `upstream-contribution/meeting-notes-upstream.md` MUST NOT contain writing-profile references (any case, any spelling). | AC-F3-3 + @compliance CF-L1-1 | `[ "$(grep -ciE 'writing.profile\|writing profile\|writing_profile' upstream-contribution/meeting-notes-upstream.md)" = "0" ]` |
+| C-v2.5-12 | `upstream-contribution/meeting-notes-upstream.md` MUST NOT contain Cowork-specific terms (per AC-F3-3 grep). | AC-F3-3 | `[ "$(grep -ciE 'WIZARD\|ADR-\|cowork\.lock\|selection-preset\|skill-depth\|sync-agency\|writing-profile' upstream-contribution/meeting-notes-upstream.md)" = "0" ]` |
+| C-v2.5-13 (binds CF-L4-1) | F3 PR description (on upstream repo) MUST carry attribution: "Originally authored for cowork-starter-kit and adapted to The Agency format." Verified by @qa at Phase 5 via PR description inspection. | AC-F3-2 + @compliance CF-L4-1 | `gh pr view <PR-URL> --json body --jq '.body' \| grep -ciF 'Originally authored for cowork-starter-kit'` |
+| C-v2.5-14 | `quality.yml` MUST NOT contain positional `$7` awk references (MF-2 column-name lookup adopted). | AC-F4-3 | `[ "$(grep -c '\$7' .github/workflows/quality.yml)" = "0" ]` |
+| C-v2.5-15 | `quality.yml` MUST NOT contain `\|\| true` on `grep -c` lines in MF-1 or MF-2 step contexts. | AC-F4-1, AC-F4-2 | `awk '/MF-1\|MF-2/,/^      - name/' .github/workflows/quality.yml \| grep -E 'grep -c.*\|\| true' \| wc -l \| grep -q '^0$'` |
+| C-v2.5-16 | `scripts/install-pre-commit.sh` exists and invokes `markdownlint`. | AC-F5-1, AC-F5-2 | `[ -x scripts/install-pre-commit.sh ] && grep -c 'markdownlint' scripts/install-pre-commit.sh \| awk '{exit ($1>=1)?0:1}'` |
+| C-v2.5-17 | `CONTRIBUTING.md` references `install-pre-commit` script under a "Local Development" (or equivalent) heading. | AC-F5-3 | `grep -c 'install-pre-commit' CONTRIBUTING.md \| awk '{exit ($1>=1)?0:1}'` |
+| C-v2.5-18 | Release artifacts complete: `VERSION`=2.5.0, CHANGELOG `## [2.5.0]` block, README badge `version-2.5.0`, README "Next up" teaser referencing v3.0 (or v2.6). | AC-REL-1..4 | `[ "$(cat VERSION)" = "2.5.0" ]` AND `head -40 CHANGELOG.md \| grep -F '## [2.5.0]'` AND `grep -F 'version-2.5.0' README.md` AND `grep -i 'next up' README.md` |
+| C-v2.5-19 (added in deliberation Round 1) | `quality.yml` MUST contain a `lock-content-sha-cross-check` step that fetches each `files[]` entry from `raw.githubusercontent.com` at `pinned_commit_sha` in the GitHub-Actions runner and asserts SHA-256 equality with stored `content_sha256`. Closes @security W1 backfill supply-chain trust gap. Runs on every PR. | F1 supply-chain backfill cross-check (deliberation A1) | `[ "$(grep -c 'lock-content-sha-cross-check' .github/workflows/quality.yml)" -ge "2" ]` |
+
+**Total: 19 top-level constraints** (18 initial + 1 added in Round 1 deliberation). No discretion remains for @dev on the 5 OQs (all bound above) or the 2 compliance MUST-FIX items (CF-L1-1 → C-v2.5-11; CF-L4-1 → C-v2.5-13).
+
+---
+
+### Spec Divergences
+
+Per the architect divergence workflow, the following spec ACs were modified or amended during Phase 1. Apply to `docs/spec.md` `## Architectural Modifications` section.
+
+- **AC-F2-4** (`grep -c "tools:" docs/architecture.md` >= 4) → unchanged in numeric, but @architect notes the verifier counts ANY string `tools:` (including this very paragraph). Practical floor at v2.5 is much higher (>20 across ADR-029 body). No AC change required; verifier remains as-spec'd.
+- **AC-F1-5** (`cmp` exit 0 on sync-agency.yml lines 143 and 220) → clarified: line 143 is the start of `SCAN_PATTERNS=(`; line 220 is in the JSON accumulator append region. The verify step is INSERTED between these regions but does not modify either line. C-v2.5-5 implements via `git diff` regex rather than line-numbered `cmp` because the verify step displaces line numbers downstream of insertion — `cmp` against frozen line numbers would falsely fail. Verifier semantics preserved (no SCAN_PATTERNS or accumulator drift); mechanism amended.
+
+No other divergences. All 33 spec ACs are achievable as-written.
+
+---
+
+### v2.5 Carry-Forwards (generated by this design)
+
+- **CF-v2.5-A:** Backfill script `scripts/backfill-content-sha256.sh` is NOT shipped to users; lives in PR description / commit message only. If a future cycle (v2.6+) adds content via a path other than `sync-agency.yml` (e.g., a manual hotfix entry), that cycle MUST run the backfill script logic locally before commit. Document in CONTRIBUTING.md? — backlog, not v2.5 scope.
+- **CF-v2.5-B:** v3.0 `tools:` routing implementation. v3.0 spec author reads ADR-029 forward-binding statement: declarative not imperative; filter/weight/warn but never auto-translate.
+- **CF-v2.5-C:** v3.0 multi-tool skill authoring. v2.5 ships all 20 skills with `tools: [claude-code]`. v3.0 may widen individual skills to multi-tool — but ONLY after explicit validation per tool. Validation methodology TBD in v3.0 spec.
+- **CF-v2.5-D:** F3 PR outcome evaluation. v3.0 gate review reads PR acknowledgment outcome (60-day window). Independent of v2.5 acceptance.
+- **CF-v2.5-E:** `upstream-contribution/` directory governance. If future cycles add more outbound contributions, this directory grows. CONTRIBUTING.md may document the directory's purpose. Backlog.
+
+---
+
+### Migration / Backwards-Compat Plan
+
+**`cowork.lock.json` change:** Additive — `content_sha256` added to all 110 `files[]` entries. `$schema_version` unchanged. Pre-v2.5 lock files are forward-compatible (sync-agency.yml verify pass tolerates entries without `content_sha256` per the reader contract). Post-v2.5 lock files are backward-compatible (additional field is unknown-but-harmless to a v2.4 reader).
+
+**SKILL.md frontmatter change:** Additive — `tools:` field added to all 20 files. Pre-v2.5 SKILL.md files are forward-compatible (wizard runtime defaults absent `tools:` to `[claude-code]` per ADR-029). Post-v2.5 SKILL.md files are backward-compatible (a v2.4 reader sees an unknown YAML key and ignores it; no parse error).
+
+**WIZARD.md change:** None at v2.5. Wizard reads `tools:` informationally (per ADR-029) — no routing logic added.
+
+**User workspace impact:** ZERO. v2.5 is infrastructure work. A user who installed via v2.4 wizard has their workspace unchanged. Re-running the wizard at v2.5 produces the same skill files (the `tools:` frontmatter line is added in the canonical pool, but the wizard's install copy faithfully reproduces frontmatter — no behavioral change to install).
+
+**`upstream-contribution/` directory:** New directory. Not installed into user workspaces (the wizard targets `skills/`, not `upstream-contribution/`). Visible only to repo browsers and contributors.
+
+---
+
+### Phase 2 Security Review Surface (for @security at `/review`)
+
+@security MUST audit the following NEW surfaces at Phase 2:
+
+1. **F1 verify step trust model.** ADR-028 implementation extends the `sync-agency.yml` trust boundary. @security reviews: (a) does the verify step's mismatch failure correctly surface to the workflow exit code (no silent swallow)? (b) is the verify step ordered BEFORE accumulator append (fail-closed before partial state)? (c) does the verify pass handle the empty-`files[]` edge case gracefully (no shell error)? (d) does the verify pass differentiate "network fetch failure" (existing code path) from "integrity mismatch" (new code path) in CI logs?
+
+2. **F1 backfill correctness.** @dev's local backfill script writes `content_sha256` for all 110 entries before merge. @security reviews: (a) is the script's iteration deterministic (no shell glob ordering instability)? (b) does the script use `--arg`/`--argjson` for jq inputs (no string interpolation)? (c) is the network fetch path identical to `sync-agency.yml`'s production fetch (same URL shape, same SHA pin)?
+
+3. **F2 MF-3 vocabulary gate trust model.** @security reviews: (a) is the awk frontmatter extraction bounded (no unterminated `---` scenario)? (b) does the gate handle malformed `tools: [...]` syntax (e.g., missing close bracket, embedded newlines) without silently passing? (c) is the allowed list (`claude-code copilot cursor windsurf`) declared in-step (not from external source — no injection vector)?
+
+4. **F2 SKILL.md tampering surface.** A new YAML frontmatter field expands the parse surface. @security reviews: (a) is `tools:` value treated as DATA (not instructions) by all readers? (b) any wizard runtime path that interpolates `tools:` token into a shell command? (no — wizard is markdown-only at v2.5).
+
+5. **F3 outbound-contribution surface.** First-time external-repository write is a governance handoff. @security reviews: (a) does the upstream PR submission go through an authenticated path tied to the project owner's GitHub account (not a CI bot)? (b) is there any automation that POSTs to upstream repo APIs (no — submission is manual)? (c) does `upstream-contribution/meeting-notes-upstream.md` ever execute or get sourced by Cowork CI (no — file is a tracked artifact only).
+
+6. **F3 inbound contamination strip (CF-L1-1 verifier).** @security reads C-v2.5-11 grep verifier; confirms no false-negative scenario where a paraphrased writing-profile reference escapes. Recommend bounded false-negative test: a deliberately paraphrased reference fed through grep — confirm it slips through (acceptable per @compliance scoping; @security records the false-negative window).
+
+7. **F4 MF-1/MF-2 hardening — `pipefail` side effects.** Per-step `set -o pipefail` is bounded to 2 step `run:` blocks. @security reviews: (a) are there any pipelines INSIDE those steps that legitimately rely on rightmost-segment success masking (no — both steps end in `grep -c`, which is the gate signal). (b) does the awk-exit-2 path (header missing) correctly surface as step failure under `pipefail` (yes — grep's preceding pipe segment exits non-zero; pipefail propagates).
+
+8. **F4 awk column-name lookup safety.** New parsing logic on a CI-trusted input file. @security reviews: (a) any path where a crafted column header (e.g., `goal_tags<TAB>` with embedded whitespace) fools the lookup? (b) any unbounded loop or backtracking (no — awk single-pass).
+
+9. **F5 pre-commit hook trust model.** Opt-in install script writes to `.git/hooks/`. @security reviews: (a) is the script's path validation strict (no `..` traversal)? (b) does the script refuse to overwrite an existing `.git/hooks/pre-commit` without prompting? (c) what happens if `markdownlint` is not installed (per spec EC-6)? (d) does the script run with `set -euo pipefail`?
+
+10. **General: `quality.yml` step ordering.** Three new steps (lock-content-sha-fault-injection, MF-3, MF-2 column-reorder regression) added. @security reviews step-order independence — no step reads outputs of a later step. (Confirmed in design; @security verifies at Phase 2.)
+
+**OWASP A05 (Security Misconfiguration) focus:** F4 hardening; MF-3 vocab gate. Both gates are config files (`quality.yml`); misconfiguration would silently mask the gate. F4 explicitly hardens against this class.
+
+**LLM01 (Prompt Injection) focus:** F2 `tools:` frontmatter — a YAML field is added to instruction-surface markdown. @security verifies the field is read as data (not instructions) by every consumer.
+
+**No payments, no auth, no schema migration.** Same as v2.4 — combined-path NOT eligible (SECURITY-SENSITIVE per spec classification).
+
+---
+
+### Pre-empted Phase 1 Deliberation Findings
+
+I anticipate the following deliberation surfaces; addressing pre-emptively so @security and @dev can deliberate from common ground:
+
+- **(@security potential WARNING) Backfill script supply-chain trust.** The backfill script runs with @dev's local `curl` against `raw.githubusercontent.com` at the pinned commit. If @dev's local environment has a poisoned `curl` or DNS, the backfilled hashes would be wrong-but-self-consistent (they'd match the poisoned bytes; verify pass would never catch the discrepancy). **Pre-resolution:** the backfill is reviewed in PR diff; an independent CI check verifies the backfilled hashes match a fresh fetch in clean GitHub-Actions environment. Specifically, `quality.yml` adds a `lock-content-sha-cross-check` step (new) that fetches each file at `pinned_commit_sha` and verifies the freshly computed SHA-256 matches the lock's `content_sha256`. Runs on every PR. This makes the backfill state cross-environment-verified. **Bind into C-v2.5-3 (or new C-v2.5-19) at deliberation if @security concurs.**
+
+- **(@dev potential AMENDMENT) Backfill script as deliverable vs. one-shot.** @dev may ask: should `scripts/backfill-content-sha256.sh` be checked in as a tracked, runnable script? **Pre-resolution: NO.** The script is one-shot. Checking it in implies maintenance commitment. If a future cycle needs the same logic, @dev re-derives from this ADR. Avoiding script-creep is a positive design constraint. Bind via `## WILL-NOT-DO` clarification if @dev requests.
+
+- **(@dev potential AMENDMENT) Commit topology.** v2.4 used 8 commits; v2.5 is smaller. **Pre-resolution: 6 commits sufficient.** Suggested grouping:
+  1. Backfill `cowork.lock.json` `content_sha256` for all 110 entries (one big lock-file diff, no other files).
+  2. Add `sync-agency.yml` verify step + fault-injection fixture + `quality.yml` `lock-content-sha-fault-injection` step (F1).
+  3. Add `tools:` frontmatter to all 20 `skills/*/SKILL.md` + `quality.yml` MF-3 step (F2).
+  4. Add `upstream-contribution/meeting-notes-upstream.md` + CHANGELOG PR-URL placeholder (F3).
+  5. Harden `quality.yml` MF-1/MF-2 (`pipefail` + awk header lookup) + regression fixture (F4).
+  6. Paperwork commit: `docs/architecture.md` updated + ADR Index reflects ADR-028 ACCEPTED + ADR-029/030 NEW + ADR-007/016 amendments + CHANGELOG entry + VERSION 2.5.0 + README badge + "Next up" teaser + `scripts/install-pre-commit.sh` + CONTRIBUTING.md update (F5).
+
+  Optional 7th commit if F3 PR URL is recorded post-merge: amend CHANGELOG + architecture.md F3 implementation note. @dev's discretion.
+
+- **(@security potential WATCH) F3 PR submission outside CI.** The PR is opened manually by the project owner. There is no automated submission. @security may flag this as an INFO with a watch item: ensure the project owner's GitHub account has 2FA enabled at PR-submission time. **Pre-resolution: this is an out-of-band hardening recommendation; not blocking; carries forward as INFO if surfaced.**
+
+---
+
+### Phase 1 Definition of Done
+
+- [x] All 5 spec OQs resolved with binding rulings (OQ-v2.5-1 through OQ-v2.5-5).
+- [x] ADR-028 status flipped PROPOSED → ACCEPTED with implementation specifics.
+- [x] ADR-029 (`tools:` contract) authored.
+- [x] ADR-030 (outbound contribution) authored.
+- [x] ADR-007 amendment authored.
+- [x] ADR-016 amendment authored.
+- [x] 18 top-level constraints (`C-v2.5-1` through `C-v2.5-18`) issued with copy-paste @qa verifiers.
+- [x] 2 @compliance MUST-FIX items bound (CF-L1-1 → C-v2.5-11; CF-L4-1 → C-v2.5-13).
+- [x] Migration plan documented (zero user-workspace impact).
+- [x] Phase 2 security review surface enumerated (10 items).
+- [x] Spec divergences captured (1 minor mechanism amendment on AC-F1-5).
+- [x] v2.5 carry-forwards generated (CF-v2.5-A through CF-v2.5-E).
+- [x] Pre-empted deliberation findings recorded.
+- [x] Anti-pattern scan (next subsection).
+
+---
+
+### Anti-Pattern Scan
+
+| # | Anti-Pattern | Present? | Notes |
+|---|--------------|----------|-------|
+| 1 | God Class/Module | NO | No new module. Changes spread across `cowork.lock.json` (data), `sync-agency.yml` (CI), `quality.yml` (CI), 20 SKILL.md (frontmatter), `upstream-contribution/` (1 file), `scripts/install-pre-commit.sh` (50L), docs (architecture + CHANGELOG + CONTRIBUTING). |
+| 2 | Circular Dependencies | NO | All directional: lock → sync-agency reads/writes; quality.yml reads lock + skills + selection-presets + curated-skills-registry. No cycle. |
+| 3 | Leaky Abstraction | NO | `content_sha256` is a fully-internal CI invariant; users never see it. `tools:` is a user-visible field but its semantics are minimal at v2.5 (informational). |
+| 4 | Premature Optimization | NO | YAGNI on v3.0 routing logic; `tools:` is informational only. Backfill script is one-shot, not generalized. |
+| 5 | Over-Engineering | NO | 5 features, 18 constraints, ~950L delta. Smaller envelope than v2.4. |
+| 6 | Tight Coupling | NO | New directory `upstream-contribution/` is excluded from existing CI loops via path-glob shape, not explicit branching. MF-3 is a fresh CI step, no entanglement with MF-1/MF-2. |
+| 7 | Missing Separation of Concerns | NO | F1 (data layer), F2 (frontmatter+CI gate), F3 (artifact+attribution), F4 (CI hardening), F5 (dev tooling) — each feature owns one surface. |
+| 8 | N+1 Query | NO | No DB. CI iterates files once per loop. |
+| 9 | Destructive Migration | NO | `content_sha256` is additive; `tools:` is additive; `$schema_version` unchanged. ADR-024 + ADR-025 byte-stable. |
+
+**Anti-pattern scan: 0 blockers.**
+
+---
+
+### v2.5 Phase 1 Summary
+
+**Outcome:** Outcome A — 2 new ADRs (ADR-029, ADR-030); 1 status-flip (ADR-028 PROPOSED → ACCEPTED); 2 amendments (ADR-007, ADR-016). All 5 spec OQs resolved with binding rulings. 2 @compliance MUST-FIX items bound as Phase-4 constraints (CF-L1-1, CF-L4-1).
+
+- **OQ-v2.5-1:** Verify step inside existing fetch job, ordered AFTER per-file SHA-256 compute (line 216) and BEFORE accumulator append (line 237). C-v2.5-2.
+- **OQ-v2.5-2:** Strategy (a) — local backfill in v2.5 PR. Atomic deploy, no half-state. C-v2.5-1 + C-v2.5-3.
+- **OQ-v2.5-3:** New dedicated MF-3 step in `quality.yml`, NOT extension of MF-1. Surface separation. C-v2.5-8.
+- **OQ-v2.5-4:** `upstream-contribution/` excluded by path-glob shape (no explicit `--exclude` flag). Naturally outside `skills/*/SKILL.md` glob.
+- **OQ-v2.5-5:** Per-step `set -o pipefail` (Approach 1) — smallest scope, durable, forward-safe vs. global YAML-level. C-v2.5-15.
+
+**Phase 4 constraints issued:** C-v2.5-1 through C-v2.5-18 (18 top-level). All copy-paste-ready, all with concrete @qa shell-command verifiers, no remaining @dev discretion on the 5 OQs or the 2 compliance MUST-FIXs.
+
+**Files Phase 4 will modify:** 5 new (`upstream-contribution/meeting-notes-upstream.md`, `scripts/install-pre-commit.sh`, `tests/fixtures/sha-fault-injection.json`, `tests/fixtures/registry-column-reorder.md`, `cowork.lock.json` — modified, not new but a large diff) + ~30 modified (20 SKILL.md + sync-agency.yml + quality.yml + CHANGELOG + VERSION + README + CONTRIBUTING + architecture.md + ...) ≈ ~35 files in scope.
+
+**Bundle delta:** lock file +~9KB; 20 SKILL.md +~1 line each (+~20L); quality.yml +~42L; sync-agency.yml +~15L; upstream-contribution/ +~80L; scripts/install-pre-commit.sh +~50L; tests/fixtures/ +~2KB; CONTRIBUTING.md +~15L; CHANGELOG +~25L; architecture.md +~700L (this section). **Total user-visible markdown delta: ~+930L net additive.** Within v2.4 informal yardstick (~3000L ceiling).
+
+**Anti-pattern scan:** 0 blockers. **LLM01 scan:** 1 surface named (F2 `tools:` field as new YAML key on instruction surface) — mitigated by ADR-029 read-as-data semantics + MF-3 closed-vocabulary gate.
+
+**Schema impact:** `cowork.lock.json` additive (+1 field per entry, schema_version unchanged). SKILL.md additive (+1 frontmatter field). **CLAUDE.md word budget: UNTOUCHED** (no v2.5 change). **`cowork.lock.json` `$schema_version`: UNCHANGED at "1.0".**
+
+**Commit topology:** 6 commits (with optional 7th post-merge for PR URL recording). Paperwork (Commit 6) carries architecture.md + CHANGELOG + VERSION + README badge + "Next up" teaser + CONTRIBUTING.md + scripts/install-pre-commit.sh.
+
+**Next step:** Phase 1 deliberation Round 1 (@security threat-model + @dev implementability), then per spec classification (SECURITY-SENSITIVE + COMPLIANCE-SENSITIVE), Phase 2 `/review` (FULL @security pass — combined-path NOT eligible). @compliance Phase 2 already DONE (PASS WITH WARNINGS, 2026-05-09T18:00Z). Then Phase 3 `/gate` for user decision.
+
+---
+
+### Phase 1 Deliberation Round 1 — Amendments
+
+Round 1 closed convergent: **@security APPROVE-WITH-WATCH-ITEMS** (3 watch items W1–W3 carry forward to Phase 2 `/review`; one new constraint added per the pre-empted backfill cross-check), **@dev APPROVE-WITH-CLARIFICATIONS** (2 procedural questions resolved below). The amendments below BIND existing C-v2.5-3 prose, add C-v2.5-19, and lock the commit topology to remove @dev discretion at Phase 4.
+
+**A1 — C-v2.5-19 NEW: Backfill cross-check CI step (resolves @security pre-empt W1 — backfill supply-chain trust).** A new `quality.yml` step `lock-content-sha-cross-check` runs on every PR. It reads each `files[]` entry from `cowork.lock.json`, fetches the file at `pinned_commit_sha` via `raw.githubusercontent.com`, computes SHA-256 in the GitHub-Actions runner, and asserts equality with the stored `content_sha256`. ANY mismatch fails the PR. This makes the backfill state cross-environment-verified (clean GHA env vs. @dev's local env). Implementation:
+
+```yaml
+- name: lock-content-sha-cross-check
+  run: |
+    set -euo pipefail
+    PINNED=$(jq -r '.pinned_commit_sha' cowork.lock.json)
+    UPSTREAM=$(jq -r '.upstream' cowork.lock.json)
+    FAIL=0
+    while IFS='|' read -r path stored_hash; do
+      curl -sf "https://raw.githubusercontent.com/${UPSTREAM}/${PINNED}/${path}" -o /tmp/x
+      ACTUAL=$(sha256sum /tmp/x | awk '{print $1}')
+      if [ "$ACTUAL" != "$stored_hash" ]; then
+        echo "::error::content_sha256 mismatch on ${path}: stored=${stored_hash} actual=${ACTUAL}"
+        FAIL=1
+      fi
+    done < <(jq -r '.files[] | "\(.path)|\(.content_sha256 // "MISSING")"' cowork.lock.json)
+    [ "$FAIL" = "0" ]
+```
+
+**Verifier (C-v2.5-19):** `grep -c 'lock-content-sha-cross-check' .github/workflows/quality.yml` ≥ 2 (step name + reference in dispatch).
+
+This step is RUN-ON-EVERY-PR (not only on `sync-agency.yml` invocations) — it makes the lock file's `content_sha256` invariant observable continuously. Constraint count rises: 18 → 19.
+
+**A2 — `scripts/backfill-content-sha256.sh` NOT shipped (resolves @dev Clarification 1).** Confirmed per pre-empt ruling. The backfill script is one-shot, run by @dev locally, NOT committed. Future cycles re-derive from this ADR if needed. WILL-NOT-DO addition: "v2.5 ships the backfilled `cowork.lock.json` but NOT the script that produced it. Future cycles requiring backfill logic re-derive from ADR-028 v2.5 prose."
+
+**A3 — Commit topology BINDING (resolves @dev Clarification 2).** 6 commits is the bound topology. No 7th commit pre-Phase-7. Post-Phase-7 PR-URL-record amendment commit is allowed but optional (depends on F3 PR submission timing relative to merge). Grouping per pre-empt above. @dev MUST follow this topology — no consolidation, no splitting.
+
+**A4 — @security W1/W2/W3 watch items carry forward to Phase 2 (no design change).**
+- **W1 (FOLDED into A1 above):** Backfill supply-chain trust — addressed via cross-check step.
+- **W2 (carry):** F3 outbound PR is submitted from a human GitHub account; no CI bot. @security recommends 2FA on the project owner's account at PR-submission time. INFO-only, no design change.
+- **W3 (carry):** MF-3 vocabulary gate's frontmatter extraction (`awk '/^---$/{c++; next} c==1 && /^tools:/'`) makes a positional assumption (frontmatter is the FIRST `---`-delimited block). If a SKILL.md ever contains a horizontal rule (`---` on its own line) inside the body, the awk's counter increments incorrectly. Risk is low (SKILL.md template forbids body-level `---`); @security recommends a markdownlint MD035 (`hr_style`) check or a sentinel test. Carry as Phase 2 INFO.
+
+**Round 1 close.** No further amendments. C-v2.5-1..19 catalog (count: **19**). AC catalog unchanged (33 spec ACs). Files-in-scope unchanged (~35). Combined-path eligibility unchanged (NOT eligible — SECURITY-SENSITIVE + COMPLIANCE-SENSITIVE). Ready for Phase 2 `/review`.

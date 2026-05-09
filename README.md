@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.4.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.5.0-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -147,11 +147,11 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## Next up — v2.5: First External Skill Import + ADR-028 Implementation
+## What's new in v2.5
 
-v2.4.0 ships the Dynamic Workspace Architect: open-ended goal discovery (F3 keyword matcher), dynamic skill-bundle composition from a consolidated `skills/` pool (20 SKILL.md files), Q&A bundle customization (F4), dynamic install with ADR-024 attribution (F5), byte-identical starter file Q1 blocks across all 7 presets, byte-identical deprecation stubs for per-preset `skills-as-prompts.md`, and CI vocabulary gates (MF-1, MF-2).
+v2.5.0 ships: ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), MF-1/MF-2 CI hardening (`set -o pipefail` + structural awk header scan replacing positional `$7`), and local markdownlint pre-commit installer.
 
-**Next up (v2.5):** ADR-028 `content_sha256` lock-schema implementation, first external skill import via `/sync-agency`, local markdownlint pre-commit (closes the v2.3.0 MD058 gap).
+**Next up (v2.6):** Multi-tool skill authoring (v3.0 routing intent) — individual skills validated for Copilot/Cursor/Windsurf and widened beyond `claude-code`.
 
 ---
 
