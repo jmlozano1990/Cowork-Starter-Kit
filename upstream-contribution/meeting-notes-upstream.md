@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD003 MD026 -->
 <!-- This file was authored for cowork-starter-kit and submitted to msitarzewski/agency-agents as a PR contribution. Cowork canonical version at skills/meeting-notes/SKILL.md. -->
 
 ---

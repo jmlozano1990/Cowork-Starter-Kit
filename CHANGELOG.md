@@ -15,7 +15,7 @@ All notable changes to this project are documented here. This project uses [Sema
 - `tools: [claude-code]` added to all 20 skills in `skills/*/SKILL.md`. All 21 `examples/*/SKILL.md` byte-mirrored (ADR-018 research-synthesis exemption applied). MF-3 CI gate blocks vocab violations and multi-line YAML form (MF-S1 MUST-FIX).
 - ADR-030: Outbound contribution model — `upstream-contribution/` working directory convention, attribution-via-PR-description policy. First outbound submission: meeting-notes skill to `msitarzewski/agency-agents`.
 - `upstream-contribution/meeting-notes-upstream.md` — upstream-format version of meeting-notes skill. Writing-profile reference stripped (CF-L1-1). Attribution line in PR description (CF-L4-1).
-- Upstream contribution: https://github.com/msitarzewski/agency-agents/pull/521 — meeting-notes skill submitted to `project-management/` category.
+- Upstream contribution: [PR #521](https://github.com/msitarzewski/agency-agents/pull/521) — meeting-notes skill submitted to `project-management/` category.
 - MF-3 vocabulary gate in `quality.yml` — closed allowlist, multi-line YAML form rejected (MF-S1 MUST-FIX).
 - MF-1 hardening: `set -o pipefail` per-step scope + `|| BAD=0` pattern replaces `|| true` (CF-v2.4-G / AC-F4-1).
 - MF-2 hardening: structural header scan replacing positional `$7` (MF-S2 MUST-FIX / AC-F4-3). awk finds `goal_tags` column by name; skips backtick-wrapped documentation rows.

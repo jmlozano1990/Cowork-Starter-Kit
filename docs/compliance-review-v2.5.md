@@ -102,7 +102,7 @@ The upstream-format file (`upstream-contribution/meeting-notes-upstream.md`) fol
 **Conclusion — the attribution policy for F3:**
 
 1. **Skill file body and frontmatter:** No Cowork attribution block required or appropriate. The file follows upstream format conventions. Adding a non-standard attribution block to the body would make the contribution non-conforming and may reduce merge likelihood.
-2. **PR description (required):** The PR description MUST carry the attribution line: "Originally authored for [cowork-starter-kit](https://github.com/[repo-url]) and adapted to The Agency format." This satisfies the spirit of contribution transparency and starts the relationship on an honest footing without violating upstream format conventions.
+2. **PR description (required):** The PR description MUST carry the attribution line: "Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format." This satisfies the spirit of contribution transparency and starts the relationship on an honest footing without violating upstream format conventions.
 3. **CHANGELOG entry (per AC-F3-2):** `Upstream contribution: [PR URL] — meeting-notes skill submitted to project-management category` is the correct Cowork-side record. This is internal to Cowork's documentation.
 4. **Cowork `upstream-contribution/meeting-notes-upstream.md`:** As a tracked artifact in the Cowork repo, this file may optionally carry a comment at the top: `# This file was authored for cowork-starter-kit and submitted to msitarzewski/agency-agents as a PR contribution.` This is a Cowork-internal tracking note, not injected into the upstream PR.
 
@@ -278,7 +278,7 @@ Bound to spec ACs. These are compliance requirements, not security findings.
 | ID | Bound to | Requirement | Verification |
 |----|---------|-------------|-------------|
 | CF-L1-1 | AC-F3-3 | `upstream-contribution/meeting-notes-upstream.md` MUST NOT contain the writing-profile integration section in any form. Strip entirely; do not rephrase as a general "output style" note. | `grep -i "writing.profile\|writing profile\|writing_profile" upstream-contribution/meeting-notes-upstream.md` = 0 |
-| CF-L4-1 | AC-F3-2 (PR description) | The PR description submitted to `msitarzewski/agency-agents` MUST include the attribution line: "Originally authored for [cowork-starter-kit]([URL]) and adapted to The Agency format." Record the exact PR URL in CHANGELOG and architecture.md per ACs F3-2 and F3-4. | PR description reviewed by @qa at Phase 5; URL recorded per AC-F3-2 and AC-F3-4 |
+| CF-L4-1 | AC-F3-2 (PR description) | The PR description submitted to `msitarzewski/agency-agents` MUST include the attribution line: "Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format." Record the exact PR URL in CHANGELOG and architecture.md per ACs F3-2 and F3-4. | PR description reviewed by @qa at Phase 5; URL recorded per AC-F3-2 and AC-F3-4 |
 
 ---
 
