@@ -3751,4 +3751,394 @@ Expand `follow-up-tracker` and `spend-awareness` to the 9-section structure. For
 | ZD — Zero-diff | cowork.lock.json?, quality.yml, sync-agency.yml, CLAUDE.md, WIZARD.md, 6× global-instructions.md, templates/, curated-skills-registry.md, action-items/SKILL.md, doc-summary/SKILL.md | 9 (AC-ZD-1..9) | cmp / wc -w / grep byte-equality checks |
 | BS — Base-sync + PR | Commit 0 body, scratchpad.md, origin branch, PR | 4 (AC-BS-1..4) | grep / git ls-remote / gh pr list |
 | CT — Commit topology | git log on release/v2.3.1 ^main | 1 (AC-CT-1 — added Round 1 amendment A2) | git log subject prefix match per C-v2.3.1-13 |
+
+---
+
+## v2.4 — Dynamic Workspace Architect
+
+> **Cycle:** v2.4 — Dynamic Workspace Architect
+> **Status:** Phase 0 — Requirements
+> **Date:** 2026-05-08T23:00:00Z
+> **Spec mode:** Standard (depth appropriate for minor feature surface; upgraded from quick due to security-surface change)
+> **Version bump:** v2.3.1 → v2.4.0 (minor — new feature surface)
+> **Classification:** SECURITY-SENSITIVE — wizard changes the skill installation surface model. @security Phase 2 required. Combined-path NOT eligible.
+> **External content detection:** Named external repos (`mattpocock/skills`, `addyosmani/agent-skills`, `anthropics/skills`) detected in prompt context. v2.4 scope DEFERS external import to a future cycle (see WILL-NOT-DO). If a future cycle includes external import, it must invoke @compliance at Phase 2 and Phase 6.
+
+---
+
+### Problem
+
+Cowork's stated vision since v1.2 is "dynamic workspace architect." Every cycle since v1.2 has added presets — not made the wizard dynamic.
+
+**The specific failure mode:** Q1 of the wizard force-maps any user goal into one of 7 hardcoded presets. Custom goals get the question "It sounds like Personal Assistant — is that right?" rather than genuine discovery. The skill pool is siloed: `examples/<preset>/.claude/skills/` — 7 folders that the wizard picks from by matching preset name, not by understanding what the user needs. `curated-skills-registry.md` is a 109-line vetted catalog that the wizard never reads.
+
+**The result:** A user who needs "Financial Manager," "Research + PM hybrid," or "career transition workspace" either gets force-mapped into a wrong preset or abandons. The wizard cannot express "you need 3 skills from research, 2 from project-management, and 1 custom" because the install step is `cp examples/<preset>/.claude/skills/*` — not a query.
+
+**v2.4 closes this gap** by converting the skill pool from 7 siloed preset folders into a unified queryable catalog and converting Q1 from a preset selector into an open-ended goal discovery conversation that feeds dynamic skill selection.
+
+---
+
+### Target Users
+
+Same personas as v1.2+. v2.4 primarily improves the experience for:
+
+**Morgan — The Objective-First User** (was under-served by preset lock): Arrives with a specific cross-domain goal ("launch a freelance consulting practice"). Today gets force-mapped to Personal Assistant or Business/Admin. With v2.4, gets a dynamically composed bundle: `follow-up-tracker` + `status-update` + `email-drafter` + `creative-brief`.
+
+**Riley — The Prosumer Builder**: Already knows what they want. Today is forced through a preset screen before getting to skills. With v2.4, can describe their objective and get a skill bundle immediately, with the option to accept a suggestion preset as a starting point.
+
+All existing personas (Alex, Maria, Sam, Casey) benefit from the new flow — preset-matched goals still get the preset as a suggestion, not a lock.
+
+---
+
+### Core Features (MVP)
+
+#### F1 — Unified Skill Pool (Consolidate 7 Preset Silos)
+
+All in-tree skills currently siloed under `examples/<preset>/.claude/skills/` are consolidated into a single flat skill pool at `skills/`. `curated-skills-registry.md` becomes the authoritative queryable catalog over this pool. The 7 preset folder structures remain — they contain non-skill scaffold files (global-instructions.md, project-instructions-starter.txt, context/, connector-checklist.md) — but the `.claude/skills/` subdirectory inside each preset becomes a symlink-or-copy target from the unified pool, not an independent source.
+
+**What "consolidated" means for v2.4:** The canonical skill files live at `skills/<skill-name>/SKILL.md`. The `examples/<preset>/.claude/skills/<skill-name>/` paths are preserved via copy-on-install by the wizard (Step 4), not as separate source files. CI enforces that the `skills/` pool is the source-of-truth; preset skill folders must match.
+
+**AC-F1:**
+- `skills/` directory exists at repo root containing all 21 in-tree skill folders (7 presets × 3 skills each, minus any de-duplicates per ADR-018)
+- `curated-skills-registry.md` `goal_tags` field is the query index — wizard reads this field to match skills to user-declared goal, not preset folder name
+- Each skill in `skills/` has a single canonical SKILL.md; no duplicate files across preset folders (de-duplicate per ADR-018 precedent: `research-synthesis` dual-file disposition)
+- `examples/<preset>/.claude/skills/` path preserved for backwards compatibility and CI enforcement — content must byte-match the pool source
+- CI `skill-depth-check` job continues to pass against the consolidated pool
+- `grep -r "goal_tags" skills/` returns ≥21 entries (one per skill)
+
+#### F2 — Selection Presets (Replace Hardcoded Q1 Menu)
+
+The 7 preset names (Study, Research, Writing, Project Management, Creative, Business/Admin, Personal Assistant) are no longer the wizard's primary product. They become **selection presets**: curated skill combinations + scaffold templates used as *starting suggestions*, not locked selections.
+
+**Selection preset definition:**
+
+```
+A selection preset = {
+  name: slug (e.g., "research")
+  display_name: "Research"
+  description: one sentence on who it serves
+  skill_bundle: [list of skill-name slugs from unified pool]
+  scaffold_source: "examples/<preset-name>/"  # non-skill files
+  match_signals: [keyword list — used by goal-matching in F3]
+}
+```
+
+Selection preset metadata lives in a new file: `selection-presets.md` (human-readable) with a machine-parseable YAML frontmatter block per preset entry.
+
+**What changes at Q1:** Open-ended goal discovery replaces the 7-item pick list. The wizard asks "What do you need help with? Describe what you want this workspace to do for you." Goal-matching (F3) then suggests a selection preset OR composes a bundle from scratch.
+
+**The 7 existing preset descriptions are preserved** as the suggestion templates. When the wizard matches a goal to a selection preset, it says "That sounds like a [Research] workspace — here's what I'd suggest: [skill list]. Sound right, or want to adjust?" The user can accept, modify, or say "none of these — build from scratch."
+
+**AC-F2:**
+- `selection-presets.md` exists at repo root with 7 entries (one per existing preset)
+- Each entry includes: `name`, `display_name`, `description`, `skill_bundle` (list of skill slugs), `scaffold_source`, `match_signals` (≥3 keywords per preset)
+- `WIZARD.md` Q1 section updated: open-ended goal discovery question replaces the 7-item pick list verbatim
+- The 7-item pick list is preserved inside `selection-presets.md` as suggestion display text — it is not deleted, it is relocated
+- Force-mapping phrase "It sounds like [preset] — is that right? If not, I can show you all 7 options." replaced by a three-path routing decision (see F3)
+- `project-instructions-starter.txt` for all 7 presets updated: Q1 uses open-ended question; preset pick list NOT present in the system context file (word budget constraint)
+- `grep -L "Which best describes your main use for Cowork" examples/*/project-instructions-starter.txt` returns all 7 preset files (the old Q1 prompt is gone from starter files)
+
+#### F3 — Dynamic Goal Matcher (Three-Path Routing)
+
+After the user describes their goal in free text, the wizard evaluates the description and routes to one of three paths:
+
+**Path A — Preset Match:** Goal description contains ≥2 signals from a selection preset's `match_signals` list.
+- Wizard: "For [goal], a [Research] workspace is a strong starting point. Here's what that includes: [skill list]. Accept, adjust, or build from scratch?"
+- User accepts → use preset's `skill_bundle` as initial bundle
+- User adjusts → enter F4 (Q&A customization) with preset bundle as starting point
+- User rejects → fall through to Path C
+
+**Path B — Multi-Preset Overlap:** Goal signals match ≥2 different presets.
+- Wizard: "That spans [Research] and [Project Management]. Here's a cross-area team I'd suggest: [combined skill list]. Want to start here, or adjust?"
+- User accepts → combined bundle as initial bundle
+- User adjusts → enter F4
+
+**Path C — Novel Goal (Custom Composition):** No preset match, or user explicitly requests custom.
+- Wizard: "Interesting — here's a team I'd build for [goal]: [skill list]. This is custom — not from any preset. Continue?"
+- Skill list derived by: match goal keywords against `curated-skills-registry.md` `description` + `goal_tags` fields
+- User confirms or adjusts → enter F4
+
+**Goal-matching algorithm (safe-by-design):** Keyword match only. No LLM sub-calls, no network calls. The wizard reads the user's goal description and the `match_signals` list from `selection-presets.md` and counts overlapping lowercase tokens. Tie-breaking rule: shorter match_signal list wins (more specific). This is a deterministic, auditable, offline operation.
+
+**AC-F3:**
+- `WIZARD.md` documents all three routing paths with explicit examples
+- Path A must be triggered when user goal contains ≥2 signals from a single preset's `match_signals` list
+- Path B must be triggered when signals span ≥2 presets and no single preset has ≥2 signals
+- Path C is the default when neither A nor B fires, or when user explicitly types "custom" or "build from scratch"
+- Every path outputs a named skill bundle (accepted or composed) before proceeding to F4
+- No path force-maps goal to preset without user confirmation — every routing decision includes a "Sound right?" or equivalent confirmation step before install
+- `grep -c "Sound right\|Want to adjust\|Continue\|adjust or build from scratch" WIZARD.md` ≥ 3 (one confirmation per path)
+
+#### F4 — Q&A Bundle Customization (Add/Remove Skills)
+
+After path routing produces an initial bundle, the wizard enters a Q&A phase to refine it:
+
+1. Show the current bundle: "Your team so far: [Skill A — role], [Skill B — role], [Skill C — role]."
+2. Offer additions: "Want to add [Skill D — role] for [specific use case from user's goal]? (Yes / No / Show me more)"
+3. Offer removals: "Anything you don't need? (Remove / Keep all)"
+4. Repeat until user confirms final bundle or types `done`
+
+Skill suggestions in F4 are drawn from the unified pool (`skills/`) filtered by the user's goal, excluding skills already in the bundle. The wizard presents ≤3 additional skill suggestions at a time to avoid overwhelming.
+
+**Role-generation rule (ADR-030 preserved):** For each skill in the bundle, the wizard generates a one-line role description containing at least one keyword from the skill's `description` field. Stopword filter per AC-D2 (from WIZARD.md §Phase 1 Role-Generation Rule) applies unchanged.
+
+**AC-F4:**
+- `WIZARD.md` documents the Q&A customization phase after bundle routing
+- Add-skill suggestions are filtered to exclude skills already in the current bundle
+- Remove-skill step is present (user can drop any bundle member)
+- Final bundle must contain ≥1 skill before proceeding to install
+- Each skill presented with: skill name, one-line role description (ADR-030 contract), source tier (Tier 1 or Tier 2)
+- `done` or equivalent confirmation exits customization and triggers Step 4 install
+- ADR-030 role-generation rule and AC-D2 stopword filter apply unchanged to all skills presented in F4
+
+#### F5 — Install Step (Dynamic Bundle Copy)
+
+Step 4 (current: `cp examples/<preset>/.claude/skills/*`) is replaced by a dynamic copy from the unified skill pool:
+
+For each skill in the confirmed bundle:
+1. Look up `skills/<skill-name>/SKILL.md` in the unified pool
+2. Copy to `<user-workspace>/.claude/skills/<skill-name>/SKILL.md`
+3. Attribution block check: if skill has `source_url` that is not `builtin`, inject ADR-024 attribution block before writing (non-overridable)
+4. Confirm copy: "Installed [Skill Name]."
+
+Post-install: `skills-as-prompts.md` is generated dynamically from the installed skill set (not copied from a preset folder). Content is the concatenation of each installed skill's `## Instructions` section, with skill name as H2 header.
+
+**AC-F5:**
+- Install step iterates over confirmed bundle slug list, not over `examples/<preset>/.claude/skills/`
+- Each skill installed from `skills/<skill-name>/SKILL.md` (unified pool source)
+- ADR-024 attribution block check applies to every installed file where `source_url != "builtin"`
+- `skills-as-prompts.md` generated from installed bundle, not copied from preset folder
+- `wc -l <user-workspace>/.claude/skills/*/SKILL.md` shows only skills in the confirmed bundle (no extra preset files)
+- Install step produces a confirmation line per skill ("Installed [name]") before proceeding to closing message
+
+#### F6 — ADR Index Backfill (ADR-020 through ADR-028)
+
+**Non-negotiable binding AC.** Four consecutive cycles of advisory deferral have failed. The ADR Index table at the top of `docs/architecture.md` is missing entries for ADR-020 through ADR-028. This is a documentation debt that makes the architecture doc unreliable as a reference. It must close in v2.4.
+
+**AC-F6:**
+- ADR Index table in `docs/architecture.md` includes rows for ADR-020, ADR-021, ADR-022, ADR-023, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028 (9 rows)
+- Each row contains: ADR number, title, status (ACCEPTED / PROPOSED as appropriate)
+- ADR-028 row shows status: PROPOSED (implementation still deferred to v2.5 per OQ-2 below)
+- `grep -c "ADR-02[0-8]" docs/architecture.md` ≥ 9 in the index table section
+- This AC is non-negotiable. Phase 5 testing MUST verify it. Any cycle that defers this AC is blocked at Phase 7.
+
+#### F7 — Mandatory Paperwork Commit (Commit Topology Fix)
+
+**Process constraint, not a file feature.** The Paperwork-Follow-Up-PR-Pattern has recurred for two consecutive cycles (v2.3.0, v2.3.1). Root cause: Commit N (docs paperwork) is marked optional in the commit topology, so it consistently doesn't ship with the code PR.
+
+**v2.4 binding constraint:** The Phase 1 commit topology for v2.4 MUST mark the paperwork commit as REQUIRED for this cycle (which produces new docs: spec section, architecture section, security review). @architect is responsible for encoding this constraint in the Phase 1 design deliverable. @dev must not treat the paperwork commit as discretionary.
+
+**AC-F7:**
+- Phase 1 architecture section for v2.4 includes a commit topology that marks the paperwork commit (pipeline.md, scratchpad.md, docs/ cycle artifacts) as REQUIRED (not "at @dev discretion")
+- `git log release/v2.4.0 ^main --oneline | grep -i "docs\|paper\|pipeline"` returns ≥1 commit on the release branch
+- No separate paperwork follow-up PR is opened after the code PR merges
+
+---
+
+### Out of Scope (v2.4)
+
+1. **ADR-028 `content_sha256` implementation** — PROPOSED status maintained. Implementation deferred to v2.5. Rationale: skill pool consolidation (F1) changes the data model; implementing integrity hashing before the pool is stable adds rework risk. v2.5 implements ADR-028 against the consolidated pool.
+2. **First external skill import** (`mattpocock/skills`, `addyosmani/agent-skills`) — deferred to v2.5. External imports require @compliance Phase 2 + Phase 6 review (COMPLIANCE-SENSITIVE classification). v2.4 is already SECURITY-SENSITIVE; bundling both classifications adds review surface and risks combined-path ineligibility for two consecutive cycles.
+3. **`anthropics/skills` import** — permanently deferred pending compliance clearance. Anthropic Proprietary license forbids redistribution. @compliance must evaluate before any import is considered.
+4. **"Financial Manager" selection preset** — explicitly excluded. The dynamic composition path (F3 Path C) handles this use case without adding a preset. Adding a preset would prove the wrong vision is winning.
+5. **LLM-based goal matching** (sub-call to judge goal → preset fit) — excluded. Goal matching in v2.4 is keyword-only for auditability and security posture. LLM-based matching is an OQ for v2.5.
+6. **Selection preset contribution workflow** (community PRs to add new presets) — deferred. CONTRIBUTING.md covers skill PRs; preset PRs need a separate contribution model. v2.5 scope.
+7. **Local markdownlint pre-commit hook** (CF-4) — deferred unless quality.yml is touched anyway.
+8. **ENFORCED_EXAMPLES widening** (CF-v2.3.1-A) — deferred unless quality.yml is touched anyway.
+9. **S1 email-drafting checklist promotion** (v2.3.1 INFO) — deferred to hygiene cycle.
+10. **Telemetry for selection quality** — out of scope. cowork-starter-kit is a static markdown repo with no telemetry surface. User feedback via GitHub Issues is the mechanism.
+
+---
+
+### Technical Constraints
+
+- Stack: Markdown-only repo. No Vitest, no Playwright, no Supabase. All ACs are file-presence, `grep`, `wc`, or `git log` assertions.
+- All new files follow ADR-004 naming conventions (lowercase, hyphenated).
+- `selection-presets.md` must be parseable by the WIZARD.md keyword-matching algorithm without a YAML parser (human-readable + structurally predictable).
+- `skills/` pool must not break CI `skill-depth-check` job (ADR-016) — all 21 skill folders must pass the existing depth checks.
+- Attribution rule ADR-024 is non-overridable — applies to any non-builtin skill in the install step.
+- `project-instructions-starter.txt` word budget: ≤350 words per file (per v1.2 F3 AC). Q1 replacement must stay within this budget.
+- Zero-diff constraint applies to: `cowork.lock.json`, `sync-agency.yml`, `.github/workflows/quality.yml` (unless F6/F7 touch quality.yml), `CLAUDE.md`.
+- Backwards compatibility: existing v2.3.1 users who have workspaces built against a specific preset still have their skill files intact. The consolidation is at the source repo level, not a migration command.
+
+---
+
+### User Stories
+
+- As Morgan (objective-first user), I can describe my goal in my own words and receive a composed skill bundle that spans multiple traditional preset categories, so that I don't have to force-fit my work into a preset that doesn't match.
+- As Riley (prosumer builder), I can accept the suggested selection preset as a starting point, then add and remove individual skills, so that I get a precisely tailored bundle without starting from scratch.
+- As Alex (student, uncertain), I can answer "studying biochemistry" and see "That sounds like a Study workspace — here's what I'd suggest" before being asked to confirm, so that I get a suggestion without having to know what the presets are.
+- As any Cowork user, I can type "build from scratch" or "none of these" after seeing a preset suggestion, and have the wizard compose a bundle from the full skill pool based on my goal description, so that preset names never gate my options.
+- As the repo maintainer, I can add a skill once to `skills/` and have it available to all selection presets that reference it via `goal_tags`, without duplicating the file under each preset folder.
+
+---
+
+### Acceptance Criteria
+
+#### Pool Consolidation (F1)
+
+- [ ] AC-F1-1: `skills/` directory exists at repo root; `ls skills/ | wc -l` ≥ 21 (one folder per in-tree skill)
+- [ ] AC-F1-2: Each skill in `skills/` contains exactly one `SKILL.md` file with valid YAML frontmatter (`name:` and `goal_tags:` fields present); `grep -rL "goal_tags" skills/*/SKILL.md` returns empty
+- [ ] AC-F1-3: `research-synthesis` appears once in the pool (de-duplicated per ADR-018 precedent); `find skills/ -name SKILL.md | xargs grep -l "name: research-synthesis" | wc -l` = 1
+- [ ] AC-F1-4: `examples/<preset>/.claude/skills/` directories preserved and byte-matching pool source; CI skill-depth-check continues to pass on all ENFORCED paths
+
+#### Selection Presets (F2)
+
+- [ ] AC-F2-1: `selection-presets.md` exists at repo root; `wc -l selection-presets.md` ≥ 35 (≥5 lines per preset × 7 presets)
+- [ ] AC-F2-2: `grep -c "match_signals:" selection-presets.md` = 7 (one `match_signals:` block per preset)
+- [ ] AC-F2-3: Each `match_signals:` block contains ≥3 lowercase keyword tokens; verifiable by reading each block
+- [ ] AC-F2-4: `grep -L "Which best describes your main use for Cowork" examples/*/project-instructions-starter.txt` returns all 7 preset file paths (old Q1 pick list removed from starter files)
+- [ ] AC-F2-5: `WIZARD.md` Q1 section contains open-ended goal discovery question ("What do you need help with" or equivalent) as the primary prompt — no 7-item pick list in Q1
+
+#### Dynamic Routing (F3)
+
+- [ ] AC-F3-1: `WIZARD.md` documents Path A, Path B, and Path C routing with explicit trigger conditions for each
+- [ ] AC-F3-2: Path A confirmation phrase present: `grep -c "Sound right\|is that right\|adjust" WIZARD.md` ≥ 3
+- [ ] AC-F3-3: Path C ("novel goal / custom composition") is reachable without naming any of the 7 presets; `WIZARD.md` Path C section does not require user to select a preset
+- [ ] AC-F3-4: No path in WIZARD.md contains the phrase "It sounds like [preset]" without a subsequent user-confirmation step before install; `grep "It sounds like" WIZARD.md` returns 0 or all instances are followed within 3 lines by a confirmation prompt
+
+#### Q&A Customization (F4)
+
+- [ ] AC-F4-1: `WIZARD.md` contains a bundle customization section with add-skill and remove-skill steps
+- [ ] AC-F4-2: Add-skill suggestions are presented ≤3 at a time (verifiable by reading the Q&A section description)
+- [ ] AC-F4-3: `done` or equivalent confirmation phrase exits customization; `grep -c "done\|confirm\|all set" WIZARD.md` ≥ 1 in the F4 section
+- [ ] AC-F4-4: ADR-030 role-generation rule preserved: `grep -c "role.*description\|one-line role\|keyword.*description" WIZARD.md` ≥ 1
+
+#### Install Step (F5)
+
+- [ ] AC-F5-1: `WIZARD.md` Step 4 (install) references `skills/<skill-name>/SKILL.md` as the source path, not `examples/<preset>/.claude/skills/`
+- [ ] AC-F5-2: `WIZARD.md` install step includes ADR-024 attribution block check language for non-builtin skills; `grep -c "ADR-024\|attribution block" WIZARD.md` ≥ 2
+- [ ] AC-F5-3: `skills-as-prompts.md` generation described as dynamic (from installed bundle), not copied from preset folder; `grep -c "installed bundle\|from the installed\|bundle skill" WIZARD.md` ≥ 1
+- [ ] AC-F5-4: Closing message (after Step 4 install) lists installed skills by name, not by preset folder
+
+#### ADR Index Backfill (F6)
+
+- [ ] AC-F6-1: ADR Index table in `docs/architecture.md` contains rows for ADR-020 through ADR-028 (9 rows minimum)
+- [ ] AC-F6-2: `grep -c "| ADR-02[0-8]" docs/architecture.md` ≥ 9 (each pipe-delimited table row)
+- [ ] AC-F6-3: ADR-028 row status is "PROPOSED"; `grep "ADR-028" docs/architecture.md | grep -c "PROPOSED"` ≥ 1
+
+#### Paperwork Commit (F7)
+
+- [ ] AC-F7-1: Phase 1 architecture section includes commit topology with paperwork commit marked REQUIRED (not optional); `grep -c "REQUIRED\|mandatory\|required.*paperwork\|paperwork.*required" docs/architecture.md` ≥ 1 in the v2.4 section
+- [ ] AC-F7-2: `git log release/v2.4.0 ^main --oneline` includes ≥1 commit with "docs" or "paperwork" or "pipeline" in subject — verifiable at Phase 7
+
+#### Release Artifacts
+
+- [ ] AC-REL-1: `cat VERSION` = `2.4.0`
+- [ ] AC-REL-2: `grep "2.4.0" CHANGELOG.md | wc -l` ≥ 1 (v2.4.0 entry present)
+- [ ] AC-REL-3: README.md version badge updated to `version-2.4.0-green`; `grep "version-2.4.0-green" README.md | wc -l` ≥ 1
+- [ ] AC-REL-4: README.md "Next up" teaser updated (v2.4 ships, v2.5 is next); teaser references "ADR-028 implementation" and/or "first external skill import"
+
+#### Zero-Diff (Unchanged Surfaces)
+
+- [ ] AC-ZD-1: `cowork.lock.json` byte-unchanged from v2.3.1; `cmp cowork.lock.json <(git show main:cowork.lock.json)` exits 0
+- [ ] AC-ZD-2: `sync-agency.yml` byte-unchanged
+- [ ] AC-ZD-3: `CLAUDE.md` byte-unchanged
+
+---
+
+### Edge Cases
+
+1. **Empty goal input:** User submits blank or single-word response to the open-ended Q1. Wizard must not crash into Path A/B/C; it must re-ask once with an example prompt ("What do you want to accomplish? For example: 'studying for medical school exams' or 'managing a freelance design business'").
+2. **All-signals-tie:** User goal triggers equal signal counts across 3+ presets. Path B selects the two highest-ranked presets; third and beyond are surfaced as "also could include" suggestions in F4.
+3. **User requests skill not in the pool:** User says "I need a skill for [X]" during F4 and X is not in `curated-skills-registry.md`. Wizard must acknowledge the gap and suggest the closest available skill, not silently skip. It must not hallucinate a skill path that doesn't exist.
+4. **User declines all F4 suggestions:** Bundle stays at whatever was confirmed after Path routing. Minimum bundle size = 1 skill. Wizard must not loop indefinitely on add-skill suggestions after "no" to all.
+5. **Single-file de-duplication edge case:** `research-synthesis` appears in both study and research preset `skill_bundle` lists. Install step must copy the single canonical `skills/research-synthesis/SKILL.md` once — not twice. Duplicate-copy check: `ls <workspace>/.claude/skills/ | grep research-synthesis | wc -l` = 1.
+
+---
+
+### Success Metrics
+
+- **Primary:** Morgan-type cross-domain goals are servable without any code change or preset addition — the wizard composes a valid bundle for any goal description in Path C. Verifiable: test with 5 novel goals post-ship; all 5 reach a bundle-confirmation step without "force-map" language.
+- **Secondary:** The 7 existing preset user journeys (Alex/Study, Maria/Research, etc.) are unregressed — all 7 still reach a confirmed workspace in ≤5 wizard exchanges. Verifiable: Phase 5 QA spot-checks each preset path.
+- **Tertiary:** ADR Index is complete (ADR-001 through ADR-028 all in index table) — verifiable by grep at Phase 5.
+- **Process:** Zero paperwork follow-up PRs in v2.4. Verifiable: single PR (#N) contains all code + docs; no subsequent paperwork PR opened.
+
+---
+
+### Assumptions
+
+- [CONFIRMED] Cowork `project-instructions-starter.txt` field limit is ~350 words. Q1 replacement must fit within this budget.
+- [CONFIRMED] `curated-skills-registry.md` `goal_tags` field is already populated for all 21 skills — it is the query index for F3.
+- [ESTIMATED] Keyword-match against `match_signals` list produces correct Path A/B/C routing for >80% of test goal descriptions. The remaining <20% fall through to Path C (acceptable — custom composition works for any goal).
+- [UNTESTED] User experience of open-ended Q1 ("describe your goal") vs. 7-item pick list: no A/B data exists. v2.4 makes the switch based on product vision alignment, not measured user preference.
+- [UNTESTED] Morgan persona (cross-domain user) is a real user archetype, not an edge case. Population size unknown.
+- [CONFIRMED] ADR-028 stays PROPOSED — implementation in v2.5. Lock file is read-only in v2.4.
+- [CONFIRMED] External imports (`mattpocock/skills`, `addyosmani/agent-skills`) are deferred. v2.4 is in-tree only.
+
+---
+
+### Open Questions for @architect (Phase 1)
+
+**OQ-1 — `selection-presets.md` machine-parseability:** The wizard must read `match_signals:` and `skill_bundle:` from `selection-presets.md` without a YAML library. What is the exact format constraint? Options: (a) YAML frontmatter block per preset (parseable by line-scanning), (b) a separate `.cowork-presets.json` sidecar file, (c) inline YAML list blocks with predictable indentation. Which format can the wizard keyword-match reliably given that it is a markdown/prose runtime? @architect to rule.
+
+**OQ-2 — ADR-028 scope in v2.4:** F1 (pool consolidation) changes the data model that ADR-028 operates on. Does pool consolidation require an ADR-028 amendment (noting the pool path changed from `examples/<preset>/.claude/skills/` to `skills/`)? Or does ADR-028 only address lock-file integrity for external imports, making in-tree pool location changes irrelevant? @architect to confirm scope boundary.
+
+**OQ-3 — `examples/<preset>/.claude/skills/` content strategy:** Two options: (a) keep preset-skill folders as independent copies (risk: drift from pool), (b) make preset-skill folders generated outputs (CI-checked to match pool). Option (b) is cleaner but requires a CI job change. Option (a) is simpler but reintroduces the silo problem over time. @architect to rule on which option v2.4 implements, and whether a new CI assertion is required.
+
+**OQ-4 — `skills-as-prompts.md` generation source:** Currently, each preset ships its own `skills-as-prompts.md`. After F5 makes install dynamic, the user's workspace `skills-as-prompts.md` is generated from the installed bundle. But the preset source files (`examples/<preset>/skills-as-prompts.md`) still exist. Do these preset-level files become stale artifacts, or do they serve a purpose? @architect to decide: keep, update, or deprecate.
+
+**OQ-5 — CI impact of `skills/` pool introduction:** Adding a new top-level `skills/` directory may conflict with existing CI globs in `quality.yml` (e.g., `skill-depth-check` ENFORCED_PRESETS paths). Does the pool directory need to be added to ENFORCED_PRESETS, or does the existing skill-depth-check logic cover it automatically? @architect to assess CI scope change.
+
+**OQ-6 — Backwards compatibility migration path for v2.3.1 users:** A user with an existing workspace built via v2.3.1 has skills from `examples/<preset>/.claude/skills/`. Their skill files are correct and installed. v2.4 makes no change to their installed workspace — this is a source repo change only. @architect to confirm: is there any scenario where v2.4 breaks an existing v2.3.1 user workspace? If yes, a migration note must be added to CHANGELOG.md.
+
+---
+
+### Carry-Forward Dispositions
+
+| Item | Source | v2.4 Disposition |
+|------|--------|-----------------|
+| ADR-028 `content_sha256` impl | v2.3.0 carry | DEFER to v2.5. F1 pool consolidation must stabilize first. |
+| First external skill import | v2.2 roadmap | DEFER to v2.5. v2.4 is SECURITY-SENSITIVE; adding COMPLIANCE-SENSITIVE in same cycle is a risk multiplier. @compliance review required for v2.5. |
+| ADR Index backfill ADR-020..028 | 4th deferral | BUNDLE — binding AC-F6 in this spec. Non-negotiable. |
+| Mandatory paperwork-commit topology | v2.3.1 retro | BUNDLE — binding AC-F7 in this spec. @architect encodes at Phase 1. |
+| Local markdownlint pre-commit hook | CF-4 v2.3.0 | DEFER — not worth touching quality.yml unless F1/F6 require it anyway. |
+| ENFORCED_EXAMPLES widening | CF-v2.3.1-A | DECIDE at Phase 1 — OQ-5 determines if quality.yml must be touched. If yes, bundle widening here. |
+| S1 email-drafting checklist promotion | v2.3.1 INFO | DEFER to v2.3.2 hygiene or v2.5 pre-spec. |
+| `anthropics/skills` import | Named in prompt | BLOCKED — Anthropic Proprietary license forbids redistribution. @compliance must clear before any import. |
+
+---
+
+### Classification and Routing Notes
+
+**Classification: SECURITY-SENSITIVE**
+
+Reasoning: v2.4 changes the skill installation surface model. Previously, the wizard's skill selection was implicit (preset name → fixed folder copy). After v2.4, the wizard makes an explicit runtime decision about which skills to install based on goal-matching logic. This creates a new attack surface:
+
+- A maliciously named goal description could be crafted to match unintended skills if the keyword-matching logic is not bounded
+- The `selection-presets.md` file becomes a security-relevant configuration artifact — tampering with `match_signals` could route users to unexpected skill bundles
+- F4 add-skill flow expands the install surface from "preset-bounded" to "pool-bounded"
+
+@security Phase 2 is required. Combined-path NOT eligible for v2.4.
+
+**External Content Detection:** Named external repos detected in prompt context (`mattpocock/skills`, `addyosmani/agent-skills`, `anthropics/skills`). v2.4 scope explicitly excludes external import — no compliance review required for THIS cycle. If a future cycle (v2.5+) includes external import, that cycle MUST invoke @compliance at Phase 2 and Phase 6 (COMPLIANCE-SENSITIVE classification per pipeline-policy.md §ThirdPartyContentImport).
+
+**Next step:** Run `/review` (Phase 2, @security) after `/design` (Phase 1, @architect). Do NOT use combined-path.
+
+---
+
+### WILL-NOT-DO (v2.4)
+
+1. Add a "Financial Manager" preset (dynamic composition handles this)
+2. Import any external skill from `mattpocock/skills`, `addyosmani/agent-skills`, or any other external repo
+3. Import from `anthropics/skills` (Anthropic Proprietary license — blocked pending @compliance)
+4. Implement ADR-028 `content_sha256` (deferred to v2.5)
+5. Use LLM sub-calls for goal matching (keyword-only for v2.4 — auditability requirement)
+6. Break backwards compatibility for v2.3.1 user workspaces
+7. Add telemetry or usage tracking of any kind (static repo — no runtime)
+8. Modify `cowork.lock.json`, `sync-agency.yml`, or `CLAUDE.md`
+9. Remove `skills-as-prompts.md` from any preset folder (fallback path preserved)
+10. Touch the v2.3.x ADR bodies (ADR-020 through ADR-028 text is frozen; only the index is backfilled)
 | **Total** | **13 files (8 SKILL.md + VERSION + CHANGELOG + README + cowork.lock.json if needed)** | **50** | |
+
+---
+
+## Architectural Modifications (v2.4 — appended at Phase 1 by @architect, 2026-05-08T23:30:00Z)
+
+Per @architect divergence-check workflow. The following spec ACs were modified during Phase 1 design to resolve internal inconsistencies discovered while designing the unified pool. Each modification has a binding architectural reason and is enforced by a Phase 1 constraint (C-v2.4-N).
+
+- **AC-F1-1** (`ls skills/ | wc -l` ≥ 21) → amended to `≥ 20` — Reason: ADR-018 dedup of `research-synthesis` reduces unique pool slug count to 20 (7 presets × 3 = 21 minus 1 duplicate). Spec parenthetical ("minus any de-duplicates per ADR-018") supports this; the AC's numeric was stale relative to dedup. Bound in C-v2.4-8.
+- **AC-F1-2** (SKILL.md frontmatter contains `name:` AND `goal_tags:` fields) → amended to "SKILL.md frontmatter contains `name:` field; `goal_tags:` lives in `curated-skills-registry.md`, not SKILL.md frontmatter" — Reason: spec F1 prose explicitly states the registry IS the query index ("`curated-skills-registry.md` `goal_tags` field is the query index"); duplicating `goal_tags` into 21 SKILL.md frontmatters would (a) require editing 21 stable files just to add a redundant field, (b) introduce a registry/SKILL.md drift surface with no clear winner on conflict, and (c) breach the spirit of the spec's own intent. The registry remains the single source for `goal_tags`. Verification: `find skills/ -name SKILL.md -exec grep -l '^goal_tags:' {} \;` returns 0 paths (no SKILL.md frontmatter has goal_tags); all goal_tags information lives in `curated-skills-registry.md` per existing schema. Bound in C-v2.4-8 + C-v2.4-12.
+- **`email-drafter` registry slug** (pre-existing, not flagged in v2.4 spec) → corrected to `email-drafting` to match the SKILL.md `name:` frontmatter field — Reason: F3 routing keyword-matches against the registry, then F5 install looks up `skills/<slug>/SKILL.md`. With the v2.3.1 slug mismatch (registry: `email-drafter`; folder: `email-drafting`), F5 install would fail with a "skill not found" error for any Path A/B match on the business-admin preset. The slug fix is a 1-character registry edit; the SKILL.md `name:` frontmatter field is the canonical source-of-truth per ADR-007 v1.1. Bundled with v2.4 F1 commit. Bound in C-v2.4-8 + C-v2.4-12.
+
+These modifications are recorded here so the `/spec --revise` feedback loop can reconcile spec ACs with architectural realities in the next requirements pass. They do NOT reduce the F1/F2/F3/F4/F5/F6/F7 feature commitment; they correct ACs whose numeric or schematic claims could not be implemented as-written without violating other ADRs (ADR-007, ADR-018) or introducing new coupling.

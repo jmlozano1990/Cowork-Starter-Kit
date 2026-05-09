@@ -1597,3 +1597,27 @@ S1 (Phase 2 INFO carry-forward — Phase 6 grep watch) is RESOLVED in-cycle: ind
 ## Note: Phase 6 Agent Scope
 
 Performed by @security with `scope_allow=[]`. Findings persisted by orchestrator. Read-only audit; no implementation files touched.
+
+---
+
+# Security Review — v2.4 Dynamic Workspace Architect (Phase 2 FULL — pointer)
+
+## Phase: 2 (full mode)
+## Date: 2026-05-09T00:30:00Z
+## Status: APPROVE-WITH-WARNINGS — 0 CRITICAL · 2 WARNING · 3 INFO
+## Classification: SECURITY-SENSITIVE (confirmed). Combined-path NOT eligible.
+
+The full v2.4 Phase 2 review (FULL OWASP Web + LLM Top 10 pass, per-watch-item W1–W5 disposition, MUST-FIX/SHOULD-FIX lists, Phase 6 audit handoff) is in **`docs/security-review-v2.4.md`** (matches the v2.3.1 cycle-specific review precedent).
+
+Headline findings:
+- **S1 WARNING — selection-presets.md token-vocabulary CI gate.** No CI assertion gates `match_signals` and `skill_bundle` lines; concrete patch text supplied; fold into C-v2.4-9 quality.yml amendment scope. **MUST-FIX Phase 4.**
+- **S2 WARNING — curated-skills-registry.md goal_tags vocabulary CI gate.** Path C scoring reads registry; goal_tags vocabulary is currently un-gated at CI; concrete patch text supplied; fold into C-v2.4-9. **MUST-FIX Phase 4.**
+- **S3 INFO — F3 STOPWORDS list reuse.** Architecture references STOPWORDS without enumerating; recommend reuse of WIZARD.md §Phase 1 64-token list verbatim.
+- **S4 INFO — F5 attribution-injection ordering.** Preserved-but-untested in v2.4 (zero non-builtin slugs); add explicit numbered ordering in WIZARD.md F5 prose for v2.5 first-external-import readiness.
+- **S5 INFO — F4 URL-grep extension.** Defense-in-depth on the role-generation step.
+
+**W1–W5 disposition (Phase 1 Round 1 watch items):** W1 → INFO (S3); W2 → WARNING (S2); W3 → RESOLVED-NO-FINDING (no consumer code references the slug outside design discussion); W4 → WARNING (S1); W5 → INFO (S4).
+
+**Preservation constraints re-verified at HEAD 4675879:** SCAN_PATTERNS L143+L220 byte-unchanged; `.cowork-allowlist.json` 10-entry seed + blocked_patterns intact; `presets/` symlink absent; CLAUDE.md 397w preserved; `cowork.lock.json` BYTE-UNCHANGED via deny-list; ADR-024 + ADR-028 prose unchanged.
+
+Proceed to Phase 3 `/gate`. Phase 4 binds MF-1 + MF-2 into C-v2.4-9 scope; SF-1/SF-2/SF-3 at @architect+@dev judgment. Combined-path NOT eligible — Phase 6 audit re-fires after Phase 5.

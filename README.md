@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.3.1-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.4.0-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -145,11 +145,11 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## Next up — v2.4: First External Skill Import + ADR-028 Implementation
+## Next up — v2.5: First External Skill Import + ADR-028 Implementation
 
-v2.3.1 ships 8 SKILL.md expansions (editing-pass, outline-generator, creative-brief, feedback-synthesizer, ideation-partner, email-drafting, follow-up-tracker, spend-awareness) — all stubs expanded to full 9-section production depth matching the canonical pattern set by voice-matching and daily-briefing.
+v2.4.0 ships the Dynamic Workspace Architect: open-ended goal discovery (F3 keyword matcher), dynamic skill-bundle composition from a consolidated `skills/` pool (20 SKILL.md files), Q&A bundle customization (F4), dynamic install with ADR-024 attribution (F5), byte-identical starter file Q1 blocks across all 7 presets, byte-identical deprecation stubs for per-preset `skills-as-prompts.md`, and CI vocabulary gates (MF-1, MF-2).
 
-**Next up (v2.4):** ADR-028 content_sha256 lock-schema implementation, first external skill import via /sync-agency, ADR Index backfill, local markdownlint pre-commit (closes the v2.3.0 MD058 gap).
+**Next up (v2.5):** ADR-028 `content_sha256` lock-schema implementation, first external skill import via `/sync-agency`, local markdownlint pre-commit (closes the v2.3.0 MD058 gap).
 
 ---
 

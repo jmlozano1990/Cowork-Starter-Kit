@@ -8,17 +8,15 @@ Check if cowork-profile.md exists in this project folder.
 
 ### Phase 1 — Goal Discovery
 
-Ask: "Welcome! What would you like this workspace for? Describe your goal, or type 'not sure' for suggestions."
+Ask: "Welcome! What do you need help with? Describe your goal — or 'not sure' for options."
 
-**If uncertain** ("not sure", "maybe", "something like"):
-"Options: 1) Study/Learning — exam prep, coursework 2) Work/Projects — tracking, reports 3) Writing/Creating — articles, content. Which fits?"
+**If uncertain:** "1) Study  2) Research  3) Writing  4) Projects  5) Creative  6) Business/Admin  7) Personal"
 
-**If goal matches preset** (study, exam, research, writing, project, PM, creative, design, business, admin):
-"That sounds like [Preset]. Use it as scaffold? 1) Yes 2) No — build from scratch"
+**Keyword match** (study, research, writing, project, creative, business, admin, personal, exam, academic, email, management): "That sounds like [Preset]. Fit? 1) Yes  2) No — build from scratch"
 
-**Novel goal:** "I'll build a [goal] workspace from scratch."
+**Novel/multi-keyword:** Route to closest preset or Path C. Confirm first.
 
-Hint: this starter is optimized for Business/Admin (email, reporting, scheduling, admin tasks).
+**Empty/one-word:** Re-ask with examples. Default to Personal Assistant if still empty.
 
 ### Phase 2 — Profile
 

@@ -4,6 +4,40 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.4.0] — 2026-05-08
+
+### Added
+- `skills/` root pool — 20 SKILL.md files (7 presets × 3 skills, minus 1 ADR-018 dedup for research-synthesis). Canonical copy drives all install operations.
+- `selection-presets.md` — 7 preset blocks in fenced ` ```preset ` format with `name`, `display_name`, `description`, `skill_bundle`, `scaffold_source`, `match_signals` keys. Authoritative keyword sets for F3 matcher.
+- Dynamic goal matcher (F3) in WIZARD.md — keyword set-intersection over `match_signals`, deterministic, no LLM sub-call. Three paths: A (single preset), B (tie), C (novel/custom). STOPWORDS cross-referenced (SF-1).
+- Q&A bundle customization (F4) in WIZARD.md — add/remove from `skills/` pool only; ≤3 suggestions per round; URL/external file rejection enforced (SF-3).
+- Dynamic install (F5) in WIZARD.md — installs from `skills/<slug>/SKILL.md` pool; ADR-024 attribution injected as numbered step 1-2-3-4 BEFORE file write (SF-2).
+- Dynamic `skills-as-prompts.md` generation in WIZARD.md Step 6 — generated from installed bundle, not copied from per-preset stub.
+- Fallback legacy workspace paragraph in WIZARD.md (OQ-6).
+- CI vocabulary gates (MF-1, MF-2) — `selection-presets.md` token-vocab gate + `curated-skills-registry.md` goal_tags gate. Rejects out-of-charset tokens.
+- CI `POOL` loop — validates all `skills/*/SKILL.md` against 9-section template + 60-line floor.
+- CI `CMP` assertion — byte-mirror check for all (preset, skill_bundle) pairs; ADR-018 exemption for study/research-synthesis.
+- `docs/security-review-v2.4.md` — Phase 2 full security review (MF-1, MF-2, SF-1, SF-2, SF-3 findings).
+
+### Changed
+- WIZARD.md Q1: replaced 7-item force-map with open-ended goal discovery (F1/F2/F3).
+- WIZARD.md Step 4: dynamic install from pool replaces static preset copy.
+- WIZARD.md Step 6: dynamic generation from installed bundle.
+- All 7 `examples/*/project-instructions-starter.txt`: Phase 1 section replaced with byte-identical 87-word compact Q1 block (Amendment A3).
+- All 7 `examples/*/skills-as-prompts.md`: replaced with byte-identical 5-line deprecation stub (C-v2.4-4).
+- `curated-skills-registry.md`: slug fix `email-drafter` → `email-drafting` (MF-2 compliance).
+- CI `skill-depth-check` job: ENFORCED_EXAMPLES widened from 3 presets to all 7; POOL + CMP + MF-1 + MF-2 gates added.
+- `docs/architecture.md`: ADR-024 thru ADR-028 + ADR Index backfill.
+- `docs/spec.md`: v2.4 feature spec + architectural modifications.
+- `docs/security-review.md`: v2.4 pointer entry.
+
+### Notes
+- `cowork.lock.json` unchanged (C-v2.4-2). Supply-chain integrity maintained.
+- `CLAUDE.md` unchanged (C-v2.4-11). Word count ≤400.
+- ADR-028 (external skill import) remains PROPOSED — implementation deferred to v2.5.
+
+---
+
 ## [2.3.1] — 2026-05-08
 
 ### Changed

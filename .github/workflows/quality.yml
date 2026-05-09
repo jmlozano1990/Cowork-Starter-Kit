@@ -314,13 +314,65 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Enforce 9-section structure and 60-line floor on depth-enforced example skills
+      - name: POOL — Enforce 9-section structure and 60-line floor on skills/ pool
+        run: |
+          # ADR-016 v2.4 amendment: POOL loop runs BEFORE ENFORCED_EXAMPLES loop.
+          # Iterates over skills/*/SKILL.md (20 files) — the canonical consolidated pool.
+          # v2.4.0: skills/ pool added (F1 consolidation). All 20 files must meet depth standard.
+          REQUIRED_SECTIONS=(
+            "## When to use"
+            "## Triggers"
+            "## Instructions"
+            "## Output format"
+            "## Quality criteria"
+            "## Anti-patterns"
+            "## Example"
+            "## Writing-profile integration"
+            "## Example prompts"
+          )
+          LINE_FLOOR=60
+          FAIL=0
+
+          if [ ! -d "skills" ]; then
+            echo "ERROR: skills/ pool directory not found at repo root."
+            exit 1
+          fi
+
+          for skill_file in skills/*/SKILL.md; do
+            if [ ! -f "$skill_file" ]; then
+              continue
+            fi
+            skill_fail=0
+            for section in "${REQUIRED_SECTIONS[@]}"; do
+              if ! grep -qF "$section" "$skill_file"; then
+                echo "MISSING section '$section' in pool file: $skill_file"
+                echo "  -> See templates/skill-template/SKILL.md for the required structure."
+                skill_fail=1
+              fi
+            done
+            line_count=$(wc -l < "$skill_file")
+            if [ "$line_count" -lt "$LINE_FLOOR" ]; then
+              echo "TOO SHORT (${line_count} lines, minimum ${LINE_FLOOR}) in pool file: $skill_file"
+              skill_fail=1
+            fi
+            if [ "$skill_fail" -eq 1 ]; then
+              FAIL=1
+            fi
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          POOL_COUNT=$(find skills -name "SKILL.md" | wc -l)
+          echo "Pool skill depth check passed — ${POOL_COUNT} pool skills meet the 9-section template and ${LINE_FLOOR}-line floor."
+
+      - name: ENFORCED_EXAMPLES — Enforce 9-section structure and 60-line floor on depth-enforced examples
         run: |
           # ADR-016: skill-depth-check enforces the 9-section template for the listed examples.
-          # Widen ENFORCED_EXAMPLES when additional examples complete the B10 skill-input flow.
           # v1.3.0: study added; v1.3.1: research added; v1.3.3: project-management added.
           # v2.0.0: ENFORCED_PRESETS renamed to ENFORCED_EXAMPLES; paths updated examples/ (ADR-021/ADR-026).
-          ENFORCED_EXAMPLES="study research project-management"
+          # v2.4.0: widened to all 7 examples (ADR-016 v2.4 amendment + CF-v2.3.1-A closure).
+          ENFORCED_EXAMPLES="study research project-management writing creative business-admin personal-assistant"
 
           REQUIRED_SECTIONS=(
             "## When to use"
@@ -347,7 +399,6 @@ jobs:
                 continue
               fi
               skill_fail=0
-              # Check all 9 required section headers (order flexible, presence required)
               for section in "${REQUIRED_SECTIONS[@]}"; do
                 if ! grep -qF "$section" "$skill_file"; then
                   echo "MISSING section '$section' in: $skill_file"
@@ -355,7 +406,6 @@ jobs:
                   skill_fail=1
                 fi
               done
-              # Check 60-line floor
               line_count=$(wc -l < "$skill_file")
               if [ "$line_count" -lt "$LINE_FLOOR" ]; then
                 echo "TOO SHORT (${line_count} lines, minimum ${LINE_FLOOR}): $skill_file"
@@ -371,16 +421,130 @@ jobs:
           if [ "$FAIL" -eq 1 ]; then
             exit 1
           fi
-          echo "Skill depth check passed — all enforced example skills meet the 9-section template and ${LINE_FLOOR}-line floor."
+          echo "Enforced examples skill depth check passed — all enforced example skills meet the 9-section template and ${LINE_FLOOR}-line floor."
+
+      - name: CMP — Byte-mirror assertion (skills/ pool vs examples/<preset>/.claude/skills/)
+        run: |
+          # ADR-016 v2.4 amendment A1/A3: cmp byte-mirror assertion.
+          # For each preset in ENFORCED_EXAMPLES, for each slug in that preset's skill_bundle
+          # (parsed from selection-presets.md), verify skills/<slug>/SKILL.md byte-matches
+          # examples/<preset>/.claude/skills/<slug>/SKILL.md.
+          # Core assertion: cmp -s skills/<slug>/SKILL.md examples/<preset>/.claude/skills/<slug>/SKILL.md
+          # Exception: research-synthesis in examples/study/ is the study variant (ADR-018);
+          # only cmp against the canonical research/ variant.
+          ENFORCED_EXAMPLES="study research project-management writing creative business-admin personal-assistant"
+          FAIL=0
+
+          if [ ! -f "selection-presets.md" ]; then
+            echo "ERROR: selection-presets.md not found — cannot verify byte-mirror."
+            exit 1
+          fi
+
+          for preset in $ENFORCED_EXAMPLES; do
+            # Parse skill_bundle for this preset from selection-presets.md
+            in_block=0
+            current_preset=""
+            while IFS= read -r line; do
+              if [[ "$line" == '```preset' ]]; then
+                in_block=1
+                current_preset=""
+                skill_bundle=""
+                continue
+              fi
+              if [[ "$line" == '```' ]] && [ "$in_block" -eq 1 ]; then
+                in_block=0
+                if [ "$current_preset" = "$preset" ] && [ -n "$skill_bundle" ]; then
+                  # Process slugs for this preset
+                  IFS=',' read -ra slugs <<< "$skill_bundle"
+                  for slug_raw in "${slugs[@]}"; do
+                    slug=$(echo "$slug_raw" | tr -d ' ')
+                    pool_file="skills/${slug}/SKILL.md"
+                    example_file="examples/${preset}/.claude/skills/${slug}/SKILL.md"
+                    # ADR-018 exemption: study/research-synthesis is intentionally different
+                    if [ "$preset" = "study" ] && [ "$slug" = "research-synthesis" ]; then
+                      echo "SKIP (ADR-018 exemption): study/research-synthesis variant preserved"
+                      continue
+                    fi
+                    if [ ! -f "$pool_file" ]; then
+                      echo "MISSING pool file: $pool_file"
+                      FAIL=1
+                      continue
+                    fi
+                    if [ ! -f "$example_file" ]; then
+                      echo "MISSING example file: $example_file"
+                      FAIL=1
+                      continue
+                    fi
+                    if ! cmp -s "$pool_file" "$example_file"; then
+                      echo "BYTE-MISMATCH: $pool_file vs $example_file"
+                      FAIL=1
+                    else
+                      echo "MATCH: ${preset}/${slug}"
+                    fi
+                  done
+                fi
+                continue
+              fi
+              if [ "$in_block" -eq 1 ]; then
+                if [[ "$line" == name:* ]]; then
+                  current_preset="${line#name: }"
+                fi
+                if [[ "$line" == skill_bundle:* ]]; then
+                  skill_bundle="${line#skill_bundle: }"
+                fi
+              fi
+            done < selection-presets.md
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::Byte-mirror check failed — pool files must match example preset files (C-v2.4-3)."
+            exit 1
+          fi
+          echo "CMP byte-mirror check passed — all pool/example skill pairs are byte-identical."
+
+      - name: MF-1 — selection-presets.md token vocabulary gate
+        run: |
+          # S1 WARNING from v2.4 Phase 2 — MF-1 MUST-FIX.
+          # selection-presets.md vocabulary gate (S1 WARNING from v2.4 Phase 2)
+          if [ -f selection-presets.md ]; then
+            BAD=$(awk '/^```preset$/,/^```$/' selection-presets.md \
+              | grep -E '^(match_signals|skill_bundle): ' \
+              | grep -cE '[^a-z0-9, :_-]' || true)
+            if [ "${BAD:-0}" -gt 0 ]; then
+              echo "::error::selection-presets.md contains invalid token vocabulary (must match [a-z0-9, :_-])"
+              exit 1
+            fi
+            echo "selection-presets.md vocabulary gate passed."
+          else
+            echo "::error::selection-presets.md not found."
+            exit 1
+          fi
+
+      - name: MF-2 — curated-skills-registry.md goal_tags vocabulary gate
+        run: |
+          # S2 WARNING from v2.4 Phase 2 — MF-2 MUST-FIX.
+          # curated-skills-registry.md goal_tags vocabulary gate (S2 WARNING from v2.4 Phase 2)
+          if [ -f curated-skills-registry.md ]; then
+            BAD=$(awk -F'|' '/^\| / && NR>2 { print $7 }' curated-skills-registry.md \
+              | grep -vE '^[[:space:]]*(goal_tags|---)' \
+              | grep -cE '[^a-z0-9, -]' || true)
+            if [ "${BAD:-0}" -gt 0 ]; then
+              echo "::error::curated-skills-registry.md goal_tags contains invalid token vocabulary in ${BAD} row(s)"
+              exit 1
+            fi
+            echo "curated-skills-registry.md goal_tags vocabulary gate passed."
+          else
+            echo "::error::curated-skills-registry.md not found."
+            exit 1
+          fi
 
       - name: Advisory notice for unenforced examples
         run: |
-          # S1: Emit advisory notices for examples NOT yet in the depth-enforcement allowlist.
-          # New SKILL.md files landing under these paths must meet the 9-section template
-          # before enforcement is widened to include the example in ENFORCED_EXAMPLES above.
-          # v1.3.0: study added; v1.3.1: research added; v1.3.3: project-management added.
-          # v2.0.0: ENFORCED_PRESETS renamed to ENFORCED_EXAMPLES (ADR-021/ADR-026).
-          ENFORCED_EXAMPLES="study research project-management"
+          # S1: All 7 examples are now in ENFORCED_EXAMPLES (v2.4 amendment).
+          # This step is retained for future-proofing; it will emit no notices in v2.4+
+          # unless a new examples/ subdirectory is added without being enrolled.
+          # v2.4.0: widened to all 7 examples — no unenforced examples expected.
+          ENFORCED_EXAMPLES="study research project-management writing creative business-admin personal-assistant"
           UNENFORCED_EXAMPLES=""
           for example_dir in examples/*/; do
             example=$(basename "$example_dir")
