@@ -18,7 +18,7 @@ This fixes that.
 
 ## How it works
 
-Open this folder as a Cowork Project. Cowork auto-loads `CLAUDE.md` as system context and runs a dynamic onboarding wizard the moment you start talking — open-ended goal discovery, profile, writing voice calibration, then skill activation. Takes about 15 minutes. No terminal required. No paste required.
+Open this folder as a Cowork Project. Cowork auto-loads `CLAUDE.md` as system context and runs the Dynamic Workspace Architect the moment you start talking — open-ended goal discovery, 3-path skill bundle composition, writing voice calibration, and Q&A customization. Takes about 15 minutes. No terminal required. No paste required.
 
 ```
 You                                Cowork
@@ -35,9 +35,9 @@ You                                Cowork
  |                                    |  this workspace for?"
  |  [your goal in your own words]     |
  | ---------------------------------> |
- |                                    |  Detects goal, proposes scaffold
- |                                    |  (preset if one matches, or
- |                                    |  builds from scratch)
+ |                                    |  Routes goal (Path A: preset match,
+ |                                    |  Path B: overlap narrowing,
+ |                                    |  Path C: from-scratch composition)
  |                                    |  Asks profile + writing questions
  |  [your answers]                    |
  | ---------------------------------> |
@@ -55,7 +55,7 @@ You                                Cowork
 
 **Two alternative entry paths** if you can't open the folder directly:
 
-- Paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions for a preset-flavored start from message one.
+- Paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested onboarding from message one. The wizard will still run dynamic goal discovery — presets are starting suggestions, not fixed selections.
 - Type `/setup-wizard` inside any Cowork project to invoke the wizard explicitly.
 
 ---
@@ -84,13 +84,13 @@ You don't need to know which preset fits your goal — the wizard figures it out
 | "I'm managing a job search and want to track applications" | Career Manager workspace — application tracker, interview prep, resume tailor, professional writing profile |
 | "I want to plan a home renovation and stay organized" | Project workspace — task tracking, stakeholder updates, decision log, direct communication writing profile |
 
-The 6 presets (Study, Research, Writing, PM, Creative, Business/Admin) are accelerators — the wizard uses them as scaffolds when your goal matches. For anything else, it builds from scratch.
+The 7 selection presets are starting suggestions — the wizard uses them as scaffolds when your goal matches closely (Path A), narrows across overlapping presets with a follow-up question (Path B), or composes a custom bundle from the unified skill pool when no preset fits (Path C).
 
 ---
 
 ## Seven goal presets
 
-You don't pick — you describe your goal in plain language and the wizard picks the right preset (or builds from scratch if nothing fits). These are the 7 scaffolds it can use:
+You describe your goal in plain language. The wizard routes to the closest preset suggestion, narrows between overlapping presets, or composes a custom bundle if nothing fits. These are the 7 selection presets it can suggest:
 
 | Preset | Best for | What you get |
 |--------|----------|--------------|
@@ -117,19 +117,21 @@ You don't pick — you describe your goal in plain language and the wizard picks
 
 ---
 
-## v1.2 highlights
+## v2.4 highlights
 
-- **Dynamic goal discovery** — the wizard asks your goal in plain language instead of showing a preset menu. If you're not sure what you want, it suggests three concrete directions. If your goal matches a preset, it uses that as a scaffold. If not, it builds from scratch.
-- **Writing profile for every workspace** — 3–4 questions calibrate Cowork to your voice, not generic AI. Outputs sound like you. Every workspace now ships with a goal-appropriate `writing-profile.md`.
-- **Curated skills registry** — `curated-skills-registry.md` lists 18 vetted skills (3 per preset) with descriptions, source URLs, and goal tags. Advanced users can opt into Tier 2 community skill discovery with built-in safety checks.
-- **No-config open** — open the repo folder in Cowork and start talking. `CLAUDE.md` auto-runs the dynamic wizard. No paste required.
+- **Dynamic Workspace Architect** — open-ended goal discovery replaces preset menus. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
+- **Unified skill pool** — 20 skills (`skills/<slug>/SKILL.md`) consolidated from former per-preset folders into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
+- **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
+- **Q&A bundle customization** — after proposing a skill bundle, the wizard offers add/remove suggestions (≤3 at a time). You confirm when done. No batch-install surprises.
+- **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
 
-Earlier highlights:
+Earlier highlights (v1.2):
 
-- **Paste-and-go setup** — paste `project-instructions-starter.txt` into Project Settings > Custom Instructions before your first conversation for preset-specific behavior.
+- **Writing profile for every workspace** — 3–4 questions calibrate Cowork to your voice. Every workspace ships with a goal-appropriate `writing-profile.md`.
+- **Curated skills registry** — `curated-skills-registry.md` lists vetted skills with descriptions, source URLs, and goal tags. Advanced users can opt into Tier 2 community skill discovery with built-in safety checks.
+- **Paste-and-go setup** — paste `project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested behavior from message one.
 - **Proactive skills** — Cowork offers flashcards when you share study material, suggests synthesis when you reference multiple sources, drafts status updates when a deadline is near.
 - **`/setup-wizard`** — explicit command to run or redo setup anytime.
-- **18 auto-discovering skills** — properly formatted as `/slash-commands` (e.g., `/flashcard-generation`, `/voice-matching`).
 
 ---
 
