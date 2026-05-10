@@ -4,6 +4,16 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.5.1] — 2026-05-09
+
+Doc-only patch: Extended Thinking + Opus onboarding guidance added to three user-facing files.
+
+- README.md Quick-start: two leading bullets added ("Toggle Extended Thinking ON" and "Select Opus 4.x in the model dropdown")
+- SETUP-CHECKLIST.md: new "Before you start" preface section at the top of the file with the same two items
+- WIZARD.md: "Before we begin — model check" section updated to reference Opus 4.x + Extended Thinking explicitly (replaces "Sonnet or higher"); `opusplan` notes for Research/Writing/PM presets unchanged
+
+---
+
 ## [2.5.0] — 2026-05-09
 
 ### Added

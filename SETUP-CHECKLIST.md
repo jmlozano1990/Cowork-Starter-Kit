@@ -1,5 +1,12 @@
 # Setup Checklist
 
+## Before you start
+
+- Toggle **Extended Thinking** ON in Cowork
+- Select **Opus 4.x** in the model dropdown
+
+---
+
 This is the **manual fallback path**. The primary v2.4 path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message. No paste required.
 
 Use this checklist if you cannot open the repo folder directly as a Cowork Project and want preset-suggested onboarding from message one. Complete every step in order.

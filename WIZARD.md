@@ -6,7 +6,7 @@
 
 ## Before we begin — model check
 
-For best results, use Claude Sonnet or higher. If you're on Claude Pro, tap the model selector (top-left) and select Sonnet before we begin. The wizard works on any model, but Haiku-class responses may require extra back-and-forth.
+For best results, enable **Extended Thinking** and select **Opus 4.x** before starting. Tap the model selector (top-left) and choose Opus 4.x, then toggle Extended Thinking ON. The wizard works on any model, but Opus with Extended Thinking produces the most accurate goal routing and skill composition.
 
 **Note for Research, Writing, and Project Management users:** The `opusplan` alias (Opus for planning, Sonnet for execution) is the recommended daily-driver model for these presets. Study and Creative work well on Sonnet alone.
 

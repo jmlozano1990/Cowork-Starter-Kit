@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.5.1-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -61,6 +61,9 @@ You                                Cowork
 ---
 
 ## Quick start
+
+- Toggle **Extended Thinking** ON in Cowork before you start
+- Select **Opus 4.x** in the model dropdown
 
 1. **[Download ZIP](https://github.com/jmlozano1990/cowork-starter-kit/archive/refs/heads/main.zip)** — unzip anywhere on your computer
 2. Open Claude Cowork → create a new Project → point it at the unzipped folder
