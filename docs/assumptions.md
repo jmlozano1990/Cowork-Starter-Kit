@@ -504,3 +504,116 @@ _Added: 2026-05-08T17:30:00Z — v2.3.1 Stub Completion cycle_
 **Evidence:** v2.3.0 successfully expanded voice-matching and daily-briefing in a single Phase 4 sweep (2 skills). v1.3.1 expanded 3 Research skills in a batched Phase 4 sweep after the user approved the batch-all decision at Phase 3 gate. 8 stubs have more surface area but lower novelty than Research preset first authoring.
 **Risk:** LOW. The risk is @dev fatigue leading to a weaker Example section or missing Anti-patterns bullet in one of the 8 skills. Mitigation: @dev authors skills in workstream order (W1→W2→W3→W4) and applies AC-Sn-1..4 self-check after each skill before committing.
 **Validation path:** @qa Phase 5: each skill independently verified against AC-Sn-1..4. No partial batch acceptance.
+
+---
+
+## v2.6.0 — Dynamic Preset Scaffolds (2026-05-10)
+
+### Scope
+
+v2.6.0 introduces a tiered skill schema (`core` / `optional` / `cross_cutting`) and replaces fixed 3-skill bundles with dynamic scaffolds that users can swap/add/drop during a session. The assumptions below are the key bets this cycle must validate or explicitly defer.
+
+---
+
+### A-v2.6-1 — Users want runtime skill edit affordance (not just wizard-time)
+
+**Confidence:** [UNTESTED]
+**Assumption:** Users want to add, swap, or drop skills mid-session (after the initial wizard setup), not only during the initial wizard configuration. The current wizard offers customization at F4 (before install), but provides no runtime edit path once a workspace is configured.
+**Risk:** If users only ever want to configure once at setup, the runtime affordance is UI complexity with no adoption. Adding session-level swap chips increases surface area without payoff. Mitigation: design swap affordance as progressive disclosure (only surfaces after the bundle is active and the user signals they need something different — not proactively exposed on session start).
+**Test plan:** Audit-finding itself is the trigger: 3 of 7 presets have documented gaps. If users could have swapped in the missing skill mid-session, would they? Falsified by: user research showing >80% of users never request a skill outside their initial bundle.
+**In-scope this cycle:** YES — core premise of v2.6.
+
+---
+
+### A-v2.6-2 — The 3-skill cap is suboptimal for most presets
+
+**Confidence:** [ESTIMATED]
+**Assumption:** The 3-skill-per-preset cap was a composer-fatigue artifact of the v2.4 ship rather than a UX-validated design decision. A 4-6 skill range with a core/optional split would better serve users without overwhelming them, because it separates "always active" from "available when needed."
+**Risk:** If 3 skills is actually the right cognitive limit for users, expanding to 4-6 makes the workspace feel heavier. Users who want simplicity may disengage. Mitigation: distinguish between what is _loaded_ (all tiers) and what is _foregrounded_ (core tier only). Core tier = 3 skills (preserves the cognitive simplicity). Optional tier adds skills that only surface when triggered.
+**Test plan:** Persona analysis shows every preset has 2-4 skills a typical user would add if asked. Falsified by: user research showing >70% of users explicitly prefer a 3-skill cap. No such research exists yet.
+**In-scope this cycle:** YES — tier split is the primary design decision.
+
+---
+
+### A-v2.6-3 — Cross-domain skills are under-represented in current bundles
+
+**Confidence:** [CONFIRMED by audit finding]
+**Assumption:** Skills like `action-items`, `meeting-notes`, `status-update`, `doc-summary`, and `voice-matching` are currently siloed in one preset each but are used by multiple persona types. Making them explicitly `cross_cutting` (or `optional` across multiple presets) reduces friction when users cross domain boundaries in a single session.
+**Risk:** If cross_cutting designation creates confusion (users don't know which workspace "owns" a skill), it may increase cognitive load rather than reduce it. Mitigation: cross_cutting skills do not appear in the wizard's primary presentation layer; they are surfaced as "also useful for your goal" suggestions.
+**Test plan:** Map each skill against the 7 personas using the "who would use this situationally" filter from the v2.6 persona analysis. Falsified by: mapping showing <30% of skills have cross-persona applicability (actual finding: 8 of 21 skills qualify for cross_cutting or optional-in-multiple tier).
+**In-scope this cycle:** YES — tier mapping is a required Phase 0 output.
+
+---
+
+### A-v2.6-4 — A 3-tier schema (core / optional / cross_cutting) is more discoverable than a flat list
+
+**Confidence:** [ESTIMATED]
+**Assumption:** Presenting skills in three tiers (core = always active, optional = available when you need it, cross_cutting = bridges domains) is more discoverable for non-technical users than presenting a flat ranked list. The tier label tells the user the skill's role in their workspace.
+**Risk:** Three tiers add label complexity. Users may not understand "cross_cutting" without explanation. Mitigation: use plain-language tier labels in UX copy ("Always on" / "Available" / "Bridges presets"). Schema uses technical tier names internally; wizard presents plain names.
+**Test plan:** Falsified by: user testing showing >50% of users cannot correctly categorize a skill given tier labels without help. No such test exists yet — tagging [UNTESTED] for the UX layer specifically.
+**In-scope this cycle:** YES — schema design. NO — UX label testing (deferred to Phase 5 @ux review).
+
+---
+
+### A-v2.6-5 — Existing v2.5.x users need backwards-compatibility during migration
+
+**Confidence:** [ESTIMATED]
+**Assumption:** Users with existing v2.5.x workspaces have installed skills in the old flat format (`skill_bundle:` key in `selection-presets.md`). A hard-flip to tiered schema without migration support would break existing users' workspace files. A deprecation period (parse both formats, warn users) is safer than a clean break.
+**Risk:** If v2.5.x installs are rare (early adopters only, low usage), a clean break is simpler and cheaper to maintain than a compatibility shim. Mitigation: query CHANGELOG for adoption signals. The pool grew by 3 skills since v2.4 lock-in — if only doc-summary was added to business-admin, adoption may still be limited. This assumption is worth challenging at Phase 1.
+**Test plan:** Falsified by: evidence that <10% of Cowork users have active workspaces from v2.5.x (making backwards-compat a low-value complexity cost). @architect to assess at Phase 1.
+**In-scope this cycle:** YES for decision. Schema design must address forward and backward parse at Phase 1.
+
+**[SUPERSEDED by D4 at Phase 0 gate, 2026-05-10 — hard-break locked; no dual-parse]**
+
+---
+
+### A-v2.6-6 — `prompt-gate` should remain an implicit cross-cutting skill, not an explicit bundle addition
+
+**Confidence:** [ESTIMATED]
+**Assumption:** `prompt-gate` is already injected into every preset's `global-instructions.md` as a workflow rule, not a standalone skill the user chooses. Making it an explicit `cross_cutting` skill in the tier schema would create a confusing double-representation: users would see it in their optional tier list but it already fires automatically.
+**Risk:** If users don't understand that `prompt-gate` is always active (because they never selected it), they may be confused by its behavior. Making it explicit in the tier schema could resolve that confusion rather than create it. Mitigation: document in global-instructions that prompt-gate is always on.
+**Test plan:** Falsified by: user feedback showing confusion about prompt-gate firing unexpectedly. No such feedback exists yet. Current design (implicit injection) is working.
+**In-scope this cycle:** YES — decision. Recommendation: `prompt-gate` stays as implicit cross-cutting (no tier-schema entry). NOT added to any preset bundle.
+
+---
+
+### A-v2.6-7 — The wizard edit affordance should surface after Path A bundle suggestion, not on demand only
+
+**Confidence:** [UNTESTED]
+**Assumption:** The runtime skill edit affordance (swap/add/drop) should be proactively offered after the wizard presents the initial bundle suggestion (post-Path A), not only surfaced when the user explicitly asks. Users who don't know they can swap will not ask. A proactive offer at the bundle-confirmation step increases adoption of the optional tier.
+**Risk:** Proactive offer adds friction to the happy path (users who want the default bundle unchanged). Mitigation: frame as a single optional-tier suggestion chip at the bundle-confirmation step. Users who want the default tap one button; users who want to customize have a clear entry point.
+**Test plan:** Falsified by: user testing showing proactive optional-tier offers are skipped >80% of the time (indicating the offer is not adding value, only friction).
+**In-scope this cycle:** YES — spec AC for wizard flow. Exact placement is an @architect decision at Phase 1.
+
+---
+
+### A-v2.6-8 — `goal_tags` frontmatter enrichment is NOT in scope this cycle
+
+**Confidence:** [CONFIRMED — scoped out]
+**Assumption:** Adding a `goal_tags` requirement to all skill frontmatter would enable better cross-domain inference (e.g., automatically suggesting `action-items` to a PM user), but the tooling to parse and route on goal_tags does not exist in v2.6. The `goal_tags` field already exists in `curated-skills-registry.md` as a registry-level field. Adding it to individual SKILL.md files is infrastructure for v3.0 routing, not v2.6 scaffold-composition.
+**Risk:** If goal_tags is deferred, the cross_cutting tier mapping must be maintained manually in `selection-presets.md` rather than inferred. This is a maintenance burden that grows as the pool grows.
+**Test plan:** N/A — this is a scope decision, not an empirical assumption. @architect to confirm at Phase 1 whether goal_tags enrichment is a 1-cycle or multi-cycle effort.
+**In-scope this cycle:** NO — defer to v2.7+.
+
+---
+
+### A-v2.6-9 — Recomposed bundles should update `global-instructions.md` proactive-offer sections
+
+**Confidence:** [CONFIRMED by audit finding]
+**Assumption:** Each preset's `global-instructions.md` hardcodes which skills are offered proactively (e.g., project-management instructs Cowork to offer `status-update`, `meeting-notes`, `risk-assessment`). If bundles are recomposed (e.g., adding `action-items` to project-management), the proactive-offer sections in `global-instructions.md` must also be updated to include the new skills. Failing to update them means the new skills exist in the bundle but are never proactively offered.
+**Risk:** Missed `global-instructions.md` updates are a silent capability gap — the skill is installed but the AI does not know to offer it. This has happened before (doc-summary was added to business-admin in the pool but may not have been added to the proactive-offer section of business-admin's global-instructions.md).
+**Test plan:** AC verification at Phase 5: for every skill in the recomposed `core` or `optional` tier of a preset, verify that the matching proactive-offer block exists in the preset's `global-instructions.md`.
+**In-scope this cycle:** YES — AC required at Phase 5.
+
+---
+
+### A-v2.6-10 — Backwards-compatible file format is preferable to a clean break for `selection-presets.md`
+
+**Confidence:** [ESTIMATED]
+**Assumption:** The tiered schema should extend the existing `selection-presets.md` format (adding `core_skills`, `optional_skills`, `cross_cutting_skills` fields alongside the legacy `skill_bundle:` field) rather than replacing `skill_bundle:` outright. This allows the wizard to parse both formats during a transition window and fail gracefully on legacy files.
+**Risk:** Maintaining two parseable formats in the wizard adds complexity and a permanent maintenance cost. A clean break (remove `skill_bundle:`) is simpler if the migration path for existing users is a one-time re-run of the wizard.
+**Test plan:** @architect to assess the migration cost at Phase 1. Falsified by: @architect confirming that the wizard already re-runs full setup from Q1 on workspace open (meaning existing users already re-configure from scratch, making backwards-compat unnecessary).
+**In-scope this cycle:** YES — schema decision delegated to @architect at Phase 1.
+
+**[SUPERSEDED by D4 at Phase 0 gate, 2026-05-10 — hard-break locked; no dual-parse]**
+

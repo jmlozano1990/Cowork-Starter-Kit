@@ -7,7 +7,7 @@
 
 ---
 
-This is the **manual fallback path**. The primary v2.5.3 path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message. No paste required.
+This is the **manual fallback path**. The primary v2.6.0 path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message. No paste required.
 
 Use this checklist if you cannot open the repo folder directly as a Cowork Project and want preset-suggested onboarding from message one. Complete every step in order — you'll have a working workspace by the end.
 
