@@ -45,3 +45,24 @@ When generating written content 100 words or longer (literature reviews, summari
 ## Safety
 
 Always ask for explicit confirmation before deleting, moving, or overwriting any file or folder.
+
+## Prompt enrichment (prompt-gate)
+
+When a user prompt is vague, low-context, or could plausibly map to multiple
+intents, run the `skills/prompt-gate/SKILL.md` workflow before executing:
+read available context files, scan the workspace for the prompt's topic,
+ask up to 3 grounded clarifying questions if needed, then execute with
+the enriched understanding. Skip the gate for any prompt prefixed with `*`
+(bypass marker), and skip for trivially clear prompts (greetings, simple
+arithmetic, single-word echoes). See `skills/prompt-gate/SKILL.md` for
+the full 4-phase workflow and bypass rules.
+
+## Correcting course
+
+When the user signals that an output is off, wrong, or not quite right
+without specifying how to fix it, follow `prompts/correcting-course.md`:
+emit one `AskUserQuestion` form with preset adjustment chips (tone, scope,
+format, depth, sources) plus an "Other" free-text chip — do NOT ask the
+user to retype context they have already provided. See
+`prompts/correcting-course.md` for the full rule including cascading-
+correction handling and the `*` bypass.

@@ -53,6 +53,7 @@ Each entry includes:
 | status-update | Synthesize project progress into a RAG-status update (Green/Amber/Red + 2–3 line narrative + next milestone) calibrated for the specified audience. | builtin | 2026-05-07 | 1 | project-management |
 | meeting-notes | Extract structured decisions, action items, and open questions from a meeting transcript or rough notes into a clean 4-section summary. | builtin | 2026-05-07 | 1 | project-management,business-admin |
 | risk-assessment | Identify and tabulate the top 5–7 project risks with likelihood, impact, and mitigation in a 6-column table, then surface the top-2 priority risks in a prose section. | builtin | 2026-05-07 | 1 | project-management |
+| prompt-gate | Enrich vague prompts by reading workspace context, scanning local files, asking up to 3 grounded clarifying questions, then executing with full context — auto-skips for trivial prompts and `*`-prefixed bypass. | builtin | 2026-05-10 | 1 | study,research,writing,project-management,creative,business-admin,personal-assistant |
 
 ### Creative
 
