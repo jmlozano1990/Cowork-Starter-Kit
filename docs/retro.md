@@ -2,6 +2,118 @@
 
 ---
 
+## v2.5.4 — Pivot Framing Realignment
+
+**Date:** 2026-05-10
+**Classification:** STANDARD (copy-only, no auth/schema/CI surface)
+**Mode:** quick (combined Phase 5+6+7)
+**Rework rate:** 0% (HEAD d64b8d2 = Phase 4 SHA; no post-Phase-4 commits)
+**Cycle SHAs:** Phase 4 binding SHA `d64b8d2e9022e979fde621a446acef18f8673ff0`, merged `6ff98b3e` via PR #48 squash 2026-05-10. Tag `v2.5.4` pushed. Branch `release/v2.5.4` deleted on remote.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 | — |
+| 1. Design | @architect | 0 | — (3 OI-1..OI-3 open issues for Phase 6 audit; all resolved inline) |
+| 2–3. Security+Gate | combined /gate | 0 | APPROVED-ADJUST — hero wording refined from chip options at gate |
+| 4. Implementation | @dev | 0 | 8/8 ACs self-verified; gate-adjusted hero bound verbatim |
+| 5+6+7. Test+Audit+Approval | @qa | 0 | 8/8 PASS, markdownlint clean, Phase 6 abbreviated inline |
+
+**Net-new findings across the full cycle:** 0. Cleanest cowork cycle on record. STANDARD classification held throughout.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC-1 | README hero line 1 — dynamic-architect framing, no skill-count number | Easy — single line replacement; gate-adjusted wording provided verbatim |
+| AC-2 | README badge version bump 2.5.3→2.5.4 | Easy — standard release artifact |
+| AC-3 | SETUP-CHECKLIST Step 1 goal-first reframe | Easy — 4 line-edits at known lines; architect provided exact bindings |
+| AC-4 | VERSION 2.5.3→2.5.4 | Easy — single value |
+| AC-5 | CHANGELOG [2.5.4] entry prepended | Easy — verbatim block from architect |
+| AC-6 | No competitor naming in new copy | Easy — deny-list enforced; archetypes only |
+| AC-7 | "SHA-pinned" present in hero | Easy — gate-adjusted hero included it |
+| AC-8 | "Next up (v2.6)" byte-identical | Easy — unchanged; verified via grep |
+
+All 8 ACs: **Easy** — copy-only patch with exact-line bindings from @architect. No rework required.
+
+---
+
+### 3. Token Cost Actuals
+
+| Model Tier | Estimate |
+|-----------|---------|
+| opus | ~1 session (architect Phase 1 only) |
+| sonnet | ~3 sessions (pm, dev, qa) |
+| haiku | 0 |
+
+Estimated cycle cost: <$0.10 (quick-mode, 4 lightweight sessions, STANDARD surface). Lowest-cost cowork cycle to date.
+
+---
+
+### 4. Phase Durations
+
+| Phase | Agent | Duration |
+|-------|-------|---------|
+| 0. Requirements | @pm | ~15 min |
+| 1. Design | @architect | ~15 min |
+| 3. Gate | User | ~10 min |
+| 4. Implementation | @dev | ~10 min |
+| 5+6+7. Test+Audit+Approve | @qa | ~10 min |
+
+**Total wall-clock:** ~60 minutes. Second quick-mode cowork cycle (baseline: v2.5.1 ~50 min). Slight increase due to gate chip selection round-trip; otherwise consistent.
+
+---
+
+### 5. Phases Abbreviated
+
+Quick mode with combined Phase 5+6+7. Phase 2 security review abbreviated inline at /gate (combined /gate path). Phase 6 audit abbreviated inline by @qa (STANDARD classification, no new security surface, deny-list clean). Appropriate for STANDARD copy-only patch.
+
+---
+
+### 6. Rework Rate and Causes
+
+**0%.** No post-Phase-4 commits. Phase 4 SHA `d64b8d2` = HEAD at merge. Gate ADJUST option refined the hero wording from chip options before Phase 4 locked in — this is the mechanism that prevented rework, not rework itself.
+
+**Root cause of the cycle existing:** v2.5.3 applied the v43 public-artifact framework but retained preset-first hero copy. The pivot to dynamic-workspace-architect (v2.4.0) was not reflected in README line 1. User caught the misalignment — pipeline spec phase did not reconcile against pivot memory. This is a 2nd (or 3rd) instance of roadmap-blind planning.
+
+---
+
+### 7. Issues Prevented
+
+`qa_issues_prevented: blocker=0 issue=0 info=0`
+
+The cycle itself was clean. The more significant prevention story is at the cycle level: v2.5.4 exists because the pipeline shipped v2.5.3 with misaligned public copy. The user caught what the pipeline missed.
+
+---
+
+### 8. Pattern Detection
+
+**3-cycle WARNING+ keyword scan across v2.5.2, v2.5.3, v2.5.4:**
+- v2.5.2 Phase 6: 0 findings (STANDARD, 0 WARNING+)
+- v2.5.3 Phase 6: 0 findings (SECURITY-SENSITIVE, 0 WARNING+ net-new)
+- v2.5.4 Phase 6: 0 findings (STANDARD)
+
+No recurring Phase 6 WARNING+ pattern across the last 3 cycles.
+
+**However — roadmap-blind planning recurrence (non-Phase-6 surface):** The failure mode that created v2.5.4 is a 2nd documented instance of `feedback_roadmap_blind_planning` (v2.4.0 public copy drift was the 1st; v2.5.3's preset-first hero was the 2nd). This is an orchestrator-level gap, not an agent-level finding — does not trigger the Phase 6 keyword promotion rule, but is documented below for patterns.md.
+
+---
+
+### 9. Retrospective Verdict
+
+**WATCH-NEEDED.** The v2.5.4 cycle itself executed cleanly — 0% rework, 8/8 ACs, quick-mode combined ceremony worked as intended for a STANDARD copy-only patch. The gate ADJUST option functioned as a real correction lever: user caught the "20 curated skills" count understating the curation story and refined it at the gate before Phase 4 locked in. V45-A3 CI smoke achieved its 3rd consecutive cowork validation (v2.5.2/v2.5.3/v2.5.4) and is promoted to PROVED.
+
+The WATCH flag is for the underlying failure mode: the pipeline spec phase did not check pivot memory before scoping the copy refresh in v2.5.3. The user had to catch the misalignment. A vision-alignment gate at /spec time — automatically reading project pivot memories and flagging copy drift before scoping — would have caught this before v2.5.3 shipped. This is a carry-forward Council self-improve candidate.
+
+The quick-mode combined Phase 5+6+7 pattern is now validated at 2 instances (v2.5.1, v2.5.4) for STANDARD copy-only patches. It is a legitimate ceremony scaling option for this surface type.
+
+---
+
 ## v2.5.3 — v43 Framework Application + O-1 Guard
 
 **Date:** 2026-05-10
