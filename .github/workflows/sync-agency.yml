@@ -335,7 +335,7 @@ jobs:
           mv /tmp/updated-lock.json cowork.lock.json
           echo "Lock file updated: pinned_commit_sha=${NEW_SHA}"
 
-      - name: Regenerate THIRD-PARTY-NOTICES.md (ADR-025)
+      - name: Regenerate THIRD-PARTY-NOTICES.md (ADR-025; preserves DO-NOT-REGENERATE tail)
         if: steps.check.outputs.needs_update == 'true'
         env:
           NEW_SHA: ${{ steps.upstream.outputs.latest_sha }}
@@ -349,10 +349,23 @@ jobs:
             > /tmp/notices-stage1.md
 
           awk '/<<LICENSE_TEXT>>/{system("cat /tmp/upstream-LICENSE"); next} {print}' \
-            /tmp/notices-stage1.md > /tmp/notices.tmp \
-            && mv /tmp/notices.tmp THIRD-PARTY-NOTICES.md
+            /tmp/notices-stage1.md > /tmp/notices-generated.md
 
-          echo "THIRD-PARTY-NOTICES.md regenerated."
+          # Preserve hand-maintained tail: any content from the DO-NOT-REGENERATE
+          # marker onwards in the live file is appended verbatim. If the marker is
+          # absent (e.g., file was reset or this is bootstrap), tail file is empty
+          # and only the regenerated section is emitted (no-op append). AC-B4.
+          set -euo pipefail
+          if [ -f THIRD-PARTY-NOTICES.md ]; then
+            awk '/<!-- DO-NOT-REGENERATE/{found=1} found{print}' \
+              THIRD-PARTY-NOTICES.md > /tmp/notices-tail.md
+          else
+            : > /tmp/notices-tail.md
+          fi
+
+          cat /tmp/notices-generated.md /tmp/notices-tail.md > THIRD-PARTY-NOTICES.md
+
+          echo "THIRD-PARTY-NOTICES.md regenerated (tail preserved: $(wc -l < /tmp/notices-tail.md) lines)."
 
       - name: Create Pull Request
         if: steps.check.outputs.needs_update == 'true'
