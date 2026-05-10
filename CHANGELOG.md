@@ -4,6 +4,41 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.5.4] — 2026-05-10 (Pivot framing realignment)
+
+### Changed
+
+- **README hero (line 1) realigned to v2.4.0 Dynamic Workspace Architect framing:**
+  Replaced "goal-based preset wizard, 20 curated skills" wording with "describe your goal, the
+  Dynamic Workspace Architect builds it from vetted, SHA-pinned skills." The v2.4.0 cycle shipped the pivot
+  functionally (open-ended goal discovery replaces preset menus); v2.5.4
+  closes the gap on the two surface-level artifacts that still carried
+  pre-pivot framing. Value-prop anchors preserved byte-identically:
+  "no code required." Note: "20 curated skills" framing was replaced with "vetted, SHA-pinned skills" — local
+  skill count understates the dynamic-architect curation story (Cowork curates down from a larger agency-agents
+  upstream pool with SHA-pinning, content-scanning, and MIT attribution injection). Curation > count.
+- **SETUP-CHECKLIST.md Step 1 sequencing fix:** Goal articulation is now
+  presented as the primary first action; preset selection is reframed as
+  "pick a starting suggestion" (the wizard confirms / narrows / composes
+  from there per Paths A/B/C). Steps 2 and 3 unchanged.
+- Version badge bumped `2.5.3` → `2.5.4`.
+
+### Operational note (manual post-merge)
+
+GitHub repo Topics need a one-time swap to match the v2.4.0 pivot. Run after
+PR merge:
+
+```bash
+gh repo edit jmlozano1990/Cowork-Starter-Kit \
+  --remove-topic templates \
+  --add-topic dynamic-workspace
+```
+
+`github.enabled=false` in the registry — in-cycle automation is skipped (same
+pattern as v2.5.3 S1/S2/S3 manual signals).
+
+---
+
 ## [2.5.3] — 2026-05-10 (v43 framework application + O-1 guard)
 
 ### Changed

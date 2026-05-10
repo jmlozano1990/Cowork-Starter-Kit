@@ -15,13 +15,13 @@ Use this checklist if you cannot open the repo folder directly as a Cowork Proje
 
 ## Steps
 
-**Step 1 — Paste project-instructions-starter.txt into Custom Instructions**
+**Step 1 — Describe your goal, then paste the closest preset's project-instructions-starter.txt into Custom Instructions**
 
-Open `examples/<preset-name>/project-instructions-starter.txt` from this repo. Copy its entire contents. Open Cowork and go to Project Settings > Custom Instructions. Paste the contents there and save.
+First, articulate the goal you want this workspace to support — in your own words, in one or two sentences (e.g., "I'm studying for the bar exam," "I'm running a 6-month home renovation," "I'm tracking my job search"). Then open `examples/<preset-name>/project-instructions-starter.txt` from the preset closest to that goal, copy its entire contents, open Cowork and go to Project Settings > Custom Instructions, and paste the contents there and save.
 
-Replace `<preset-name>` with the preset closest to your goal: study, research, writing, project-management, creative, business-admin, or personal-assistant.
+Pick the preset closest to your goal as a starting suggestion (the wizard will confirm or refine it once you start talking): study, research, writing, project-management, creative, business-admin, or personal-assistant. If none feels close, pick any — the wizard's Path C will compose a custom bundle from your goal description.
 
-This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard will still ask your goal in your own words and may suggest that preset, narrow across overlapping presets, or compose a custom bundle; the preset you chose here is a starting suggestion, not a fixed assignment.
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then confirms the preset you chose, narrows across overlapping presets, or composes a custom bundle from scratch. The preset is a starting suggestion, not a fixed assignment.
 
 **Step 2 — Create your Cowork Project**
 
