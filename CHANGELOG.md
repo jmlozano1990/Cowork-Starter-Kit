@@ -4,6 +4,52 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.5.2] — 2026-05-10
+
+### Added
+
+- **prompt-gate skill** (`skills/prompt-gate/SKILL.md`) — auto-loaded via every
+  preset's `global-instructions.md`. Detects vague prompts and enriches them by
+  reading workspace context, scanning local files, asking up to 3 grounded
+  clarifying questions, then executing with full context. Bypass with `*` prefix.
+- **correcting-course rule** (`prompts/correcting-course.md`) — auto-loaded via
+  every preset's `global-instructions.md`. When the user says output is off,
+  emits a structured form with preset adjustment chips (tone, scope, format,
+  depth, sources) plus an "Other" free-text escape — no need to retype context.
+- New `prompts/` directory at repo root for cross-cutting workflow rules
+  injected into preset `global-instructions.md` files.
+- `THIRD-PARTY-NOTICES.md` updated: new `## Direct Pattern Incorporations`
+  section with the `addyosmani/agent-skills` MIT entry covering the 4-phase
+  context-enrichment pattern incorporated into `skills/prompt-gate/SKILL.md`.
+
+### Changed
+
+- All 7 presets' `global-instructions.md` files gained two appended sections
+  (`## Prompt enrichment (prompt-gate)` and `## Correcting course`). Existing
+  content is byte-unchanged.
+- `curated-skills-registry.md` adds a `prompt-gate` row under Project
+  Management with cross-cutting `goal_tags`.
+
+### Patch-Level Exception (process note)
+
+A new opt-in skill (prompt-gate) ships at patch level here because the v2.6
+minor slot is publicly committed to multi-tool skill authoring. The skill is
+auto-loaded via global-instructions but can be removed from any preset's
+`global-instructions.md` without other changes. Future new-skill cycles
+default back to minor version bumps.
+
+### Compliance
+
+- MIT attribution preserved for the upstream pattern source
+  (`addyosmani/agent-skills` @ `9534f44c5448086fcc0046f9d83752c654c81930`):
+  full permission notice embedded in `skills/prompt-gate/SKILL.md` footer
+  (Option A, self-contained) and full license text in
+  `THIRD-PARTY-NOTICES.md` (`## Direct Pattern Incorporations`).
+- Phase 2 `/legal` review: PASS WITH MUST-FIX (2 WARNING / 4 INFO);
+  CF-L1-1 and CF-L1-2 resolved by the additions above.
+
+---
+
 ## [2.5.1] — 2026-05-09
 
 Doc-only patch: Extended Thinking + Opus onboarding guidance added to three user-facing files.

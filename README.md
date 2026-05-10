@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.1-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.5.2-green.svg)](CHANGELOG.md)
 
 ---
 
