@@ -1084,3 +1084,289 @@ The GitHub repo description already reads correctly: "Build a Claude workspace f
 
 STANDARD — copy-only, no auth/RLS/schema/CI/guard/settings/API/compliance surface.
 - **[UNTESTED]** Path 1 tail-extraction logic handles all edge cases (marker absent, marker at EOF, encoding variants). @qa must simulate at Phase 5.
+
+---
+
+## v2.6.0 Cycle — Dynamic Preset Scaffolds (RE-SCOPED)
+
+> **Cycle:** v2.6.0 — Dynamic Preset Scaffolds (RE-SCOPED 2026-05-10)
+> **Version bump:** 2.5.4 → 2.6.0 (MINOR — new feature surface: tiered skill schema + runtime swap affordance)
+> **Status:** Phase 0 — Requirements (DONE)
+> **Date:** 2026-05-10T00:00:00Z
+> **Mode:** DEEP
+> **Classification:** STANDARD (preliminary — confirmed at Phase 1; no auth/schema/CI/compliance surface identified in requirements)
+> **Routing:** `/design` next. No `/legal` trigger detected (no external content derivation; all skills and presets are existing Cowork-owned content).
+
+---
+
+### Strategic Context
+
+v2.6 was publicly committed in the README "Next up" teaser as "Multi-tool skill authoring (v3.0 routing intent) — individual skills validated for Copilot/Cursor/Windsurf and widened beyond claude-code." On 2026-05-10, the user elected to flip the v2.6 slot to address an audit finding instead. Multi-tool authoring is deferred to v2.7+.
+
+**The audit finding (2026-05-10):** All 7 preset skill bundles were composed in a single v2.4.0 commit and have never been re-evaluated against the full 21-skill pool. Three presets have documented MINOR-GAPS; the pool has grown by 3 skills since the v2.4 lock-in; and the 3-skill cap per preset has never been validated as a UX constraint.
+
+**The user's strategic framing (verbatim):** "I have the guess that the presets are outdated based in the old version and is not counting all the possibilities we have now, we should assess new combinations based on all the pool and then be creating those preset templates that can be dynamically adjusted by user interaction."
+
+**What v2.6 ships:** A tiered skill schema (`core` / `optional` / `cross_cutting`), recomposed bundles across all 7 presets based on full-pool JTBD analysis, and a runtime swap/add/drop affordance that makes presets starting scaffolds rather than fixed configurations.
+
+---
+
+### Problem
+
+The 7 Cowork preset skill bundles were composed at v2.4.0 against a 20-skill pool and have never been updated. Since then, the pool has grown (action-items, doc-summary, prompt-gate added), making the v2.4 compositions an incomplete map of available capabilities.
+
+Three specific capability gaps have been identified by domain-JTBD analysis:
+- **Study:** `editing-pass` absent (students write assignments; the current bundle stops at research and notes)
+- **Project Management:** `action-items` absent (meeting-notes output feeds directly into action-item extraction; the two are used together by the same persona on the same trigger)
+- **Business/Admin:** `meeting-notes` absent from the proactive-offer layer (the bundle's global-instructions does not mention it as a proactively offered skill)
+
+Beyond gaps, the deeper problem is architectural: presets are currently fixed bundles. Once installed, a user cannot add a skill mid-session without starting the wizard again. This creates hard domain boundaries that do not match how knowledge workers actually work — a project manager needs to draft an email; a student needs to polish an essay; a personal assistant needs to extract action items from meeting notes. The current architecture treats these as different "workspaces" when they are all the same work session.
+
+---
+
+### Target Users
+
+**Primary persona served by this cycle:**
+All 7 preset personas benefit, but the highest-impact change is for Jordan (Project Management) and Casey (Personal Assistant), who both have clear optional-tier gaps from the audit finding. Alex (Study) benefits from `editing-pass` addition to optional tier.
+
+**Backwards-compat concern:** Existing v2.5.x users with installed workspaces. The schema migration strategy must not break existing skill bundle files.
+
+---
+
+### Core Features (MVP)
+
+#### F1 — Tiered Skill Schema in `selection-presets.md`
+
+**What it does:** Extends the `selection-presets.md` preset block format to support three tiers per preset:
+- `core_skills` (always loaded, replaces current `skill_bundle:`) — 2-4 skills per preset
+- `optional_skills` (available for swap-in during wizard F4 or runtime; suggested proactively by preset-specific global-instructions) — 1-3 additional skills per preset
+- `cross_cutting_skills` (shared across presets; surfaces as "also useful" suggestions) — pool-level annotation
+
+The legacy `skill_bundle:` field is deprecated but still parsed by the wizard during a transition window (A-v2.6-10). Wizard reads `core_skills` if present; falls back to `skill_bundle:` if absent.
+
+**Recomposed bundles (full-pool JTBD analysis — Phase 0 output):**
+
+| Preset | Core skills (core tier) | Optional skills | Notes |
+|--------|------------------------|-----------------|-------|
+| Study | flashcard-generation, note-taking, research-synthesis | editing-pass, outline-generator | Unchanged core; editing-pass + outline-generator added as optional |
+| Research | literature-review, source-analysis, research-synthesis | note-taking, doc-summary | Unchanged core; note-taking + doc-summary added as optional |
+| Writing | voice-matching, outline-generator, editing-pass | research-synthesis, feedback-synthesizer | Unchanged core; research-synthesis + feedback-synthesizer added as optional |
+| Project Management | meeting-notes, status-update, risk-assessment | action-items, follow-up-tracker | Unchanged core; action-items + follow-up-tracker added as optional |
+| Creative | ideation-partner, creative-brief, feedback-synthesizer | outline-generator, voice-matching | Unchanged core; outline-generator + voice-matching added as optional |
+| Business/Admin | email-drafting, doc-summary, action-items | meeting-notes, follow-up-tracker | action-items promoted to core (from optional); meeting-notes added as optional |
+| Personal Assistant | daily-briefing, follow-up-tracker, spend-awareness | action-items, doc-summary | Unchanged core; action-items + doc-summary added as optional |
+
+**Cross-cutting skills (available across all presets as suggestions):**
+
+| Skill | Rationale |
+|-------|-----------|
+| action-items | Used situationally by PM, business-admin, personal-assistant, and study personas |
+| meeting-notes | Used situationally by PM, business-admin, and personal-assistant personas |
+| doc-summary | Used situationally by research, business-admin, and personal-assistant personas |
+| voice-matching | Used situationally by writing and creative personas; crossover to business-admin for exec emails |
+| research-synthesis | Bridges study, research, and writing domains |
+
+**ACs:**
+- **AC-F1-1:** `selection-presets.md` contains `core_skills:` and `optional_skills:` fields on all 7 preset blocks. `grep -c "core_skills:" selection-presets.md` = 7.
+- **AC-F1-2:** All 7 presets retain `skill_bundle:` field for backwards-compat (parser fallback). `grep -c "skill_bundle:" selection-presets.md` = 7.
+- **AC-F1-3:** Each preset's `core_skills:` count is between 2 and 4. No preset has more than 4 core skills.
+- **AC-F1-4:** Each preset's `optional_skills:` count is between 1 and 3.
+- **AC-F1-5:** A `cross_cutting_skills:` annotation block exists at the bottom of `selection-presets.md` listing the 5 cross-cutting skills identified in Phase 0 analysis.
+- **AC-F1-6:** `quality.yml` skill-depth-check continues to pass on all skills in the pool (no skill-depth regressions from schema changes). `grep -c "PASS" quality-check-output` = pool count.
+
+---
+
+#### F2 — Runtime Skill Swap Affordance (Wizard + Global Instructions)
+
+**What it does:** Adds a runtime skill swap/add/drop path that allows users to modify their active skill set during a session without re-running the full wizard. The affordance surfaces at two points:
+1. **At bundle confirmation (F4 in WIZARD.md):** After the wizard presents the `core_skills` bundle, it proactively offers the `optional_skills` as a "you might also want" list with chips. User can add any optional skill to the session before confirming.
+2. **Mid-session (global-instructions.md):** Each preset's `global-instructions.md` gains a "Skill swap" section specifying that when the user asks for a capability not in their current bundle (e.g., a PM user says "can you help me polish this email?"), the AI offers the closest matching optional or cross-cutting skill rather than saying it is unavailable.
+
+**WIZARD.md changes:** F4 (bundle customization) updated to distinguish between `core_skills` (pre-selected, user can remove) and `optional_skills` (pre-listed as "also available", user can add). The prompt changes from "Want to add or remove anything?" to "Your core bundle: [core_skills]. Also available for your workspace type: [optional_skills]. Add any, or keep core only?"
+
+**global-instructions.md changes:** All 7 preset `global-instructions.md` files updated to:
+1. Reference `optional_skills` in the proactive-offer trigger section (new triggers for each optional skill)
+2. Add a "Skill swap" section with instructions for when user requests a skill outside the current bundle
+
+**ACs:**
+- **AC-F2-1:** WIZARD.md F4 section distinguishes `core_skills` from `optional_skills` in the bundle-confirmation prompt. `grep -c "optional_skills\|optional skills\|Also available" WIZARD.md` >= 1.
+- **AC-F2-2:** All 7 preset `global-instructions.md` files contain proactive-offer trigger blocks for each skill in their `optional_skills` tier. For each `optional_skills` entry, a matching "offer automatically when" block exists in the corresponding `global-instructions.md`.
+- **AC-F2-3:** Each preset's `global-instructions.md` contains a "Skill swap" section (or equivalent heading) instructing the AI to offer the closest optional or cross-cutting skill when the user requests a capability outside the current bundle.
+- **AC-F2-4:** The existing proactive-offer blocks for `core_skills` in all 7 `global-instructions.md` files are byte-unchanged. Only new blocks are added; existing blocks are not modified or reordered.
+- **AC-F2-5:** WIZARD.md F4 backwards-compat: if a preset block only has `skill_bundle:` (no `core_skills:`), the wizard falls back to presenting `skill_bundle:` contents as the proposed bundle. `grep -c "skill_bundle" WIZARD.md` >= 1 (fallback reference preserved).
+
+---
+
+#### F3 — Release Artifact Updates
+
+**What it does:** Updates public-facing artifacts to reflect the v2.6.0 changes:
+- README "Next up" teaser: replace v2.6 multi-tool teaser with "v2.7+ multi-tool skill authoring" (per `feedback_version_bump_completeness` — "Next up" must be updated)
+- README version badge: bump 2.5.4 → 2.6.0
+- VERSION file: 2.5.4 → 2.6.0
+- CHANGELOG.md: prepend [2.6.0] entry
+- SETUP-CHECKLIST.md: update any version references
+
+**ACs:**
+- **AC-F3-1:** README version badge reads `2.6.0`. `grep -c "2.6.0" README.md` >= 1.
+- **AC-F3-2:** README "Next up" line reads "v2.7+" (not v2.6). `grep -c "v2.7" README.md` >= 1. `grep -c "v2.6.*multi-tool\|multi-tool.*v2.6" README.md` = 0.
+- **AC-F3-3:** VERSION file contains `2.6.0`. `cat VERSION` = `2.6.0`.
+- **AC-F3-4:** CHANGELOG.md `[2.6.0]` section is the first entry (prepended). `head -5 CHANGELOG.md | grep -c "2.6.0"` >= 1.
+- **AC-F3-5:** README contains no competitor names (deny-list: competitor names per internal docs). `grep -ciE "(cursor|windsurf|copilot|notion|gpt|openai)" README.md` (in marketing copy positions) = 0.
+
+---
+
+### Out of Scope (v2.6)
+
+- **Multi-tool skill authoring.** Deferred to v2.7+. No `tools:` field changes beyond v2.5 baseline.
+- **`goal_tags` SKILL.md enrichment.** Deferred to v2.7+. Cross-cutting skill mapping is maintained manually in `selection-presets.md` at v2.6.
+- **New skill additions.** Pool remains at 21 skills (20 original + prompt-gate). No new SKILL.md files.
+- **Automated skill inference / LLM-based routing.** CF-v2.4-E (LLM goal matching). Still in backlog.
+- **Upstream contribution.** v2.5.0 F3 submitted `meeting-notes`. No additional upstream contribution this cycle.
+- **Any CI gate changes.** `quality.yml` and `sync-agency.yml` are BYTE-UNCHANGED this cycle unless @architect identifies a structural requirement at Phase 1.
+- **Persona profile wizard expansion.** `WIZARD.md` Q1-Q5 flow is unchanged except F4 bundle-confirmation step. No new questions added.
+- **`cowork-profile.md` schema changes.** User profile file format is unchanged.
+
+---
+
+### Technical Constraints
+
+- **Stack:** Markdown + bash scripts. No build step. No schema. No CI changes (preliminary).
+- **File format (backwards-compat):** `selection-presets.md` must parse cleanly with both legacy (`skill_bundle:`) and new (`core_skills:` + `optional_skills:`) keys. Wizard must support both formats during the transition window (A-v2.6-10).
+- **Deny-list (BYTE-UNCHANGED unless @architect overrides):** `WIZARD.md` Q1/Q2/Q3/Q4/Q5 sections (only F4 changes), all 21 SKILL.md files, `cowork.lock.json`, `quality.yml`, `sync-agency.yml`, `curated-skills-registry.md`.
+- **No new skills added to the pool.** The recomposition uses the existing 21-skill pool only. `ls skills/ | wc -l` = 21 at Phase 5.
+- **ADR-024 attribution injection:** Byte-unchanged. No new upstream installs.
+- **No competitor names in public copy.** README, CHANGELOG promotional copy, SETUP-CHECKLIST, release bodies must contain no competitor names (internal docs exempt per `feedback_no_competitor_naming_public`).
+- **markdownlint:** 0 violations on all new and modified `.md` files. CI must pass on first push.
+- **Commit topology (ADR-033):** Phase 0/1/2 docs (spec, architecture, security-review) in mandatory-paperwork commit alongside implementation.
+
+---
+
+### User Stories
+
+- As Alex (student), I want `editing-pass` available in my Study workspace so I can polish a lab report mid-session without switching workspaces.
+- As Jordan (project manager), I want `action-items` available as a one-tap addition after meeting-notes runs so I can feed the task board without a manual copy-paste step.
+- As Casey (personal assistant), I want to add `doc-summary` when I receive a long HOA notice in the middle of a personal-assistant session so I can get the key decision without opening a separate workspace.
+- As Sam (freelance writer), I want `research-synthesis` available as an optional skill in my Writing workspace so I can compare competitor angles for a client brief without leaving the session.
+- As any Cowork user, I want the wizard to show me what optional skills are available for my workspace type so I can make an informed choice at setup, not discover capabilities by accident later.
+- As any Cowork user with an existing workspace, I want my current skill bundle to continue working after v2.6.0 so that updating the repo does not break my configuration.
+- As Priya (creative strategist), I want `outline-generator` available as an optional skill in my Creative workspace so I can structure a strategy deck without switching to a writing workspace.
+- As Chris (business-admin), I want the AI to proactively offer `meeting-notes` when I paste meeting content so I can get a full structured record, not just action items.
+
+---
+
+### Acceptance Criteria — Full List
+
+| ID | Feature | Criterion | Verification method |
+|----|---------|-----------|---------------------|
+| AC-F1-1 | F1 | `core_skills:` on all 7 presets | `grep -c "core_skills:" selection-presets.md` = 7 |
+| AC-F1-2 | F1 | `skill_bundle:` retained on all 7 presets | `grep -c "skill_bundle:" selection-presets.md` = 7 |
+| AC-F1-3 | F1 | Core tier count 2-4 per preset | Manual review: no preset has >4 core skills |
+| AC-F1-4 | F1 | Optional tier count 1-3 per preset | Manual review: no preset has >3 optional skills |
+| AC-F1-5 | F1 | cross_cutting_skills block exists | `grep -c "cross_cutting_skills:" selection-presets.md` >= 1 |
+| AC-F1-6 | F1 | Skill-depth-check passes all 21 skills | CI quality.yml: skill-depth-check step PASS |
+| AC-F2-1 | F2 | WIZARD.md F4 distinguishes core/optional | `grep -c "optional_skills\|Also available" WIZARD.md` >= 1 |
+| AC-F2-2 | F2 | All 7 global-instructions.md have optional-skill proactive-offer blocks | Manual review: each optional_skill has matching "offer automatically when" block |
+| AC-F2-3 | F2 | All 7 global-instructions.md have "Skill swap" section | `grep -rc "Skill swap\|skill-swap\|swap a skill" examples/*/global-instructions.md | grep -c ":"` = 7 |
+| AC-F2-4 | F2 | Existing core-skill proactive-offer blocks byte-unchanged | `git diff HEAD~1 examples/*/global-instructions.md | grep -c "^-.*offer automatically"` = 0 |
+| AC-F2-5 | F2 | WIZARD.md retains `skill_bundle:` fallback reference | `grep -c "skill_bundle" WIZARD.md` >= 1 |
+| AC-F3-1 | F3 | README badge = 2.6.0 | `grep -c "2.6.0" README.md` >= 1 |
+| AC-F3-2 | F3 | README "Next up" references v2.7+ not v2.6 | `grep -c "v2.7" README.md` >= 1; no v2.6 multi-tool reference |
+| AC-F3-3 | F3 | VERSION = 2.6.0 | `cat VERSION` = `2.6.0` |
+| AC-F3-4 | F3 | CHANGELOG [2.6.0] prepended | `head -5 CHANGELOG.md | grep -c "2.6.0"` >= 1 |
+| AC-F3-5 | F3 | No competitor names in README | deny-list grep = 0 in marketing copy positions |
+
+---
+
+### Edge Cases
+
+1. **Empty optional tier at runtime:** User is in a session and asks for a skill not in core or optional tier. Global-instructions "Skill swap" section must respond with the closest cross-cutting match (not "I can't do that"). If no cross-cutting match exists, the AI must say explicitly: "That skill is not in your current workspace — want to add it or start fresh?"
+
+2. **Backwards-compat fallback triggers:** A user with a v2.4.x or v2.5.x `selection-presets.md` (containing only `skill_bundle:`, no `core_skills:`) opens the wizard. The wizard must parse `skill_bundle:` and present the full bundle as core — no error, no partial install.
+
+3. **Core and optional tier overlap:** If a skill listed in `core_skills:` is also listed in `optional_skills:` (authoring error), the wizard must de-duplicate and count the skill as core only. No double-install.
+
+4. **Cross-cutting skill already in core:** If a cross-cutting skill (e.g., `action-items`) is also listed as a `core_skills:` entry for a preset, the cross-cutting annotation must not cause a second install. De-duplication logic applies.
+
+5. **global-instructions.md proactive-offer for optional skill when user has not added it:** The proactive offer in global-instructions triggers even if the user has not added the optional skill to their session. The AI should offer to add it ("Want me to add this skill to your session?") rather than attempting to use it silently.
+
+6. **User adds a cross-cutting skill mid-session:** The AI must acknowledge the addition ("I've added `action-items` to your session — it extracts owned action items from meeting transcripts or threads. Paste your meeting notes to use it.") rather than silently activating it.
+
+7. **Max optional tier reached:** If a user adds all optional and cross-cutting skills to their session (extreme edge), the session should remain functional. There is no enforced maximum — the user's configuration choice is respected.
+
+8. **Preset name collision:** If a future skill addition to the pool uses a name identical to an existing cross-cutting skill slug, the cross-cutting annotation must not create an ambiguous reference. CI skill-name uniqueness check must be enforced.
+
+---
+
+### Risks
+
+| Risk | Severity | Mitigation |
+|------|----------|-----------|
+| global-instructions.md proactive-offer update missed for a new optional skill | HIGH | AC-F2-2 requires verification for every optional_skills entry across all 7 presets at Phase 5. @qa to automate check. |
+| Backwards-compat fallback not tested under CI (existing users get broken parse) | HIGH | Phase 5 @qa creates test fixture with legacy `skill_bundle:`-only preset blocks; wizard must handle gracefully. |
+| skill_bundle: retained creates permanent maintenance debt (two schema versions in flight) | MEDIUM | @architect to evaluate at Phase 1 whether the transition window should have an end date (e.g., deprecated-in-v2.7). |
+| Cross-cutting tier creates user confusion ("is this skill in my workspace or not?") | MEDIUM | Global-instructions "Skill swap" section must explicitly acknowledge mid-session additions. UX phrasing review at Phase 5 @ux. |
+| README "Next up" update reveals v2.6 scope change publicly (original teaser was multi-tool) | LOW | Changelog entry explains the slot flip to preset-recomposition without referencing original multi-tool commitment by name. User decides framing. |
+
+---
+
+### Open Questions for @architect (Phase 1)
+
+**OQ-v2.6-1 (F1 — schema format):** Should `core_skills:` and `optional_skills:` use YAML list syntax (`core_skills: [a, b, c]`) consistent with the existing `skill_bundle:` field, or a multi-line block (`core_skills:\n  - a\n  - b`)? Parser must handle both if the format is ambiguous.
+
+**OQ-v2.6-2 (F2 — swap affordance implementation):** The "Skill swap" section in global-instructions tells the AI to offer a skill when the user requests a capability outside the bundle. Should this be implemented as a markdown instruction block (current pattern) or as a structured trigger format (new pattern consistent with existing "offer automatically when" blocks)? The two formats must not conflict.
+
+**OQ-v2.6-3 (F2 — runtime install mechanism):** When a user adds an optional skill mid-session via the "Skill swap" offer, does the skill SKILL.md file need to be physically installed to `.claude/skills/` at that point, or does the AI operate from the skill's Instructions inline (loaded from WIZARD.md F6 skill-as-prompts fallback)? The answer determines whether the swap affordance requires file-system access at runtime.
+
+**OQ-v2.6-4 (F1 — backwards-compat duration):** Should the `skill_bundle:` legacy key be formally deprecated in this cycle (marked as deprecated, planned for removal at v2.7.0) or left as permanent dual-parse? Recommendation needed before ADR documenting the schema change.
+
+**OQ-v2.6-5 (F2 — cross-cutting display):** In the WIZARD.md F4 bundle-confirmation prompt, should the `cross_cutting_skills` be presented separately from `optional_skills`, or merged into a single "also available" list? The distinction may be useful for advanced users but confusing for casual ones.
+
+---
+
+### Success Metrics
+
+- **Primary:** Percentage of Cowork sessions where at least one optional or cross-cutting skill is added mid-session (target: measurable by user report; no telemetry in v2.6). Proxy: absence of "can you do X in this workspace?" questions that terminate sessions.
+- **Secondary:** Zero post-release reports of legacy workspace breakage (backwards-compat maintained). Tracked via GitHub issues.
+- **Leading indicator:** All 7 presets' optional-tier additions are proactively offered in their `global-instructions.md` at Phase 5 @qa verification (AC-F2-2 PASS).
+
+---
+
+### Assumptions in This Cycle
+
+| ID | Assumption | Confidence | In scope |
+|----|-----------|-----------|---------|
+| A-v2.6-1 | Users want runtime skill edit affordance | [UNTESTED] | YES |
+| A-v2.6-2 | 3-skill cap is suboptimal | [ESTIMATED] | YES |
+| A-v2.6-3 | Cross-domain skills under-represented | [CONFIRMED] | YES |
+| A-v2.6-4 | 3-tier schema more discoverable | [ESTIMATED] | YES |
+| A-v2.6-5 | v2.5.x users need backwards-compat | [ESTIMATED] | YES |
+| A-v2.6-6 | prompt-gate stays implicit | [ESTIMATED] | YES |
+| A-v2.6-7 | Edit affordance should be proactive at bundle-confirm | [UNTESTED] | YES |
+| A-v2.6-8 | goal_tags enrichment not in scope | [CONFIRMED] | NO |
+| A-v2.6-9 | global-instructions.md must reflect bundle recomposition | [CONFIRMED] | YES |
+| A-v2.6-10 | Backwards-compat file format preferable | [ESTIMATED] | YES — decision to @architect |
+
+---
+
+## Architectural Modifications (v2.6.0)
+
+The following spec items were modified during Phase 1 architecture design (2026-05-10T19:30:00Z) to conform to the 8 user decisions locked at the Phase 0 → Phase 1 gate. All modifications are user-elected (not architect overrides). See `docs/architecture.md` § "v2.6.0 Phase 1 — Dynamic Preset Scaffolds Design" and ADR-034 for full rationale.
+
+- **AC-F1-2** (originally: `skill_bundle:` retained on all 7 presets — `grep -c "skill_bundle:" selection-presets.md` = 7) → **INVERTED to: `skill_bundle:` REMOVED on all 7 presets — `grep -c "^skill_bundle:" selection-presets.md` = 0.** Reason: D4 hard-break (user override at gate). The `skill_bundle:` field is removed in v2.6.0; new `core_skills:` schema is the only schema. Clone-once template means no live-state migration is needed; legacy parser would be dead code.
+
+- **AC-F2-5** (originally: WIZARD.md retains `skill_bundle:` fallback reference — `grep -c "skill_bundle" WIZARD.md` >= 1) → **INVERTED to: WIZARD.md contains zero `skill_bundle:` references — `grep -c "skill_bundle" WIZARD.md` = 0.** Reason: D4 hard-break (user override at gate). Same rationale as AC-F1-2 inversion — no parser fallback exists.
+
+- **OQ-v2.6-1** (schema format question) → **RESOLVED: comma-separated single-line list (consistent with existing `match_signals:` format).** Not YAML inline arrays, not multi-line block lists. Rationale: preserves existing line-scanner parser shape; avoids adding YAML parser surface (which would also widen the OI-v2.6-S2 threat model).
+
+- **OQ-v2.6-3** (runtime install mechanism question) → **RESOLVED: instruction-only swap, no file copy at runtime (D8 binding).** AI loads optional/cross-cutting skill instructions inline from the pool; does NOT write to `.claude/skills/` mid-session. `skills-as-prompts.md` continues to operate from the install-time bundle (core + user-confirmed optional adds at F4).
+
+- **OQ-v2.6-4** (backwards-compat duration question) → **RESOLVED: hard break, no deprecation cycle planned (D4 binding).** There is no `skill_bundle:` field left to deprecate post-v2.6.0.
+
+- **OQ-v2.6-5** (cross-cutting display question) → **RESOLVED: cross_cutting_skills are presented separately from optional_skills in WIZARD.md F4 prose.** F4 prompt has three add-source bullets: optional tier (preset-specific), cross-cutting (pool-level), full pool (free-text suggestion match). See `docs/architecture.md` § WIZARD.md Prose Changes Diff Block 2.
+
+- **Classification re-run** (originally STANDARD per Phase 0 preliminary) → **CONFIRMED SECURITY-SENSITIVE at Phase 1.** Triggers: CI gate edit (`quality.yml` ADR-016 v2.6 amendment), new AI-instruction surface (Skill swap prose in 7 files), hard-break schema migration. Phase 2 (@security) review is mandatory; combined-path skip is NOT eligible.
+
+- **Spec § Out of Scope amendment:** "Any CI gate changes" originally listed `quality.yml` as BYTE-UNCHANGED unless @architect identifies a structural requirement. Architect identified a structural requirement (the parser-update lock-step). `quality.yml` receives 2 targeted edits (CMP step parser + MF-1 regex) per ADR-016 v2.6 amendment. All other CI workflow files (`sync-agency.yml`) remain BYTE-UNCHANGED.
+
+- **Spec § Risks amendment:** the risk row "skill_bundle: retained creates permanent maintenance debt" is rendered moot by D4 hard-break and is replaced by the new risk: "CI gate parser lock-step missed, byte-mirror silently no-ops" — captured as ADR-034 §Consequences and as Guard Change Summary §I "What could break" item 1. Mitigation: ADR-016 v2.6 amendment is committed in lock-step with ADR-034.
+

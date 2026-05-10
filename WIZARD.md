@@ -32,7 +32,7 @@ Ask the user:
 
 **If uncertain** ("not sure", "maybe", "?", empty, or a single word):
 
-Re-ask once with examples: "What do you want to accomplish? For example: studying for medical school exams; managing a freelance design business; drafting professional emails for clients." If the user is still uncertain after the re-ask, default to Path C with the Personal Assistant preset's `skill_bundle` as a generic starting point.
+Re-ask once with examples: "What do you want to accomplish? For example: studying for medical school exams; managing a freelance design business; drafting professional emails for clients." If the user is still uncertain after the re-ask, default to Path C with the Personal Assistant preset's `core_skills` as a generic starting point.
 
 **Goal tokenization (F3 keyword match):**
 
@@ -44,11 +44,17 @@ Lowercase the user's goal text. Remove STOPWORDS (see §"Phase 1 — Role-Genera
 
 **Path A — clear single-preset match (≥3 matching signals from one preset, no other preset within 1 token):**
 
-Present: "That sounds like **[Preset Name]** — is that right? Your starting skill bundle would be: [skill 1], [skill 2], [skill 3].
+Present: "That sounds like **[Preset Name]** — is that right?
 
-Sound right? Or would you like to adjust or build from scratch?"
+Your **core skills** would be: [core_skill 1], [core_skill 2], [core_skill 3].
 
-If user confirms: proceed to F4 (bundle customization). If user declines: proceed to Path C.
+Also available for [Preset Name] workspaces (you can add any of these to your bundle now, or ask later mid-session): [optional_skill 1], [optional_skill 2].
+
+Want to start with the core skills, add any of the optional ones, or build from scratch?"
+
+If user confirms core only: proceed to F4 (final bundle confirmation) with `core_skills` as the proposed bundle.
+If user adds one or more optional skills: proceed to F4 with `core_skills + selected optional_skills` as the proposed bundle. De-duplicate.
+If user declines: proceed to Path C.
 
 **Path B — two-preset tie (top 2 presets are within 1 matching signal of each other):**
 
@@ -75,14 +81,16 @@ User confirms or adjusts. Proceed to F4.
 
 After routing (Path A, B, or C), the user has a proposed skill bundle. Before installing, offer one round of customization:
 
-"Your bundle: [skill 1], [skill 2], [skill 3].
+"Your bundle: [final skill list].
 
 Want to add or remove anything?
-- **Add:** Name a skill type (e.g., 'email', 'meeting notes'). I'll suggest the closest match from the pool (≤3 suggestions at a time).
+- **Add from optional tier** (preset-specific suggestions, not yet selected): [unselected optional_skills, if any remain]
+- **Add from cross-cutting** (useful across workspaces): [up to 3 cross_cutting suggestions that are not already in the bundle]
+- **Add from full pool:** Name a skill type (e.g., 'email', 'meeting notes'). I'll suggest the closest match from the 21-skill pool (≤3 suggestions at a time).
 - **Remove:** Name any skill to drop it.
 - **Done / keep all:** confirm to proceed."
 
-**Pool boundary (C-v2.4-7):** Add-skill suggestions come ONLY from the `skills/` pool (20 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "External skills are not yet supported in v2.4 — coming in v2.5."
+**Pool boundary (C-v2.4-7, v2.6 update):** Add-skill suggestions come ONLY from the `skills/` pool (21 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "External skills are not yet supported in v2.6 — coming in v2.7+."
 
 **Role-generation (ADR-030):** For each skill in the final bundle, generate a one-line role description per the §"Phase 1 — Role-Generation Rule" below. Display as: "Installed skills will help you with: [role for skill 1]; [role for skill 2]; [role for skill 3]."
 
@@ -235,7 +243,7 @@ For custom/Path C workspaces, use `examples/personal-assistant/connector-checkli
 
 ### Step 6 — Generate skills-as-prompts fallback (dynamic, from installed bundle)
 
-Generate `skills-as-prompts.md` in the user's workspace from the installed bundle — NOT copied from a preset folder. For each skill in the installed bundle:
+Generate `skills-as-prompts.md` in the user's workspace from the **installed bundle** (`core_skills` + any user-confirmed `optional_skills` adds from F4) — NOT copied from a preset folder. Cross-cutting skills NOT added at install time are NOT included in `skills-as-prompts.md` — they are loaded inline at runtime by the AI when the user invokes the swap affordance (per ADR-034 §Decision, D8). For each skill in the installed bundle:
 
 1. Read `## Instructions` section from `<user-workspace>/.claude/skills/<slug>/SKILL.md`.
 2. Append to `skills-as-prompts.md` as:

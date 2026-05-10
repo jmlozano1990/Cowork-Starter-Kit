@@ -521,3 +521,80 @@ The seven-dimension whitespace from v1.2 remains intact. v2.0 adds three more. N
 **Claude Cowork Config v2.0 is the only workspace architect for Claude Cowork that combines upstream content breadth (~30 categories from a curated library) with supply-chain safety (SHA-pinned, checksum-verified, allowlisted, attribution-injected) — so non-technical users get the coverage they need and the safeguards they can't build themselves.**
 
 Where the skill ecosystem is dangerous without guidance, awesome lists give you links without integrity, and orchestration frameworks require developer expertise, Claude Cowork Config v2.0 gives you a vetted, verified workspace built from any goal — with full provenance on every file installed.
+
+---
+
+## v2.6.0 — Dynamic Preset Scaffolds Competitive Scan (2026-05-10)
+
+> **Internal document.** Per `feedback_no_competitor_naming_public`, competitor names may appear in this file. Do NOT sync to Confluence or any public surface. Competitor names must be stripped from all user-facing copy (README, CHANGELOG, SETUP-CHECKLIST, release bodies).
+
+### Scope
+
+v2.6 introduces runtime-editable preset scaffolds. This scan examines how adjacent AI workspace tools handle the scaffold-vs-runtime distinction: what is fixed at setup vs. what the user can change mid-session. Four patterns examined.
+
+---
+
+### Pattern 1 — Custom GPT / GPT Builder (OpenAI)
+
+**Starting-scaffold mechanism:** Creator defines a fixed set of capabilities at configuration time via the GPT Builder UI: instructions (system prompt), knowledge files (uploaded), and tool toggles (web, DALL-E, code interpreter). This is fully static from the user's perspective — once configured, the capability set does not change per session.
+
+**Runtime edit affordance:** None within a session. Users cannot swap capabilities mid-conversation. To change the capability set, the user must open the builder, edit, and re-deploy. No in-session runtime adjustment path exists.
+
+**Schema (flat vs. tiered):** Flat. Tool toggles are binary (on/off). No distinction between "core" and "optional" capabilities within a single GPT. Cross-tool coverage is handled by creating multiple distinct GPTs (e.g., a "Research GPT" and a "Writing GPT").
+
+**Implications for Cowork:** The flat, static model is well-understood but generates the exact pain point v2.6 addresses — users who want to cross domains in a single session (e.g., research then write) must switch GPTs. Cowork's tiered scaffold with runtime swap affordance is a genuine differentiator here. The risk: users trained on GPT Builder's "configure once" mental model may not intuitively expect runtime edit to exist. Proactive offer at the bundle-confirmation step (A-v2.6-7) directly addresses this expectation gap.
+
+---
+
+### Pattern 2 — IDE Rule Presets (Cursor / Windsurf style)
+
+**Starting-scaffold mechanism:** The user selects or creates a "rules" file (`.cursorrules`, project-level YAML, or inline rule block) that configures AI behavior for a codebase. Rules are loaded at session start and persist for the session. Presets (e.g., "React rules", "Python linting rules") are offered via templates or community repos.
+
+**Runtime edit affordance:** Limited but present. Users can temporarily override a rule mid-conversation by prefixing a prompt ("ignore the linting rule for this output") or by editing the rules file between sessions. The affordance is implicit and requires knowing the rule override syntax.
+
+**Schema (flat vs. tiered):** Flat. All rules are in a single file at the same priority level. No distinction between "core" (always-active) and "optional" (context-dependent) rules. Some community templates use comment sections to separate concerns (e.g., `# Core rules` / `# Optional rules`), but this is convention, not system-enforced.
+
+**Implications for Cowork:** The implicit override pattern ("ignore rule X for this output") is a low-friction escape hatch but requires user expertise. Cowork's proactive chip-based affordance ("Want to add a skill to this session?") is a lower-expertise entry point — better fit for Cowork's non-technical target users. The section-comment convention (core / optional in a single file) is an interesting signal: users who care enough have already invented tiered thinking. Cowork formalizes what the community already does informally.
+
+---
+
+### Pattern 3 — AI Agent Composition Tools (e.g., multi-agent orchestrators)
+
+**Starting-scaffold mechanism:** Users define an agent "team" at setup: which agents are active, what tools each has access to, and what the orchestrator's routing logic is. The team is fixed for a workflow run. Some tools allow "hot-swap" of agents between runs but not within a single execution thread.
+
+**Runtime edit affordance:** Mid-run affordance is rare and complex. Most tools treat a running agent composition as immutable to avoid state corruption. Post-run reconfiguration is the norm.
+
+**Schema (flat vs. tiered):** Varies. More mature tools distinguish between "required agents" (core to the workflow) and "optional agents" (invoked only when specific conditions are met). This is structurally analogous to Cowork's `core` vs `optional` tier.
+
+**Implications for Cowork:** The core/optional agent distinction in multi-agent tools validates the tier concept architecturally. The key difference: Cowork's "agents" are skills (stateless tools invoked on demand), not autonomous agents (stateful actors with memory). This makes runtime skill swap safer and simpler in Cowork than in true multi-agent systems — no state corruption risk. Cowork can implement mid-session swap affordance more aggressively than agent orchestration tools can.
+
+---
+
+### Pattern 4 — Personal AI Workflow Builders (non-developer tools)
+
+**Starting-scaffold mechanism:** These tools offer a preset library (productivity, communication, research) that users select at setup. The preset configures which "powers" or "modes" the AI has. Some tools offer a "build from scratch" path for power users.
+
+**Runtime edit affordance:** Some tools have introduced a "mode switch" chip during conversation — a tappable element that changes the AI's behavior context mid-chat (e.g., switching from "research mode" to "writing mode"). This is the most direct competitive reference for Cowork's v2.6 runtime swap affordance.
+
+**Schema (flat vs. tiered):** Flat presets, but "mode" chips represent an implicit tier — modes are overlaid on the base preset at runtime. This is functionally similar to what Cowork's `optional` tier does.
+
+**Implications for Cowork:** The mode-chip pattern (mid-conversation context switch) is validated by at least one competitor. It was adopted by power users before it was a product feature — suggesting genuine user demand. Cowork's version (skill swap affordance after bundle-confirmation) is more granular than mode-switching: users add/remove specific skills rather than switching entire modes. This is a richer UX if the complexity is managed; it becomes friction if the option set is too long.
+
+---
+
+### Cross-Pattern Synthesis — What Competitors Validate
+
+| Pattern | Validated? | Cowork differentiation |
+|---------|-----------|----------------------|
+| Fixed scaffold at setup | Universally validated | Cowork extends this with runtime edit |
+| Mid-session override (implicit) | IDE tools validate; expert users only | Cowork makes this explicit and chip-driven |
+| Core vs optional tier | Multi-agent tools validate structurally | Cowork applies to single-session skill loading |
+| Mode-switch chips mid-chat | Validated by at least 1 competitor | Cowork variant: skill-level granularity, not mode-level |
+| Cross-domain skill sharing | No competitor does this well | Cowork's `cross_cutting` tier is genuinely differentiated |
+
+**Strongest validated bet:** Mid-session override demand is real (IDE tools prove expert users want it; mode-switch competitors prove casual users want it). Cowork's chip-based swap affordance addresses both segments.
+
+**Strongest differentiated bet:** The `cross_cutting` tier — explicitly representing skills that work across domain presets — is not present in any competitor pattern examined. Every competitor forces a preset switch to change domain context. Cowork's v2.6 positions this as the primary architectural innovation.
+
+**Risk to manage:** The mode-switch competitor's lesson is that mid-conversation context switches can create session-state confusion when the AI doesn't explicitly confirm what has changed. Cowork's global-instructions must proactively acknowledge skill additions mid-session ("I've added `action-items` to your session — here's what it does") to avoid the silent-state-change failure mode.
+

@@ -397,3 +397,196 @@ Riley will read the SETUP-CHECKLIST more carefully than Jordan or Alex, and will
 5. **Jordan must not feel lost when given options.** Every AskUserQuestion button set must include an "I'm not sure / help me decide" path. The wizard never dead-ends on uncertainty.
 
 6. **Skill discovery must protect Jordan by default.** Jordan cannot assess security risk. Tier 1 curated skills are Jordan's path. Tier 2 is only available after explicit opt-in with a clear explanation of what "community-sourced, unverified" means.
+
+---
+
+## v2.6.0 — Dynamic Preset Scaffolds (2026-05-10)
+
+### Overview
+
+v2.6.0 reframes all 7 presets as _starting scaffolds_ with runtime swap/add/drop affordance. This section adds domain-level JTBD analysis and per-preset personas to inform the tiered schema and scaffold composition decisions.
+
+Personas in this section are decision filters for: (1) which skills belong in `core` vs `optional` vs `cross_cutting` tiers, (2) where the runtime edit affordance surfaces in the wizard flow, and (3) what backwards-compat strategy respects existing users.
+
+---
+
+### Persona 1 — Alex (Study)
+
+**Background:** 20-year-old biochemistry major using Cowork to survive high-volume reading weeks.
+
+**Primary JTBD:**
+- When buried in 5+ papers before an exam, I want to convert them into flashcards and structured notes in one session so I can review efficiently without re-reading everything.
+- When I finish a lecture recording, I want to capture what I'll actually be tested on so I can stop worrying about forgetting it.
+- When I'm confused by a paper's argument, I want to see how it compares to other sources so I understand where the author fits in the debate.
+
+**Skills Alex uses most (core tier):**
+- `flashcard-generation` — daily during exam prep; the primary reason Alex stays in the workspace
+- `note-taking` — used for every paper and lecture; produces the review layer
+- `research-synthesis` — used 2-3x/week when comparing sources for a paper or lit review section
+
+**Skills Alex uses situationally (optional tier):**
+- `editing-pass` — for lab reports and essays: "I know what I want to say, just fix my writing"
+- `outline-generator` — for longer assignments where Alex is stuck on structure before drafting
+
+**Skills Alex would never use in a Study workspace:**
+- `email-drafting`, `daily-briefing`, `spend-awareness`, `risk-assessment`, `status-update`, `creative-brief`, `ideation-partner`, `follow-up-tracker`
+
+**Friction the current 3-skill cap creates:**
+The current Study bundle (flashcard-generation + note-taking + research-synthesis) hits Alex's core perfectly. But when Alex writes a lab report mid-session, there is no `editing-pass` available without starting a new workspace or asking the wizard to swap. The missing affordance: "I want to write this essay now — can you help me polish it?" The pivot from study mode to writing mode is natural for Alex; the wizard makes it feel like a system boundary.
+
+---
+
+### Persona 2 — Maya (Research)
+
+**Background:** 29-year-old PhD candidate in cognitive science managing a 60-source systematic review.
+
+**Primary JTBD:**
+- When I have a new batch of papers to process, I want to see how they map to the themes I already know so I can identify gaps without re-reading sources I've already coded.
+- When I evaluate whether to cite a source, I want a quick credibility and relevance verdict so I can move through my stack faster.
+- When I'm writing the lit review chapter, I want a synthesis view of how sources agree and diverge so I can structure the argument without losing important contradictions.
+
+**Skills Maya uses most (core tier):**
+- `literature-review` — the defining tool; organizes her source set thematically
+- `source-analysis` — used on every new paper before deciding to include it
+- `research-synthesis` — bridges individual sources into the comparative synthesis Maya needs to write
+
+**Skills Maya uses situationally (optional tier):**
+- `note-taking` — for new sources in the first pass, before formal coding
+- `doc-summary` — when reviewing a paper for a committee member who needs a quick brief
+
+**Skills Maya would never use in a Research workspace:**
+- `flashcard-generation`, `daily-briefing`, `spend-awareness`, `creative-brief`, `ideation-partner`, `email-drafting`, `follow-up-tracker`
+
+**Friction the current 3-skill cap creates:**
+Maya's current bundle (literature-review + source-analysis + research-synthesis) matches her core workflow. The gap is when she shifts to writing a section of her thesis. `note-taking` is missing from her loaded bundle when she needs to draft structured notes from a new source mid-session. She exits the flow mentally to remember that she doesn't have note-taking active — then either re-explains what she wants or settles for a less structured output.
+
+---
+
+### Persona 3 — Sam (Writing)
+
+**Background:** 32-year-old freelance content strategist who produces 3-5 long-form pieces a week for B2B clients.
+
+**Primary JTBD:**
+- When I take on a new client brief, I want to match their voice quickly so my first draft doesn't come back with "this doesn't sound like us" edits.
+- When I'm stuck on structure for a complex piece, I want a detailed outline I can argue against so I stop staring at a blank page.
+- When I finish a draft, I want targeted editing suggestions at the depth I specify so I can polish without losing my voice.
+
+**Skills Sam uses most (core tier):**
+- `voice-matching` — the first skill Sam loads; without it, the workspace produces generic AI copy
+- `outline-generator` — used at the start of every major piece; Sam navigates from the outline
+- `editing-pass` — final polish before client delivery
+
+**Skills Sam uses situationally (optional tier):**
+- `research-synthesis` — when a piece requires comparing sources or positioning a client against market alternatives
+- `feedback-synthesizer` — when clients send mixed notes and Sam needs to reconcile them into a coherent revision direction
+
+**Skills Sam would never use in a Writing workspace:**
+- `flashcard-generation`, `daily-briefing`, `spend-awareness`, `risk-assessment`, `action-items`, `meeting-notes`, `follow-up-tracker`
+
+**Friction the current 3-skill cap creates:**
+Sam's current bundle (voice-matching + outline-generator + editing-pass) is the strongest-fit preset of the 7. Almost no friction in core workflow. The gap appears when Sam takes a research-heavy client brief and needs `research-synthesis` to compare competitors before writing. Sam either does that manually or opens a separate Research workspace — a context switch that breaks the writing session flow.
+
+---
+
+### Persona 4 — Jordan (Project Management)
+
+**Background:** 38-year-old operations manager at a 40-person SaaS company who runs 3 concurrent projects and is in 8+ meetings a week.
+
+**Primary JTBD:**
+- When I finish a meeting with decisions and commitments scattered across notes, I want a clean record of what was decided and who owns what so nothing falls through the cracks.
+- When I need to update a stakeholder on project status, I want a draft calibrated to their level (exec, team, client) so I can send it without rewriting from scratch.
+- When a new initiative starts, I want a risk snapshot so I can surface blockers before they become incidents.
+
+**Skills Jordan uses most (core tier):**
+- `meeting-notes` — used after every meeting; the highest-frequency touchpoint for Jordan's workspace
+- `status-update` — used 2-3x/week for stakeholder communication
+- `risk-assessment` — used at project start and when something feels off mid-project
+
+**Skills Jordan uses situationally (optional tier):**
+- `action-items` — when meeting-notes output needs to feed directly into a task system (ownership + deadline extraction in a separate structured list)
+- `follow-up-tracker` — when tracking multi-party commitments across a week of meetings
+
+**Skills Jordan would never use in a Project Management workspace:**
+- `flashcard-generation`, `voice-matching`, `creative-brief`, `ideation-partner`, `spend-awareness`, `daily-briefing`, `literature-review`, `source-analysis`
+
+**Friction the current 3-skill cap creates:**
+The current project-management bundle has `status-update`, `meeting-notes`, and `risk-assessment` — matching Jordan's core perfectly in theory. But `action-items` is missing. After meeting-notes produces a clean record, Jordan's next step is always "pull the action items for the task board." Doing this in two steps is not a blocker, but `action-items` is used as frequently as `meeting-notes` in practice. It is the clearest example of a skill that belongs in the `optional` tier because it is used by the same persona on the same trigger events, just not every single time.
+
+---
+
+### Persona 5 — Priya (Creative)
+
+**Background:** 26-year-old brand strategist at a creative agency who owns ideation and brief-writing for 4-6 clients simultaneously.
+
+**Primary JTBD:**
+- When a client brief is too vague to brief the creative team, I want to structure it into a clear problem + principles + constraints document so the team can execute without constant interruptions.
+- When a project is starting from a blank page, I want genuinely distinct creative directions to explore so I don't default to the same pattern for every client.
+- When feedback arrives from 4 different reviewers on a campaign, I want a synthesis that separates signal from noise so the next iteration has a clear direction.
+
+**Skills Priya uses most (core tier):**
+- `creative-brief` — the core deliverable of Priya's work; used on every new client project
+- `ideation-partner` — used at project start to break out of familiar patterns
+- `feedback-synthesizer` — used after every review round; multi-source feedback is the norm, not the exception
+
+**Skills Priya uses situationally (optional tier):**
+- `outline-generator` — when Priya is writing a strategy deck or proposal (not a brief)
+- `voice-matching` — when producing client-facing copy that must match a brand voice Priya has already documented
+
+**Skills Priya would never use in a Creative workspace:**
+- `flashcard-generation`, `daily-briefing`, `spend-awareness`, `risk-assessment`, `action-items`, `follow-up-tracker`, `literature-review`, `source-analysis`
+
+**Friction the current 3-skill cap creates:**
+The current creative bundle (ideation-partner + creative-brief + feedback-synthesizer) is a near-perfect core match. The gap is `outline-generator`: when Priya shifts from brief-writing to strategy-deck writing mid-session, she needs structural help for a longer document format. The skill exists in the pool but is invisible in the creative workspace. The "hard boundary" between presets is the friction point — Priya's work spans both creative strategy and written deliverables, and the current architecture treats these as two separate workspaces.
+
+---
+
+### Persona 6 — Chris (Business/Admin)
+
+**Background:** 44-year-old VP of operations at a professional services firm whose job is equal parts communication, document processing, and admin coordination.
+
+**Primary JTBD:**
+- When I receive a long vendor proposal or internal report I need to act on in a meeting, I want the key insight and recommended action summarized in 2 minutes so I'm prepared without a full read.
+- When I need to communicate a decision or respond to a complex email, I want a draft calibrated to the recipient relationship so I don't over-explain or under-explain.
+- When I finish a meeting, I want the action items extracted and owned so I can paste them into the team channel without manually re-reading my notes.
+
+**Skills Chris uses most (core tier):**
+- `email-drafting` — used daily; the highest-frequency tool in the business-admin context
+- `doc-summary` — used whenever Chris receives a document that requires a decision
+- `action-items` — used after every meeting to feed the team channel and task system
+
+**Skills Chris uses situationally (optional tier):**
+- `meeting-notes` — when the meeting requires a full structured record (not just action items)
+- `follow-up-tracker` — when Chris needs to track multi-party commitments across a week
+
+**Skills Chris would never use in a Business/Admin workspace:**
+- `flashcard-generation`, `voice-matching`, `creative-brief`, `ideation-partner`, `literature-review`, `source-analysis`, `risk-assessment`
+
+**Friction the current 3-skill cap creates:**
+The current business-admin bundle was (email-drafting + doc-summary + action-items) as of v2.6 recomposition analysis. This actually matches Chris's core well. But `meeting-notes` is absent from the bundle. Chris's meeting frequency means that after `action-items` runs, the next natural ask is a full structured record for the team. `meeting-notes` and `action-items` are used by the same persona in the same trigger window; separating them into different bundles is arbitrary from Chris's perspective.
+
+---
+
+### Persona 7 — Casey (Personal Assistant)
+
+**Background:** 35-year-old knowledge worker and parent managing work commitments, household logistics, and personal finances with no admin support.
+
+**Primary JTBD:**
+- When I start my day with too many tabs open in my head, I want a structured briefing of my schedule, priorities, and pending follow-ups so I can close those loops before 10am.
+- When someone promises to send me something or I commit to sending something, I want a record of who owes what so I stop discovering dropped commitments 2 weeks later.
+- When I review my transactions for the month, I want a plain-language breakdown by category so I understand where money went without building a spreadsheet.
+
+**Skills Casey uses most (core tier):**
+- `daily-briefing` — the anchor habit; used every morning to structure the day
+- `follow-up-tracker` — used after inbox processing sessions and end-of-week reviews
+- `spend-awareness` — used monthly for financial review and weekly for high-spend weeks
+
+**Skills Casey uses situationally (optional tier):**
+- `action-items` — when Casey processes meeting notes from a work context and needs to extract tasks
+- `doc-summary` — when Casey receives a long document (HOA notice, insurance policy, school communication) and needs the key decision quickly
+
+**Skills Casey would never use in a Personal Assistant workspace:**
+- `flashcard-generation`, `literature-review`, `source-analysis`, `creative-brief`, `ideation-partner`, `voice-matching`, `risk-assessment`, `meeting-notes`, `outline-generator`
+
+**Friction the current 3-skill cap creates:**
+Casey's current bundle (daily-briefing + follow-up-tracker + spend-awareness) is a clean core match. The optional-tier gap is `action-items` and `doc-summary`. When Casey processes a complex email thread or HOA document, neither skill is available without leaving the personal workspace. The 3-skill cap means Casey must either tolerate the gap or open a Business/Admin workspace that lacks daily-briefing and spend-awareness. The friction is the forced binary: home vs. work contexts, not the natural blend Casey actually lives.
+

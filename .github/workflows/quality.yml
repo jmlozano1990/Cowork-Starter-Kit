@@ -425,8 +425,8 @@ jobs:
 
       - name: CMP — Byte-mirror assertion (skills/ pool vs examples/<preset>/.claude/skills/)
         run: |
-          # ADR-016 v2.4 amendment A1/A3: cmp byte-mirror assertion.
-          # For each preset in ENFORCED_EXAMPLES, for each slug in that preset's skill_bundle
+          # ADR-016 v2.6 amendment: cmp byte-mirror assertion.
+          # For each preset in ENFORCED_EXAMPLES, for each slug in that preset's core_skills
           # (parsed from selection-presets.md), verify skills/<slug>/SKILL.md byte-matches
           # examples/<preset>/.claude/skills/<slug>/SKILL.md.
           # Core assertion: cmp -s skills/<slug>/SKILL.md examples/<preset>/.claude/skills/<slug>/SKILL.md
@@ -441,21 +441,21 @@ jobs:
           fi
 
           for preset in $ENFORCED_EXAMPLES; do
-            # Parse skill_bundle for this preset from selection-presets.md
+            # Parse core_skills for this preset from selection-presets.md (ADR-016 v2.6 amendment)
             in_block=0
             current_preset=""
             while IFS= read -r line; do
               if [[ "$line" == '```preset' ]]; then
                 in_block=1
                 current_preset=""
-                skill_bundle=""
+                core_skills=""
                 continue
               fi
               if [[ "$line" == '```' ]] && [ "$in_block" -eq 1 ]; then
                 in_block=0
-                if [ "$current_preset" = "$preset" ] && [ -n "$skill_bundle" ]; then
+                if [ "$current_preset" = "$preset" ] && [ -n "$core_skills" ]; then
                   # Process slugs for this preset
-                  IFS=',' read -ra slugs <<< "$skill_bundle"
+                  IFS=',' read -ra slugs <<< "$core_skills"
                   for slug_raw in "${slugs[@]}"; do
                     slug=$(echo "$slug_raw" | tr -d ' ')
                     pool_file="skills/${slug}/SKILL.md"
@@ -489,8 +489,8 @@ jobs:
                 if [[ "$line" == name:* ]]; then
                   current_preset="${line#name: }"
                 fi
-                if [[ "$line" == skill_bundle:* ]]; then
-                  skill_bundle="${line#skill_bundle: }"
+                if [[ "$line" == core_skills:* ]]; then
+                  core_skills="${line#core_skills: }"
                 fi
               fi
             done < selection-presets.md
@@ -554,7 +554,7 @@ jobs:
           # selection-presets.md vocabulary gate (S1 WARNING from v2.4 Phase 2)
           if [ -f selection-presets.md ]; then
             BAD=$(awk '/^```preset$/,/^```$/' selection-presets.md \
-              | grep -E '^(match_signals|skill_bundle): ' \
+              | grep -E '^(match_signals|core_skills|optional_skills): ' \
               | grep -cE '[^a-z0-9, :_-]') || BAD=0
             if [ "${BAD:-0}" -gt 0 ]; then
               echo "::error::selection-presets.md contains invalid token vocabulary (must match [a-z0-9, :_-])"

@@ -4,6 +4,45 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.6.0] — 2026-05-10 (Dynamic Preset Scaffolds)
+
+### Added
+
+- **Tiered skill schema** — `selection-presets.md` now defines three tiers per preset:
+  - `core_skills:` (2-4 skills, always installed by the wizard — replaces `skill_bundle:`)
+  - `optional_skills:` (1-3 skills, proactively offered at bundle-confirm and mid-session)
+  - `cross_cutting_skills:` (pool-level annotation, 5 skills useful across multiple workspace types)
+- **Per-preset optional-tier proactive-offer blocks** — all 7 `examples/*/global-instructions.md` files gain proactive-offer trigger blocks for each `optional_skills:` entry (14 new blocks total, paired 1:1 with optional tier per preset)
+- **"## Skill swap" section** in all 7 `examples/*/global-instructions.md` — instructs the AI to offer optional/cross-cutting skills inline when the user requests a capability outside the core bundle (D8 instruction-only swap; no file copy to `.claude/skills/` at runtime)
+- **Cross-cutting skills annotation** — `selection-presets.md` footer block lists 5 pool-level cross-cutting skills with rationale table
+
+### Changed
+
+- **Wizard Path A flow** (WIZARD.md) — bundle-confirm now proactively presents optional-tier before user confirms, per D5. User can add any optional skill to the install at setup time.
+- **Wizard F4 customization** (WIZARD.md) — bundle customization step now distinguishes three add-sources: optional tier (preset-specific), cross-cutting (pool-level), full pool (free-text match)
+- **Wizard pool boundary** (WIZARD.md) — updated from 20 to 21 slugs; external-skills rejection message updated to v2.6 reference
+- **Wizard Step 6 header** (WIZARD.md) — clarifies that `skills-as-prompts.md` covers core + user-confirmed optional adds at install time; cross-cutting skills added mid-session are loaded inline, not written to disk
+- **7 preset bundles recomposed** from full-pool JTBD analysis: Study, Research, Writing, Project Management, Creative, Business/Admin, Personal Assistant — all cores unchanged from v2.5.x; optional tiers are net-new in v2.6.0
+- **README "Next up" line** — updated to v2.7+ framing per D7 (no tool names)
+- **README version badge** — bumped `2.5.4` → `2.6.0`
+- **CI `quality.yml` CMP step** — parser switched from `skill_bundle:` to `core_skills:` in lock-step with ADR-034 (ADR-016 v2.6 amendment). Byte-mirror invariant semantics unchanged: pool files must match example folder copies for installed core skills.
+- **CI `quality.yml` MF-1 vocabulary gate** — regex updated from `^(match_signals|skill_bundle):` to `^(match_signals|core_skills|optional_skills):` to cover new field names
+
+### Removed
+
+- **`skill_bundle:` field** (D4 hard-break) — removed from all 7 preset blocks in `selection-presets.md`. New schema is the only schema. No parser fallback exists in the wizard or CI.
+
+### Schema migration
+
+The `skill_bundle:` field in `selection-presets.md` is removed. New schema: `core_skills:` (always loaded) + `optional_skills:` (offered at setup or runtime) + `cross_cutting_skills:` (pool-level annotation). Existing v2.5.x clones are unaffected — their `selection-presets.md` still contains `skill_bundle:` and their bundled wizard reads it. Users who clone v2.6.0 get the new schema only (clone-once template design — `selection-presets.md` is read by the wizard at setup time, not by user workspaces post-setup). CI byte-mirror parser updated in lock-step (ADR-016 v2.6 amendment). See ADR-034 for full migration scenario table.
+
+### References
+
+- ADR-034: Tiered Preset Schema with Hard-Break Migration
+- ADR-016 (Amendment v2.6): CMP Byte-Mirror + MF-1 Parser Switch to `core_skills:`
+
+---
+
 ## [2.5.4] — 2026-05-10 (Pivot framing realignment)
 
 ### Changed

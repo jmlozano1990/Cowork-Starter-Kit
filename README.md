@@ -2,7 +2,7 @@ Configure your Claude Cowork workspace in 15 minutes — describe your goal, the
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.4-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.6.0-green.svg)](CHANGELOG.md)
 
 ---
 
@@ -160,7 +160,7 @@ v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstr
 
 v2.5.0 ships: ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), MF-1/MF-2 CI hardening (`set -o pipefail` + structural awk header scan replacing positional `$7`), and local markdownlint pre-commit installer.
 
-**Next up (v2.6):** Multi-tool skill authoring (v3.0 routing intent) — individual skills validated for Copilot/Cursor/Windsurf and widened beyond `claude-code`.
+**Next up (v2.7+):** Multi-tool skill authoring — individual skills widened beyond the default tool, with structured routing intent.
 
 ---
 
