@@ -2,6 +2,140 @@
 
 ---
 
+## v2.6.0 — Dynamic Preset Scaffolds (RE-SCOPED)
+
+**Date:** 2026-05-10
+**Classification:** SECURITY-SENSITIVE (CI gate edit + new AI-instruction surface + D4 hard-break schema migration)
+**Mode:** full + DEEP PM (first deep-mode cycle since v1.0)
+**Rework rate:** 0.25% (1 line deleted post-Phase-4 SHA — whitespace lint fix `0f42903`; no functional change)
+**Cycle SHAs:** Phase 4 binding SHA `583cb7dcbc509bf5e4fd47586d8d8d47e0203c30`, lint fix `0f42903`, merged `83510e1f` via PR #49 squash 2026-05-10. Tag `v2.6.0` pushed. Branch `release/v2.6.0` deleted on remote.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 | — (deep mode: 4 docs, 10 assumptions, 7 personas, competitive scan, PRD) |
+| 0.5. Gate | user | 0 | 8 decisions LOCKED (D1-D8); D4 HARD BREAK user override |
+| 1. Design | @architect | 0 | 6 OI-v2.6-S1..S6 open issues surfaced for Phase 2; all resolved by Phase 4 |
+| 2. Security Review | @security | 6 | 0 CRITICAL / 3 WARNING (all Phase 4 MUST-FIX) / 3 INFO; SECURITY-SENSITIVE confirmed |
+| 3. User Gate | User | 0 | APPROVED as-designed; MF-S2.6-1..4 bound; AC-P1-6 new MATCH-count binding added |
+| 4. Implementation | @dev | 0 | 5 commits; 16 files; 25/26 ACs self-PASS + 1 DEFERRED; deny-list BYTE-UNCHANGED |
+| 5. Testing | @qa | 2 | 0 blocker (MD012 MUST-FIX caught pre-push); 1 INFO (AC-P1-2 CI-dependent) |
+| 6. Code Audit | @security | 0 | PASS — 0 CRITICAL · 0 WARNING · 0 net-new INFO; all MF-S2.6 RESOLVED |
+| 7. Final Approval | @qa | 0 | APPROVED; rework 0.25%; qa_issues_prevented: blocker=1 issue=0 info=1 |
+
+**Net-new findings across full cycle:** 0 CRITICAL. Phase 2: 3 WARNING (all resolved as MF-S2.6-1..3 by Phase 4). Phase 5 caught 1 CI blocker (MD012) pre-push — prevented a CI-fix loop. Clean close.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC-F1-1 | `core_skills:` present in all 7 presets | Easy — schema rewrite verbatim from architect |
+| AC-F1-2 (inverted) | `skill_bundle:` count = 0 in selection-presets.md | Easy — hard-break removal; verified via grep |
+| AC-F1-3 | 3 core skills per preset (within [2,4]) | Easy — architect bound verbatim per-preset |
+| AC-F1-4 | 2 optional skills per preset (within [1,3]) | Easy — architect bound verbatim per-preset |
+| AC-F1-5 | `cross_cutting_skills:` present (1 block) | Easy — footer block verbatim from architect |
+| AC-F1-6 | All skill slugs have SKILL.md (21/21) | Easy — deny-list BYTE-UNCHANGED; verified via find |
+| AC-F2-1 | WIZARD.md optional_skills references present | Easy — 6 diff blocks from architect |
+| AC-F2-2 | 14 net-new proactive-offer blocks (2 per preset) | Hard — 7-file append; correctly bounded by deny-list; AC-F2-4 regression check required |
+| AC-F2-3 | `## Skill swap` present in all 7 global-instructions.md | Hard — 7-file section insert; MF-S2.6-1 source-binding sub-requirement introduced by Phase 2 |
+| AC-F2-4 | Existing core-skill proactive-offer blocks BYTE-UNCHANGED | Easy — verified via git diff |
+| AC-F2-5 (inverted) | `skill_bundle` count = 0 in WIZARD.md | Easy — diff block removal; verified via grep |
+| AC-F3-1..5 | Release artifacts (badge, Next-up v2.7+, VERSION, CHANGELOG, competitor deny-list) | Easy — all standard; D4 CHANGELOG migration subsection (MF-S2.6-3) was the one non-standard item |
+| AC-P1-1..5 | CI gate parser switch, lock-step; no skill_bundle in quality.yml; prompt-gate implicit; no Copilot/Cursor/Windsurf in README marketing | Easy — architect bound deterministic grep verifiers |
+| AC-P1-6 | CI CMP ≥20 MATCH lines on first push | Hard — HIGH-severity false-pass risk; DEFERRED to Phase 5/CI; **resolved at 43 MATCH lines on first push** |
+| MF-S2.6-1 | Source-binding sentence in all 7 Skill swap sections | Easy — once per @dev verify; Phase 6 confirmed grep=7 |
+| MF-S2.6-2 | `[SUPERSEDED by D4]` on A-v2.6-5/10 in assumptions.md | Easy — append-only; introduced MD012 double-blank (caught Phase 5) |
+| MF-S2.6-3 | `### Schema migration` subsection in CHANGELOG [2.6.0] | Easy — explicit subsection; verified grep=1 |
+| MF-S2.6-4 | CI MATCH-count ≥20 (3×7-1 SKIP) | Hard — deferred to CI push; **CI delivered 43 MATCH lines — 2× minimum** |
+
+Hardest ACs: AC-F2-2 (7-file append with regression risk), AC-F2-3 (7-file section insert + source-binding), AC-P1-6/MF-S2.6-4 (load-bearing CI parser assertion). All passed on first push.
+
+---
+
+### 3. Token Cost Actuals
+
+| Model Tier | Sessions | Estimate |
+|-----------|---------|---------|
+| opus | 2 | @architect Phase 1 + @security Phase 6 (SECURITY-SENSITIVE audit) |
+| sonnet | many | @pm Phase 0 (4 docs), @dev Phase 4 (5 commits), @qa Phase 5+7, @security Phase 2 |
+| haiku | 0 | — |
+
+Estimated cycle cost: ~$0.50–$1.50 (full SECURITY-SENSITIVE mode, deep PM, 6 agent sessions). Highest-cost cowork cycle in the v2.5.x–v2.6.x arc (expected — first deep-mode + SECURITY-SENSITIVE since v2.0). Deep PM cost justified: 8 user decisions shipped chip-format, preventing mid-Phase-4 scope drift.
+
+Prior cycle comparison: v2.5.4 <$0.10 (STANDARD quick-mode). v2.6.0 cost premium = deep PM + full security audit path.
+
+---
+
+### 4. Phase Durations
+
+| Phase | Agent | Duration | Notes |
+|-------|-------|---------|-------|
+| 0. Requirements | @pm | ~2 hr | Deep mode — 4 docs (PRD + assumptions + competitive + personas) |
+| 0.5. Gate | user | ~30 min | 8 chip decisions; D4 HARD BREAK user override |
+| 1. Design | @architect | ~1 hr | ~+600 lines; ADR-034 + ADR-016 amendment; 6 OI surfaced |
+| 2. Security Review | @security | ~1 hr | Full OWASP + LLM01/02/06/08; 6 OI dispositions; Guard Change Summary §I |
+| 3. User Gate | User | ~15 min | APPROVED as-designed; AC-P1-6 binding added |
+| 4. Implementation | @dev | ~2 hr | 5 commits; 16 files; all 20 ACs + 4 MF self-PASS |
+| 5. Testing | @qa | ~1 hr | MD012 blocker caught + fixed pre-push |
+| 6. Code Audit | @security | ~1 hr | 0 net-new; all MF RESOLVED; Guard Change Summary §I refined (10 items) |
+| 7. Final Approval | @qa | ~30 min | APPROVED; G1 skipped (github.enabled=false) |
+
+**Total wall-clock:** ~9 hours. Longest cowork cycle since v2.0 (expected — deep PM + SECURITY-SENSITIVE full mode). No phase outliers; phase 0 deep-mode cost is intentional, not a process gap.
+
+---
+
+### 5. Phases Abbreviated
+
+Full mode — all phases at full ceremony. Phase 0 elevated to DEEP mode (first since v1.0). @ux skipped (no UI files — appropriate). G1 public artifact audit skipped (github.enabled=false — advisory logged in Phase 7: "run /refresh-public claude-cowork-config post-merge"). No phases combined. SECURITY-SENSITIVE classification enforced separate Phase 2 + Phase 6 paths (combined-path NOT eligible — correctly reaffirmed by @security at Phase 6).
+
+---
+
+### 6. Rework Rate and Causes
+
+**0.25%.** 1 line deleted post-Phase-4 SHA in `docs/assumptions.md` — double blank line (MD012) introduced by MF-S2.6-2 `[SUPERSEDED by D4]` annotation commit. Caught by @qa V45-A3 local CI smoke at Phase 5. Fixed as 1-line whitespace removal (`0f42903`). 4th consecutive cowork cycle achieving CI green on first push (V45-A3 PROVED). Rework: 1 line in 378 new lines added = 0.26%, rounded to 0.25%.
+
+No functional rework. The lint fix did not alter any content semantics, security surface, or AC verification outcome.
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=1, issue=0, info=1**
+
+- **BLOCKER** (Phase 5): MD012 double-blank-line in docs/assumptions.md at lines 398+620. Introduced by MF-S2.6-2 SUPERSEDED annotation commit. CI markdownlint would have failed on push, triggering a rework loop. Caught by @qa V45-A3 local smoke before push. 1-line fix resolved.
+- **INFO** (Phase 5→7): AC-P1-2 CI-dependent verification deferred. Confirmed green on CI push (≥20 MATCH lines = 43 actual). Non-blocking, resolved at push as expected.
+
+Without the pipeline: the MD012 blocker would have caused at minimum 1 CI-fix commit, eroding the Phase 4 SHA integrity and extending the merge window.
+
+---
+
+### 8. Pattern Detection
+
+Review of Phase 6 Summaries across the 3 most recent APPROVED cycles:
+
+- **v2.5.2:** Phase 6 — 0 CRITICAL, 0 WARNING, 0 INFO (abbreviated, STANDARD).
+- **v2.5.4:** Phase 6 — 0 findings (abbreviated, STANDARD, combined Phase 5+6+7).
+- **v2.6.0:** Phase 6 — 0 CRITICAL, 0 WARNING, 0 net-new INFO (SECURITY-SENSITIVE full audit).
+
+No keyword match at WARNING+ severity across 3 consecutive cycles. No pattern promotion triggered.
+
+**Note:** v2.6.0 Phase 2 had 3 WARNING (OI-v2.6-S1..S3 — AI-instruction injection surface + skills-as-prompts scope + doc drift). All 3 resolved at Phase 4. Phase 6 confirmed RESOLVED. No Phase 6 carry-forward. Pattern does not qualify (Phase 2 findings, not Phase 6 findings at Phase 6 summary).
+
+No recurring Phase 6 patterns detected across the last 3 APPROVED cycles.
+
+---
+
+### 9. Retrospective Verdict
+
+v2.6.0 was the most architecturally complex cowork cycle since v2.0: a user-directed strategic re-scope (multi-tool authoring → dynamic preset scaffolds), a D4 hard-break schema migration with irreversible clone-state implications, a SECURITY-SENSITIVE CI gate parser switch, and the first deep-PM-mode cycle since v1.0. It shipped clean. Rework rate was 0.25% — a single whitespace line, caught pre-push by the V45-A3 CI smoke step that the pipeline has now validated 4 consecutive times. The audit-then-scope approach that drove this cycle was itself the antidote to the roadmap-blind planning pattern that had surfaced in v2.5.3/v2.5.4 — the deliberate read-only discovery audit gave the user evidence to re-scope confidently, and the deep PM 8-chip gate format delivered 8 locked decisions before @architect touched a file, eliminating mid-Phase-4 drift risk. The one genuine risk — the CI parser lock-step false-pass scenario flagged at HIGH severity by @architect — was mitigated by the ≥20 MATCH-count assertion (AC-P1-6/MF-S2.6-4), which delivered 43 MATCH lines on first push. What to improve: deep PM mode front-loads significant context generation; future deep-mode cycles should verify that the phase 0.5 gate is scheduled with adequate review time (the D4 user-override decision was non-trivial). Overall cycle health: HEALTHY. Strategic-complexity handling has matured.
+
+---
+
 ## v2.5.4 — Pivot Framing Realignment
 
 **Date:** 2026-05-10
