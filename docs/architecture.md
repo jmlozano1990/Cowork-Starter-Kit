@@ -7075,3 +7075,229 @@ scope_allow_delta:
 
 **Constraint catalog:** 0 new C-IDs (no new architectural constraints — all bindings are content-level + workflow-step-local). **AC catalog:** 24 spec ACs unchanged (9 Scope A + 6 Scope B + 4 REL + 5 ZD). **Files-in-scope:** 9. **Open issues for @security at Phase 2:** OI-B1..OI-B7 (§ 6). **Combined-path eligibility:** NOT eligible (SECURITY-SENSITIVE classification confirmed). Ready for Phase 2 `/review` (@security FULL) and then Phase 3 `/gate`.
 
+---
+
+## v2.5.4 Phase 1 — Pivot Framing Realignment Impact Statement
+
+> **Cycle:** v2.5.4 — Pivot Framing Realignment
+> **Mode:** Quick (impact statement only — no ADR, no anti-pattern scan, no deliberation)
+> **Date:** 2026-05-10T23:45:00Z
+> **Branch:** `release/v2.5.4` (cut from main HEAD `99bca03`)
+> **Classification re-run:** STANDARD confirmed (no auth/schema/CI/compliance surface; copy-only edits to 2 markdown files + 2 release artifacts)
+
+### Schema impact
+
+None.
+
+### New auth surface
+
+None.
+
+### Rationale (1 sentence)
+
+Copy-only realignment of README hero (line 1) and SETUP-CHECKLIST.md Step 1 sequencing to match the v2.4.0 Dynamic Workspace Architect pivot already shipped functionally — the v2.5.4 spec deny-list confirms WIZARD.md / CLAUDE.md / CONTRIBUTING.md / 20 skills / selection-presets.md / .github/workflows are byte-unchanged, so no other surface needs touching.
+
+### scope_allow_delta
+
+SKIP (V44-S5 external project; cowork is a downstream consumer of v43 framework, no The-Council guard adjustments warranted).
+
+### Files in Phase 4 scope (binding for @dev — 4 files)
+
+| # | File | Edit |
+|---|------|------|
+| 1 | `/home/user/claude-cowork-config/README.md` | Line 1 hero rewrite + line 5 version badge bump |
+| 2 | `/home/user/claude-cowork-config/SETUP-CHECKLIST.md` | Step 1 reframe (lines 18 + 24, plus a new Step 1.5 / sequencing tweak) |
+| 3 | `/home/user/claude-cowork-config/VERSION` | `2.5.3` → `2.5.4` |
+| 4 | `/home/user/claude-cowork-config/CHANGELOG.md` | Prepend `[2.5.4]` entry (with TIER 3 `gh repo edit` post-merge note) |
+
+**Deny-list (any change = Phase 6 BLOCKER):** WIZARD.md, CLAUDE.md, CONTRIBUTING.md, all 20 `skills/<slug>/SKILL.md`, selection-presets.md, curated-skills-registry.md, cowork.lock.json, all `examples/<preset>/` contents, `.github/workflows/*`, all `docs/*` except this Phase 1 append.
+
+---
+
+### Exact-line bindings for @dev
+
+#### TIER 1 — README.md line 1 (hero rewrite) — BINDING
+
+**Current (verbatim, line 1):**
+```
+Configure your Claude Cowork workspace in 15 minutes — goal-based preset wizard, 20 curated skills, no code required.
+```
+
+**Replace with (verbatim, line 1):**
+```
+Configure your Claude Cowork workspace in 15 minutes — describe your goal, the Dynamic Workspace Architect builds it, 20 curated skills, no code required.
+```
+
+**Rationale:** leads with user action ("describe your goal"), names the v2.4 architecture explicitly ("Dynamic Workspace Architect builds it"), preserves the two value-prop anchors ("20 curated skills, no code required") byte-identically. 21 words — within the 20-ish word target. Matches the GitHub repo description tone without copying it verbatim. Avoids "preset" entirely on line 1 (presets are suggestions, not the framing). No competitor names. AC-1 PASSES (no "preset wizard"; contains "goal" and "Dynamic Workspace"). AC-2 PASSES ("20 curated skills" + "no code required" both preserved).
+
+#### TIER 1 (continued) — README.md line 5 (version badge) — BINDING
+
+**Current (verbatim, line 5):**
+```
+[![Version](https://img.shields.io/badge/version-2.5.3-green.svg)](CHANGELOG.md)
+```
+
+**Replace with (verbatim, line 5):**
+```
+[![Version](https://img.shields.io/badge/version-2.5.4-green.svg)](CHANGELOG.md)
+```
+
+AC-6 PASSES.
+
+#### TIER 1 verification commands (for @dev self-check before commit)
+
+```bash
+head -1 /home/user/claude-cowork-config/README.md | grep -v "preset wizard"        # exit 0 (no match = PASS)
+head -1 /home/user/claude-cowork-config/README.md | grep -E "goal.*Dynamic Workspace"  # 1 hit = PASS
+head -1 /home/user/claude-cowork-config/README.md | grep "20 curated skills"       # 1 hit = PASS
+head -1 /home/user/claude-cowork-config/README.md | grep "no code required"        # 1 hit = PASS
+grep -c "version-2.5.4" /home/user/claude-cowork-config/README.md                  # 1
+grep "Next up" /home/user/claude-cowork-config/README.md                            # must be byte-identical to v2.5.3
+```
+
+#### TIER 2 — SETUP-CHECKLIST.md sequencing fix — BINDING
+
+The current Step 1 (lines 18–24) presents **paste preset → run wizard** as the action sequence, which inverts the v2.4 mental model. The fix: **rename Step 1 to lead with goal articulation**, demote preset selection to "pick a starting suggestion", and keep the paste mechanic intact (the manual fallback path still requires the paste — only the framing changes).
+
+**Edit 1 — line 18 (Step 1 heading rewrite):**
+
+**Current (verbatim, line 18):**
+```
+**Step 1 — Paste project-instructions-starter.txt into Custom Instructions**
+```
+
+**Replace with (verbatim, line 18):**
+```
+**Step 1 — Describe your goal, then paste the closest preset's project-instructions-starter.txt into Custom Instructions**
+```
+
+**Edit 2 — line 20 (Step 1 body, first paragraph reframe):**
+
+**Current (verbatim, line 20):**
+```
+Open `examples/<preset-name>/project-instructions-starter.txt` from this repo. Copy its entire contents. Open Cowork and go to Project Settings > Custom Instructions. Paste the contents there and save.
+```
+
+**Replace with (verbatim, line 20):**
+```
+First, articulate the goal you want this workspace to support — in your own words, in one or two sentences (e.g., "I'm studying for the bar exam," "I'm running a 6-month home renovation," "I'm tracking my job search"). Then open `examples/<preset-name>/project-instructions-starter.txt` from the preset closest to that goal, copy its entire contents, open Cowork and go to Project Settings > Custom Instructions, and paste the contents there and save.
+```
+
+**Edit 3 — line 22 (preset list paragraph — reframe as "starting suggestions"):**
+
+**Current (verbatim, line 22):**
+```
+Replace `<preset-name>` with the preset closest to your goal: study, research, writing, project-management, creative, business-admin, or personal-assistant.
+```
+
+**Replace with (verbatim, line 22):**
+```
+Pick the preset closest to your goal as a starting suggestion (the wizard will confirm or refine it once you start talking): study, research, writing, project-management, creative, business-admin, or personal-assistant. If none feels close, pick any — the wizard's Path C will compose a custom bundle from your goal description.
+```
+
+**Edit 4 — line 24 (mechanism paragraph — already mostly aligned, light reframe):**
+
+**Current (verbatim, line 24):**
+```
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard will still ask your goal in your own words and may suggest that preset, narrow across overlapping presets, or compose a custom bundle; the preset you chose here is a starting suggestion, not a fixed assignment.
+```
+
+**Replace with (verbatim, line 24):**
+```
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then confirms the preset you chose, narrows across overlapping presets, or composes a custom bundle from scratch. The preset is a starting suggestion, not a fixed assignment.
+```
+
+**No other lines in SETUP-CHECKLIST.md change.** Steps 2 and 3 (Create Cowork Project, Assign project folder) and the rest of the file are byte-unchanged.
+
+#### TIER 2 verification commands (for @dev self-check before commit)
+
+```bash
+# AC-3: goal language precedes preset reference
+sed -n '18,25p' /home/user/claude-cowork-config/SETUP-CHECKLIST.md | grep -n "goal\|articulate\|describe" | head -1   # line number must precede first "preset" reference
+sed -n '18,25p' /home/user/claude-cowork-config/SETUP-CHECKLIST.md | grep -n "preset" | head -1                       # check ordering
+
+# AC-4: Steps 2 and 3 still present
+grep -c "^\*\*Step [0-9]" /home/user/claude-cowork-config/SETUP-CHECKLIST.md    # >= 3 (Steps 1, 2, 3 minimum)
+```
+
+#### TIER 3 — CHANGELOG.md `[2.5.4]` entry — BINDING
+
+**Prepend immediately after line 5 (`---`) and before line 7 (`## [2.5.3]`):**
+
+```markdown
+## [2.5.4] — 2026-05-10 (Pivot framing realignment)
+
+### Changed
+
+- **README hero (line 1) realigned to v2.4.0 Dynamic Workspace Architect framing:**
+  Replaced "goal-based preset wizard" wording with "describe your goal, the
+  Dynamic Workspace Architect builds it." The v2.4.0 cycle shipped the pivot
+  functionally (open-ended goal discovery replaces preset menus); v2.5.4
+  closes the gap on the two surface-level artifacts that still carried
+  pre-pivot framing. Value-prop anchors preserved byte-identically:
+  "20 curated skills, no code required."
+- **SETUP-CHECKLIST.md Step 1 sequencing fix:** Goal articulation is now
+  presented as the primary first action; preset selection is reframed as
+  "pick a starting suggestion" (the wizard confirms / narrows / composes
+  from there per Paths A/B/C). Steps 2 and 3 unchanged.
+- Version badge bumped `2.5.3` → `2.5.4`.
+
+### Operational note (manual post-merge)
+
+GitHub repo Topics need a one-time swap to match the v2.4.0 pivot. Run after
+PR merge:
+
+```bash
+gh repo edit jmlozano1990/Cowork-Starter-Kit \
+  --remove-topic templates \
+  --add-topic dynamic-workspace
+```
+
+`github.enabled=false` in the registry — in-cycle automation is skipped (same
+pattern as v2.5.3 S1/S2/S3 manual signals).
+
+---
+```
+
+#### TIER 3 verification commands
+
+```bash
+grep -c '^## \[2.5.4\]' /home/user/claude-cowork-config/CHANGELOG.md            # 1
+grep -c "v2.4.0" /home/user/claude-cowork-config/CHANGELOG.md | head -1          # >= 1 in [2.5.4] entry (anchor reference)
+grep -A1 'gh repo edit' /home/user/claude-cowork-config/CHANGELOG.md | grep "dynamic-workspace"   # 1 hit
+```
+
+#### Release — VERSION
+
+```
+2.5.3
+```
+
+→
+
+```
+2.5.4
+```
+
+(Single line, no trailing newline added/removed beyond what's already there.)
+
+#### Release — README "Next up" — INVARIANT (must be byte-unchanged)
+
+`grep -A2 "Next up" README.md` output must be byte-identical between `main@99bca03` and `release/v2.5.4@HEAD`. AC-8 carry-forward from v2.3.x AC-REL-3 pattern (recurring 2-cycle miss historically; explicit hard-lock here).
+
+---
+
+### Phase 4 commit topology suggestion
+
+Single commit `release: v2.5.4 — pivot framing realignment` covering all 4 files. No paperwork/functional split needed (everything is paperwork in this cycle). @dev's call.
+
+### Phase 2 (@security)
+
+**Skip.** STANDARD classification + copy-only edits + zero auth/schema/CI/compliance surface = combined-path eligible. Recommend going straight to `/gate` after Phase 1, with @security review-only attestation at Phase 6 audit time.
+
+### Open issues for Phase 6 audit
+
+- **OI-1:** Verify `head -1 README.md` does not name any specific competing tool/vault/plugin/creator (per `feedback_no_competitor_naming_public`). Current proposed wording uses generic terms ("Dynamic Workspace Architect" is internal product name) — PASS at Phase 1, but @security must re-verify at HEAD.
+- **OI-2:** Verify CHANGELOG `[2.5.4]` entry contains TIER 3 `gh repo edit` command verbatim and references "v2.4.0".
+- **OI-3:** Verify deny-list intact: `git diff main..HEAD --name-only` returns exactly the 4 declared files (README.md, SETUP-CHECKLIST.md, VERSION, CHANGELOG.md). Zero drift into deny-listed files = required.
+

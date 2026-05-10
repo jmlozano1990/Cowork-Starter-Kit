@@ -990,4 +990,97 @@ Scope A is STANDARD (public artifact markdown polish, no auth/RLS/workflow/depen
 - **[CONFIRMED]** github.enabled=false for cowork — S1/S2/S3 signals skipped in-cycle; documented for manual application.
 - **[ESTIMATED]** Scope A (README reorder + copy polish + SETUP/CONTRIBUTING touches) takes @dev ≤ 2 hours. Scope B (workflow patch) takes @dev ≤ 1 hour.
 - **[UNTESTED]** README reorder does not break any inbound anchor links. Reviewer must check before merge.
+
+---
+
+## v2.5.4 Cycle — Pivot Framing Realignment
+
+> **Cycle:** v2.5.4 — Pivot Framing Realignment (copy-only hotfix)
+> **Version bump:** 2.5.3 → 2.5.4 (PATCH)
+> **Status:** Phase 0 — Requirements
+> **Date:** 2026-05-10T23:30:00Z
+> **Mode:** Quick
+> **Classification:** STANDARD (copy-only; no auth/schema/compliance/CI surface)
+
+---
+
+### Problem
+
+v2.4.0 shipped the Dynamic Workspace Architect pivot ("open-ended goal discovery replaces preset menus"). The functional implementation is complete and aligned across all 14 files audited. However, two surface-level artifacts were not updated in the pivot cycle:
+
+1. **README line 1 (hero):** still reads "goal-based preset wizard" — contradicts the v2.4 pivot where presets are *suggestions*, not menus.
+2. **SETUP-CHECKLIST.md Step 1 sequencing:** presents preset-paste as the primary action before goal discovery, inverting the v2.4 mental model.
+
+The GitHub repo description already reads correctly: "Build a Claude workspace from your goal — the Dynamic Wizard maps it to vetted agents." The README hero must match this tone. Everything else (CLAUDE.md, WIZARD.md, CONTRIBUTING.md, all 20 skills, CHANGELOG, selection-presets.md) is confirmed aligned — no changes needed.
+
+---
+
+### Scope
+
+**TIER 1 — README hero rewrite (1 line)**
+- Replace `/home/user/claude-cowork-config/README.md` line 1 from "goal-based preset wizard" framing to dynamic-architect-first framing.
+- Match GitHub repo description tone: "Build a Claude workspace from your goal — the Dynamic Wizard maps it to vetted agents from the unified skill pool."
+- Preserve "20 curated skills, no code required" if it still fits naturally.
+- No other README lines changed.
+
+**TIER 2 — SETUP-CHECKLIST sequencing fix**
+- `/home/user/claude-cowork-config/SETUP-CHECKLIST.md` Step 1 (~line 18) and any subsequent step that implies preset-selection-before-goal-discovery: reframe so goal discovery is presented as the primary action, with preset-paste as the optional accelerator for the manual fallback path.
+- @architect picks exact line edits at Phase 1.
+
+**TIER 3 — GitHub topic swap (manual post-merge)**
+- Document for user to run post-merge:
+  `gh repo edit jmlozano1990/Cowork-Starter-Kit --remove-topic templates --add-topic dynamic-workspace`
+- github.enabled=false in registry — in-cycle automation skipped (same pattern as v2.5.3 S1/S2/S3). Command goes in CHANGELOG only.
+
+**Release artifacts:**
+- VERSION: 2.5.3 → 2.5.4
+- README version badge: 2.5.3 → 2.5.4
+- CHANGELOG: [2.5.4] entry citing "v2.4.0 pivot framing realignment" so future readers understand why
+- "Next up (v2.6)" in README: VERIFY byte-identical (no change)
+
+---
+
+### Acceptance Criteria
+
+1. **AC-1 (TIER 1):** `head -1 README.md` contains no instance of "preset wizard"; contains "goal" or "Dynamic Workspace" or equivalent dynamic-architect framing.
+2. **AC-2 (TIER 1):** `head -1 README.md` preserves "20 curated skills" and "no code required" (or equivalent preserved value prop).
+3. **AC-3 (TIER 2):** SETUP-CHECKLIST.md Step 1 heading and body do not imply preset selection precedes goal articulation; goal discovery or "describe your goal" language appears before any preset reference.
+4. **AC-4 (TIER 2):** SETUP-CHECKLIST.md retains functional equivalence — all steps still present, manual fallback path still navigable.
+5. **AC-5 (Release):** `cat VERSION` = `2.5.4`.
+6. **AC-6 (Release):** `grep "version-2.5.4" README.md` returns 1 hit (badge).
+7. **AC-7 (Release):** `grep "\[2.5.4\]" CHANGELOG.md` returns 1 hit; entry body references "v2.4.0 pivot framing realignment".
+8. **AC-8 (Release):** `grep "Next up" README.md` returns a line referencing v2.6 (byte-identical to v2.5.3 "Next up" teaser — no v2.6 scope change).
+
+---
+
+### Will-Not-Do (v2.5.4)
+
+- v2.6 multi-tool work
+- Any change to WIZARD.md, CLAUDE.md, CONTRIBUTING.md, skill descriptions, examples/<preset>/ contents, selection-presets.md
+- Any new ADRs (copy-only cycle — no architectural decisions)
+- Any change to cowork.lock.json
+- Any change to .github/workflows/
+- Competitor naming in public copy (per feedback_no_competitor_naming_public)
+
+---
+
+### Technical Constraints
+
+- Stack: markdown/plain-text only (no build step, no schema, no CI changes)
+- github.enabled=false — TIER 3 gh command documented in CHANGELOG only; not automated in-cycle
+- Zero deny-list violations: WIZARD.md, CLAUDE.md, CONTRIBUTING.md, quality.yml, sync-agency.yml, cowork.lock.json, all 20 SKILL.md files, selection-presets.md — all BYTE-UNCHANGED
+
+---
+
+### Risks
+
+- LOW. Copy-only changes to 2 files + release artifacts. No functional logic touched.
+- [CONFIRMED] v2.5.3 is the latest shipped tag. All 4 prior v2.5.x cycles shipped clean.
+- [UNTESTED] New hero wording does not introduce any competitor names (per no-competitor-naming-public rule — @dev self-verify before commit).
+
+---
+
+### Classification
+
+STANDARD — copy-only, no auth/RLS/schema/CI/guard/settings/API/compliance surface.
 - **[UNTESTED]** Path 1 tail-extraction logic handles all edge cases (marker absent, marker at EOF, encoding variants). @qa must simulate at Phase 5.
