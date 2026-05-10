@@ -1,8 +1,8 @@
-Configure your Claude Cowork workspace in 15 minutes — goal-based preset wizard, 20 curated skills, no code required.
+Configure your Claude Cowork workspace in 15 minutes — describe your goal, the Dynamic Workspace Architect builds it from vetted, SHA-pinned skills, no code required.
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.3-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.5.4-green.svg)](CHANGELOG.md)
 
 ---
 

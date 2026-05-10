@@ -7125,7 +7125,9 @@ Configure your Claude Cowork workspace in 15 minutes — goal-based preset wizar
 
 **Replace with (verbatim, line 1):**
 ```
-Configure your Claude Cowork workspace in 15 minutes — describe your goal, the Dynamic Workspace Architect builds it, 20 curated skills, no code required.
+Configure your Claude Cowork workspace in 15 minutes — describe your goal, the Dynamic Workspace Architect builds it from vetted, SHA-pinned skills, no code required.
+
+> **User-bound revision (gate decision 2026-05-10T17:30:00Z):** "20 curated skills" replaced with "vetted, SHA-pinned skills" — local 20-skill count understates the dynamic-architect curation story (cowork curates DOWN from a larger agency-agents upstream pool with SHA-pinning + content-scanning + MIT attribution). Curation > count. Aligns with GitHub repo description tone.
 ```
 
 **Rationale:** leads with user action ("describe your goal"), names the v2.4 architecture explicitly ("Dynamic Workspace Architect builds it"), preserves the two value-prop anchors ("20 curated skills, no code required") byte-identically. 21 words — within the 20-ish word target. Matches the GitHub repo description tone without copying it verbatim. Avoids "preset" entirely on line 1 (presets are suggestions, not the framing). No competitor names. AC-1 PASSES (no "preset wizard"; contains "goal" and "Dynamic Workspace"). AC-2 PASSES ("20 curated skills" + "no code required" both preserved).
