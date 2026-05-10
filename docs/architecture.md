@@ -6201,9 +6201,9 @@ The strict literal verification (empty `git diff`) conflicts with the project's 
 
 **Resolution (Phase 1 design contract; binds @dev's AC-ZD-4 verification):**
 
-- **Intent of AC-ZD-4:** No new ADRs. No ADR mutations. No re-ordering or rewriting of existing ADR sections (ADR-001 through ADR-030).
+- **Intent of AC-ZD-4:** No new ADRs. No ADR mutations. No re-ordering or rewriting of existing ADR sections (the 32 existing `^## ADR-` entries — ADR-001 through ADR-030 plus 5 amendments under ADR-015/016/019).
 - **Permitted under AC-ZD-4 as re-interpreted:** Append-only Phase 1 design record under a new top-level `## v2.5.2 Phase 1 — Quality Loop Design` heading (this section), consistent with the v2.5.1 precedent at line 6157.
-- **Verification @dev runs at Phase 4:** `awk '/^## ADR-[0-9]+/{print}' docs/architecture.md` returns 30 ADRs (ADR-001 through ADR-030); count and IDs unchanged from v2.5.1 HEAD. `git diff main -- docs/architecture.md` shows ONLY the appended `## v2.5.2 Phase 1 — Quality Loop Design` section (and its descendants). No diff inside any `^## ADR-[0-9]+` block.
+- **Verification @dev runs at Phase 4:** `awk '/^## ADR-[0-9]+/{print}' docs/architecture.md` returns 32 entries (ADRs and amendments matching `^## ADR-`); count and ID set unchanged from v2.5.1 HEAD. `git diff main -- docs/architecture.md` shows ONLY the appended `## v2.5.2 Phase 1 — Quality Loop Design` section (and its descendants). No diff inside any `^## ADR-[0-9]+` block.
 
 This re-interpretation is recorded in spec.md `## Architectural Modifications` per @architect Step 4a (see § 10 below).
 
@@ -6240,7 +6240,7 @@ This re-interpretation is recorded in spec.md `## Architectural Modifications` p
 4. `.github/workflows/quality.yml` (AC-ZD-5 — POOL loop is `skills/*/SKILL.md`; `prompt-gate` auto-detected, no allowlist edit needed; see § 8)
 5. `.github/workflows/sync-agency.yml` (AC-ZD-5)
 6. `.github/workflows/release-assets.yml` (AC-ZD-5)
-7. Any existing ADR section (ADR-001 through ADR-030 are byte-unchanged; § 2)
+7. Any existing ADR section (32 `^## ADR-` entries — ADR-001 through ADR-030 plus 5 amendments under ADR-015/016/019 — are byte-unchanged; § 2)
 8. `templates/` and `scripts/` directories (out of scope)
 9. `selection-presets.md` (`prompt-gate` is NOT added to any preset's `skill_bundle` — wired via `global-instructions.md` injection only; this preserves the byte-mirror CMP gate at `quality.yml:426`)
 10. Any `examples/<preset>/.claude/skills/` directory (CMP byte-mirror only enforces slugs in `skill_bundle`; `prompt-gate` absent from `skill_bundle` → no `.claude/skills/prompt-gate/` copies required)
