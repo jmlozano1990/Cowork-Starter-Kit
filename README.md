@@ -1,18 +1,16 @@
-# cowork-starter-kit
-
-> Set up your Claude Cowork workspace in 15 minutes. No code. No configuration files. Open the folder in Cowork — the wizard runs automatically.
+Configure your Claude Cowork workspace in 15 minutes — goal-based preset wizard, 20 curated skills, no code required.
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.5.2-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.5.3-green.svg)](CHANGELOG.md)
 
 ---
 
-## The problem
+## Who is this for
 
-Claude Cowork is powerful — but a blank project is intimidating. Most people never configure it properly, so they get generic answers instead of a workspace tuned for how they actually work.
-
-This fixes that.
+- **Students and exam preppers** — set up a study workspace with flashcard generation, note-taking, and research synthesis in one guided session
+- **Knowledge workers and analysts** — configure a research or project workspace tuned to your writing voice and goal — no template hunting required
+- **Project managers and team leads** — spin up a status-update, meeting-notes, and risk-tracking workspace without touching a config file
 
 ---
 
@@ -77,7 +75,7 @@ That's it. Cowork reads the project instructions and walks you through personali
 
 ---
 
-## What can you build?
+## What's included
 
 You don't need to know which preset fits your goal — the wizard figures it out. Here are three examples:
 
@@ -89,9 +87,7 @@ You don't need to know which preset fits your goal — the wizard figures it out
 
 The 7 selection presets are starting suggestions — the wizard uses them as scaffolds when your goal matches closely (Path A), narrows across overlapping presets with a follow-up question (Path B), or composes a custom bundle from the unified skill pool when no preset fits (Path C).
 
----
-
-## Seven goal presets
+### Goal presets
 
 You describe your goal in plain language. The wizard routes to the closest preset suggestion, narrows between overlapping presets, or composes a custom bundle if nothing fits. These are the 7 selection presets it can suggest:
 
@@ -118,9 +114,9 @@ You describe your goal in plain language. The wizard routes to the closest prese
 - `folder-structure.md` — recommended folder layout for your workspace
 - `.claude/skills/<skill-name>/SKILL.md` — 3 deprecation-stub skills (canonical versions live in the unified `skills/` pool)
 
----
+### Highlights
 
-## v2.4 highlights
+**v2.4 highlights:**
 
 - **Dynamic Workspace Architect** — open-ended goal discovery replaces preset menus. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
 - **Unified skill pool** — 20 skills (`skills/<slug>/SKILL.md`) consolidated from former per-preset folders into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
@@ -135,6 +131,16 @@ Earlier highlights (v1.2):
 - **Paste-and-go setup** — paste `project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested behavior from message one.
 - **Proactive skills** — Cowork offers flashcards when you share study material, suggests synthesis when you reference multiple sources, drafts status updates when a deadline is near.
 - **`/setup-wizard`** — explicit command to run or redo setup anytime.
+
+---
+
+## How to extend
+
+Want to go deeper? Three paths:
+
+- **Add a preset** — copy `templates/preset-template/` and follow the guide in `CONTRIBUTING.md`. Your new preset joins the wizard's suggestion pool.
+- **Explore the architecture** — `docs/architecture.md` contains all ADRs and Phase 1 design records from v1.0 to present.
+- **Author a skill** — start from `templates/skill-template/` for the 9-section format the wizard installs.
 
 ---
 
@@ -176,6 +182,10 @@ If this saved you setup time, a star helps other Claude Cowork users find it.
 
 ---
 
-## License
+## Credits / Attribution
 
 MIT — see LICENSE.
+
+Upstream skill content sourced from [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) (MIT). Full third-party notices in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md).

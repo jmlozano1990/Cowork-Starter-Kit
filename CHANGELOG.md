@@ -4,6 +4,38 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.5.3] — 2026-05-10 (v43 framework application + O-1 guard)
+
+### Changed
+
+- **Scope A — v43 Public Artifact Framework applied to cowork-starter-kit:**
+  README restructured to Profile-1 `how-to` IA (positioning statement first,
+  new `## Who is this for` H2, section order aligned: value prop → audience →
+  Demo → Quick start → What's included → How to extend → Credits / Attribution).
+  `## License` renamed to `## Credits / Attribution` with upstream attribution.
+  `## What can you build?` renamed to `## What's included`; `## Seven goal presets`
+  merged as `### Goal presets` subsection. New `## How to extend` H2 added.
+  Version badge bumped `2.5.2` → `2.5.3` (AC-A4).
+  SETUP-CHECKLIST.md intro paragraph updated to v2.5.3 reference.
+  CONTRIBUTING.md gains a contributor value statement before `## Adding a new preset`.
+
+### Added
+
+- **`templates/public-artifact/release-body.md`** — v43-compliant release body
+  template with `[REPLACE:VERSION]`, `[REPLACE:POSITIONING]`,
+  `[REPLACE:CHANGE_BULLET_1..3]`, `[REPLACE:BREAKING]`, `[REPLACE:CHANGELOG_LINK]`,
+  `[REPLACE:NEXT_TEASER]` markers per `public-artifact-strategy.md` § 7.
+
+- **Scope B — O-1 Guard: sync-agency.yml now preserves DO-NOT-REGENERATE tail:**
+  The "Regenerate THIRD-PARTY-NOTICES.md" step (ADR-025) is patched (Path 1) to
+  read and re-append any content below the `<!-- DO-NOT-REGENERATE -->` marker in
+  the live file. The `## Direct Pattern Incorporations` section added in v2.5.2
+  will survive future upstream SHA bumps.
+  Defense-in-depth: step name now advertises tail-preserve behavior in `gh run list`
+  output (V2.5.3-S1); `set -euo pipefail` added to patched run block (V2.5.3-S2).
+
+---
+
 ## [2.5.2] — 2026-05-10
 
 ### Added

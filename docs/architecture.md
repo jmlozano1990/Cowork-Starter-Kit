@@ -6742,3 +6742,336 @@ No other ACs are modified, skipped, or relaxed. All 21 spec ACs (AC-D2-1..11, AC
 
 **Round 1 close.** Constraint catalog: 0 new C-IDs (no new architectural constraints — all bindings are content-level). AC catalog: 21 spec ACs unchanged. Files-in-scope: 16. Compliance MUST-FIX bindings: CF-L1-1 (handled in § 4.1), CF-L1-2 (handled in § 4.5). Combined-path eligibility: NOT eligible (COMPLIANCE-SENSITIVE classification confirmed). Ready for Phase 1 deliberation (@architect ↔ @security ↔ @dev) and then Phase 3 `/gate`.
 
+## v2.5.3 Phase 1 — v43 Framework Application Design
+
+**Mode:** full · **Classification:** SECURITY-SENSITIVE (re-confirmed post-file-discovery, see § 6) · **Date:** 2026-05-10T15:00:00Z · **Branch:** `release/v2.5.3` (worktree on cowork repo) · **Cycle:** v2.5.3 — v43 Framework Application + O-1 Guard · **Spec section:** `docs/spec.md` "## v2.5.3 Cycle — v43 Framework Application + O-1 Guard"
+
+### 1. Decision-Trigger Walk
+
+Run @architect's anti-pattern detection tree against the v2.5.3 scope:
+
+| Trigger | Verdict | Rationale |
+|---------|---------|-----------|
+| New schema/migration? | NO | No DB layer in cowork. |
+| New auth surface? | NO | Scope A is markdown polish; Scope B patches an existing workflow step without changing permissions or secret handling. |
+| New ADR-class architectural decision? | NO | Scope A is APPLICATION of an existing framework (v43 / `how-to` profile) authored in The-Council — cowork is a downstream consumer. Scope B is a localized patch to an existing workflow step that preserves a marker-protected region; the marker contract was already established at v2.5.2 (`THIRD-PARTY-NOTICES.md` line 61). The patch operationalises the existing intent — no new architectural seam. |
+| ADR mutation needed? | NO | ADR-025 amendment is explicitly DEFERRED per spec WILL-NOT-DO and `THIRD-PARTY-NOTICES.md` lines 71–74 (deferred until 3rd hand-maintained entry). All 32 `^## ADR-` entries (ADR-001..ADR-030 + 5 amendments) remain byte-unchanged. |
+| Cross-cutting policy that future cycles will reuse? | NO | The Path 1 tail-preserve mechanism is local to this workflow step. If a second workflow ever adopts a DO-NOT-REGENERATE marker, that cycle would extract a shared shell helper (Rule of Three). |
+
+**Verdict:** No new ADR. No ADR mutations. v2.5.3 is application + workflow patch.
+
+### 2. AC-ZD-3 Re-interpretation (Architectural Modification)
+
+**Conflict surfaced.** Spec AC-ZD-3 reads: *"No new ADRs added. No existing ADR sections modified."*
+
+The strict literal verification (no diff to `docs/architecture.md`) conflicts with the project's established convention: every prior cycle (v2.0, v2.0.2, v2.0.3, v2.3.0, v2.3.1, v2.5.1, v2.5.2) appends a per-cycle Phase 1 design record under a new top-level heading. v2.5.2 § 2 codified the re-interpretation: append-only Phase 1 records are permitted; ADR mutations are not.
+
+**Resolution (Phase 1 design contract; binds @dev's AC-ZD-3 verification):**
+
+- **Intent of AC-ZD-3:** No new ADRs. No ADR mutations. No re-ordering or rewriting of existing ADR sections.
+- **Permitted under AC-ZD-3 as re-interpreted:** Append-only Phase 1 design record under `## v2.5.3 Phase 1 — v43 Framework Application Design` (this section), consistent with the v2.5.1 / v2.5.2 precedent.
+- **Verification @dev runs at Phase 4:** `awk '/^## ADR-[0-9]+/{print}' docs/architecture.md` returns 32 entries (count and ID set unchanged from v2.5.2 HEAD `b31ccce`). `git diff main -- docs/architecture.md` shows ONLY the appended `## v2.5.3 Phase 1 — v43 Framework Application Design` section. No diff inside any `^## ADR-[0-9]+` block.
+
+This re-interpretation is recorded in spec.md `## Architectural Modifications` per @architect Step 4a (see § 11 below).
+
+### 3. Scope A — v43 Framework Surface Checklist (extracted)
+
+Source of truth: `/home/user/The-Council/docs/public-artifact-strategy.md` (read-only reference; The-Council is the v43 author, cowork is the consumer).
+
+**Profile binding:** cowork-starter-kit → **Profile 1: `how-to`** (confirmed in spec § Profile assignment via § 8 rubric: primary user task-oriented = YES; non-developer reader = YES; not inhabited daily = YES; not infrastructure = YES).
+
+**Prescribed `how-to` IA section order** (from public-artifact-strategy.md § 2 lines 31–40):
+
+| # | Section | Heading level | Char/word budget |
+|---|---------|---------------|------------------|
+| 1 | One-sentence value proposition | Text (no heading) | ≤160 chars |
+| 2 | Who is this for | H2 | ≤200 words, 3 bullets max |
+| 3 | Demo / screenshot / GIF | H2 | — |
+| 4 | Quick start | H2 | — |
+| 5 | What's included | H2 | — |
+| 6 | How to extend / customize | H2 | — |
+| 7 | Credits / Attribution | H2 | — |
+
+**Tier 1 SEO signals** (from § 3 lines 112–120; PASS/FAIL on audit):
+
+| Signal | Standard | Verifiable in cycle? |
+|--------|----------|----------------------|
+| S1: Repo description set, ≤350 chars | non-empty + keyword-rich | NO — github.enabled=false; documented for post-merge manual application |
+| S2: Repo description ≥3 distinct keyword phrases | — | NO — same as S1 |
+| S3: GitHub Topics 5–10 tags | — | NO — github.enabled=false; documented for post-merge manual application |
+| S4: README first 250 chars = positioning statement | no badge block before the prop | YES — verifiable via grep on `README.md` head |
+| S5: "Who is this for" section within first 300 words | — | YES — verifiable via awk on `README.md` |
+
+**S1/S2/S3 disposition:** Spec § Surface checklist row "Repo description (S1/S2)" and "GitHub Topics (S3)" already document the proposed values:
+
+- **Proposed repo description (≤350 chars, ≥3 keyword phrases):** *"Configure your Claude Cowork workspace in 15 minutes — goal-based preset wizard, 20 curated skills, no code required."* (113 chars; keyword phrases: "Claude Cowork workspace", "goal-based preset wizard", "20 curated skills", "no code".)
+- **Proposed Topics (9 tags, within 5–10 range):** `claude-ai`, `claude-project`, `ai-workspace`, `productivity`, `prompt-engineering`, `workflow`, `no-code`, `starter-kit`, `anthropic`.
+
+These will be applied manually post-merge by the operator via `gh repo edit --description "..."` and `gh repo edit --add-topic ...`. The cycle does NOT request the user run these commands now (per `feedback_no_manual_terminal_work`); they are queued in the merge-ready state for the next routine repo touch and surfaced in the v2.5.3 release body teaser. **AC-A1..A9 are unaffected by the S1/S2/S3 deferral** — those ACs verify in-repo content only.
+
+### 4. Scope A — README.md exact-line edit plan
+
+Current README.md is 181 lines. Pre-cycle IA Drift score: 0/3 (top 3 H2 headings: `The problem` line 11, `How it works` line 19, `Quick start` line 63 — none match the prescribed `how-to` top 3 positions).
+
+**Target post-cycle state:**
+
+| New slot | New heading | Where content comes from | Lines (approximate) |
+|----------|-------------|--------------------------|---------------------|
+| 1 | (no heading — positioning statement text) | NEW prose, ≤160 chars, contains 3+ keywords from proposed repo description | 1 |
+| 2 | `## Who is this for` | NEW H2 (≤200 words, 3 bullets) | 1 H2 + 3 bullets ≈ 12 lines |
+| 3 | `## How it works` (existing — serves Demo / flow slot 3) | EXISTING (lines 19–60); content is the ASCII flow diagram + alt entry paths — qualifies as Demo per `how-to` § 2 row 3 (text-based "show, don't tell" diagram is acceptable when no GIF available) | UNCHANGED CONTENT, RELOCATED |
+| 4 | `## Quick start` | EXISTING (lines 63–76) | UNCHANGED CONTENT, RELOCATED |
+| 5 | `## What's included` | RENAME from `## What can you build?` + merge with `## Seven goal presets` content; preserve both tables | one-line H2 rename + section merge |
+| 6 | `## How to extend` | NEW (≤80 words) — points to CONTRIBUTING.md and `docs/architecture.md` for advanced users | 1 H2 + 3–5 lines |
+| 7 | `## Credits / Attribution` | NEW H2 — moves and explicitly headers the existing License + adds short upstream attribution sentence to `msitarzewski/agency-agents` (already in THIRD-PARTY-NOTICES.md; this is the README trust-signal surface) | 1 H2 + 4–6 lines |
+
+**Sections preserved between IA reorder (no rewrites; relocate or fold only):**
+
+- Lines 119–139 (`v2.4 highlights` + earlier highlights) → relocate AFTER slot 5 (`What's included`) as a `### Highlights` subsection or fold under slot 5. @dev's call.
+- Lines 141–144 (`Safety first`) → preserve as a top-level H2 between slot 5 and slot 6 (safety claim is a trust signal — keeps user-visible).
+- Lines 147–157 (`Supply-Chain Integrity (v2.0)` + `What's new in v2.5`) → fold under slot 6 (`How to extend`) or keep as a separate H2 BETWEEN slot 6 and slot 7 — @dev's call. **The "Next up (v2.6)" line on line 157 is BYTE-IDENTICAL (AC-REL-3 carry-forward — hard lock).**
+- Lines 161–163 (`Staying up to date`) → fold under slot 6 or keep as standalone H2 before Credits.
+- Lines 167–169 (`Contribute a preset`) → fold into slot 7 Credits (bullet "Want to contribute? See CONTRIBUTING.md") OR keep as a separate H2 before Credits.
+- Lines 173–175 (`Star this repo`) → preserve as-is between Highlights and Credits, or fold into Credits as a closing line.
+
+**Exact edits @dev makes (binding):**
+
+| # | File | Lines | Change | Verification |
+|---|------|-------|--------|--------------|
+| 1 | `README.md` | 1–9 (header block) | DELETE H1 `# cowork-starter-kit` (line 1). Replace blockquote on line 3 with PLAIN positioning statement (no `>` prefix). Move 3 badges (lines 5–7) to AFTER the positioning paragraph, before the first `---`. Drop the leading `# ` from line 1 entirely; the file MUST start with the positioning sentence. Update version badge `version-2.5.2-green` → `version-2.5.3-green` (AC-A4). | `head -c 250 README.md` returns positioning text (no `# `, no `>`, no `[![`); grep for `version-2.5.3-green` PASS; grep for `version-2.5.2-green` FAIL. |
+| 2 | `README.md` | NEW H2 inserted between current line 9 and line 11 | INSERT `## Who is this for` H2 + 3 bullets ≤200 words. Audience: 3 archetypes (student, knowledge worker, project manager) per spec edge case 3 — NO competitor naming (per `feedback_no_competitor_naming_public`). | `awk '/^## Who is this for/{found=NR} END{exit !(found && found < 300)}' README.md` PASS; word count of section ≤200. |
+| 3 | `README.md` | existing 19–60 (`## How it works`) | RELOCATE the entire H2 block to slot 3 (after Who is this for). Content byte-identical. | `git diff` shows movement only, no content edit inside `## How it works`. |
+| 4 | `README.md` | existing 63–76 (`## Quick start`) | RELOCATE to slot 4. Content byte-identical. | same as #3. |
+| 5 | `README.md` | existing 80–118 (`## What can you build?` + lines 94–120 `## Seven goal presets`) | RENAME `## What can you build?` → `## What's included`. MERGE the two existing H2 sections under the renamed H2; the Seven goal presets table becomes a `### Goal presets` subsection. Both tables and all bullet content byte-preserved. | grep `^## What's included` PASS; grep `^## What can you build` FAIL; both tables present. |
+| 6 | `README.md` | NEW between slot 5 and Safety first | INSERT `## How to extend` H2 (≤80 words). Points to: (a) CONTRIBUTING.md for adding presets, (b) `docs/architecture.md` for ADRs and Phase 1 records, (c) skill author path via `templates/skill-template/` | grep `^## How to extend` PASS; word count ≤80. |
+| 7 | `README.md` | line 141 onwards | PRESERVE `## Safety first` H2 + content byte-identical (per `feedback_no_competitor_naming_public` and trust-signal logic). | grep `^## Safety first` PASS; section content byte-identical via `git diff`. |
+| 8 | `README.md` | existing 147–157 (`Supply-Chain Integrity` + `What's new in v2.5`) | PRESERVE BOTH H2s; content byte-identical EXCEPT badge bump on line 7 (handled in #1). The "Next up (v2.6)" line on line 157 is **BYTE-IDENTICAL** (AC-REL-3 hard lock). | `grep -F "Next up (v2.6)" README.md` returns the exact byte-string from v2.5.2 HEAD; verifiable via `git show v2.5.2:README.md \| grep -F "Next up (v2.6)" \| diff - <(grep -F "Next up (v2.6)" README.md)`. |
+| 9 | `README.md` | existing 161–175 (`Staying up to date`, `Contribute a preset`, `Star this repo`) | PRESERVE H2s; content byte-identical. | `git diff` shows no content change. |
+| 10 | `README.md` | existing 179–181 (`License`) | RENAME `## License` → `## Credits / Attribution`. Append 2–3 lines: short upstream attribution to `msitarzewski/agency-agents` (link to THIRD-PARTY-NOTICES.md for full notices) + 1-line link to CONTRIBUTING.md for contributors. License sentence preserved. | grep `^## Credits / Attribution` PASS; License text preserved; THIRD-PARTY-NOTICES.md link present. |
+
+**Result:** README post-edit IA Drift = **3/3** (slot 1 = positioning, slot 2 = Who is this for, slot 3 = Demo via How it works). Target ≥2/3 from AC-A3 EXCEEDED.
+
+**Word-count and byte budget checks @dev runs at Phase 4 close:**
+
+- `head -c 250 README.md` → must contain only the positioning statement (no markdown formatting other than basic punctuation).
+- `awk '/^## Who is this for/{found=NR} /^## /{if(found && NR>found+1 && !done){done=NR}} END{print found, done}' README.md` → first H2 between line 1 and ~30; section ≤200 words.
+- `git show v2.5.2:README.md | grep -F "Next up (v2.6)"` byte-identical to HEAD — AC-REL-3.
+
+### 5. Scope A — SETUP-CHECKLIST.md, CONTRIBUTING.md, release-body template
+
+| # | File | Change | Lines | AC |
+|---|------|--------|-------|-----|
+| 11 | `SETUP-CHECKLIST.md` | UPDATE intro paragraph (lines 9–11) to reference v2.5.3 OR the Releases page dynamically. Audit "you" framing in first 10 steps; if fewer than 3 "you"-framed sentences, light edit to match `how-to` tone. NO structural changes. Existing 11-step list byte-preserved. | ~5 line touch | AC-A5 |
+| 12 | `CONTRIBUTING.md` | INSERT 1–2 sentences AFTER line 3 (before `## Adding a new preset`) framing contributor value: "Cowork-starter-kit is community-maintained. Every preset PR widens the goals the wizard can route a new user through — your contribution helps a future user reach a working workspace faster." (or @dev's equivalent ≤30-word sentence). Existing 11-item PR review checklist byte-unchanged. | ~3 lines insert | AC-A6 |
+| 13 | `templates/public-artifact/release-body.md` (NEW) | CREATE per public-artifact-strategy.md § 7 lines 246–266 template. All `[REPLACE:*]` markers present and named: `[REPLACE:VERSION]`, `[REPLACE:POSITIONING]`, `[REPLACE:CHANGE_BULLET_1..3]`, `[REPLACE:BREAKING]`, `[REPLACE:CHANGELOG_LINK]`, `[REPLACE:NEXT_TEASER]`. | NEW file ~30 lines | AC-A7 |
+
+**Path A vs Path B for AC-A7 — bound:** **Path A (NEW file `templates/public-artifact/release-body.md`).** Rationale: cowork already uses `templates/preset-template/`, `templates/skill-template/`, `templates/global-instructions-base.md`, `templates/writing-profile-template.md` — `templates/public-artifact/release-body.md` follows the same convention. CONTRIBUTING.md is for contributor process (DCO, CI, PR conventions) and would muddle authorial concerns. The directory `templates/public-artifact/` does NOT currently exist (verified `ls templates/` 2026-05-10) — @dev creates it when adding the file. Spec edge case 4 (file path conflict) does not apply: no existing template at this path.
+
+### 6. Scope B — sync-agency.yml O-1 Guard
+
+**Path binding:** **Path 1 — workflow patch with tail-preserve.**
+
+**Rationale (binding decision):**
+
+1. **Marker-driven semantics preserve the contract.** The DO-NOT-REGENERATE marker in `THIRD-PARTY-NOTICES.md` was added at v2.5.2 with the explicit intent that the workflow honor it. Path 1 makes that intent operational. Path 2 would silently delete the marker's semantic role (the marker would still be in the file but the workflow ignores it), breaking the v2.5.2 design contract and forcing future hand-maintained entries through a template+workflow round-trip.
+2. **Lower attack surface delta for @security review.** Path 1 adds ~6 lines of awk/grep extraction logic into one existing workflow step (lines 343–355). Path 2 modifies `.github/templates/THIRD-PARTY-NOTICES.template.md` AND removes/reframes the marker in two files (template + live file). Path 1's diff is contained to one file (workflow); Path 2 touches two files (workflow may also need a comment update to reflect the changed regeneration semantics). **Path 1 = 1 file diff; Path 2 = 2 file diff. Path 1 wins on attack-surface minimality.**
+3. **No new external data ingestion.** Both paths operate only on repo-internal files. Neither changes secret handling, permissions, or the `peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f` SHA pin (spec edge case 5; verified at v2.5.2 HEAD).
+4. **Future-proof for hand-maintained entries.** Path 1 generalizes: any future hand-maintained third-party entry can be appended below the marker without further workflow edits. Path 2 requires a template edit per addition.
+
+**Exact diff for `.github/workflows/sync-agency.yml`:**
+
+Current step (lines 338–355):
+
+```yaml
+      - name: Regenerate THIRD-PARTY-NOTICES.md (ADR-025)
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          NEW_SHA: ${{ steps.upstream.outputs.latest_sha }}
+          NEW_LICENSE_SHA256: ${{ steps.license.outputs.new_license_sha256 }}
+        run: |
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          export NOW NEW_SHA NEW_LICENSE_SHA256
+
+          envsubst '$NOW $NEW_SHA $NEW_LICENSE_SHA256' \
+            < .github/templates/THIRD-PARTY-NOTICES.template.md \
+            > /tmp/notices-stage1.md
+
+          awk '/<<LICENSE_TEXT>>/{system("cat /tmp/upstream-LICENSE"); next} {print}' \
+            /tmp/notices-stage1.md > /tmp/notices.tmp \
+            && mv /tmp/notices.tmp THIRD-PARTY-NOTICES.md
+
+          echo "THIRD-PARTY-NOTICES.md regenerated."
+```
+
+**Patched step (replaces lines 338–355; net delta: +9 lines):**
+
+```yaml
+      - name: Regenerate THIRD-PARTY-NOTICES.md (ADR-025; preserves DO-NOT-REGENERATE tail)
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          NEW_SHA: ${{ steps.upstream.outputs.latest_sha }}
+          NEW_LICENSE_SHA256: ${{ steps.license.outputs.new_license_sha256 }}
+        run: |
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          export NOW NEW_SHA NEW_LICENSE_SHA256
+
+          envsubst '$NOW $NEW_SHA $NEW_LICENSE_SHA256' \
+            < .github/templates/THIRD-PARTY-NOTICES.template.md \
+            > /tmp/notices-stage1.md
+
+          awk '/<<LICENSE_TEXT>>/{system("cat /tmp/upstream-LICENSE"); next} {print}' \
+            /tmp/notices-stage1.md > /tmp/notices-generated.md
+
+          # Preserve hand-maintained tail: any content from the DO-NOT-REGENERATE
+          # marker onwards in the live file is appended verbatim. If the marker is
+          # absent (e.g., file was reset or this is bootstrap), tail file is empty
+          # and only the regenerated section is emitted (no-op append). AC-B4.
+          if [ -f THIRD-PARTY-NOTICES.md ]; then
+            awk '/<!-- DO-NOT-REGENERATE/{found=1} found{print}' \
+              THIRD-PARTY-NOTICES.md > /tmp/notices-tail.md
+          else
+            : > /tmp/notices-tail.md
+          fi
+
+          cat /tmp/notices-generated.md /tmp/notices-tail.md > THIRD-PARTY-NOTICES.md
+
+          echo "THIRD-PARTY-NOTICES.md regenerated (tail preserved: $(wc -l < /tmp/notices-tail.md) lines)."
+```
+
+**Diff metrics:** 1 step modified, ~17 lines existing → ~26 lines patched, +9 net. Step name updated to advertise the preservation behavior (audit-trail signal). All other workflow contents (permissions, concurrency, secret usage, peter-evans SHA pin, all other steps) byte-unchanged.
+
+**Threat model (binding open issues for @security at Phase 2):**
+
+| # | Risk | Vector | Architect's view | Phase 2 verifier |
+|---|------|--------|------------------|------------------|
+| OI-B1 | Workflow secret handling regression | Patched step uses `${{ secrets.GITHUB_TOKEN }}`? | NO — the step does not touch `GITHUB_TOKEN`. Only env vars `NEW_SHA`, `NEW_LICENSE_SHA256`, `NOW` (all internally computed). Job-level `contents: write` and `pull-requests: write` are unchanged. AC-B6. | @security verifies no `secrets.*` reference is added or removed in the diff. |
+| OI-B2 | Tail-injection vector | Could a malicious upstream commit cause arbitrary content below the marker? | NO — the tail is read from the EXISTING `THIRD-PARTY-NOTICES.md` in the cowork repo (post-checkout, pre-regeneration). Upstream `agency-agents` cannot influence this file because it's NOT in the allowlist for content fetch (allowlist is `agents/*.md` + `LICENSE` per cowork.lock.json). The tail content is therefore always cowork-authored. | @security verifies fetch allowlist (line ~150 of workflow) does NOT include `THIRD-PARTY-NOTICES.md` from upstream. |
+| OI-B3 | awk command injection via marker text | Could marker text contain shell metachars? | NO — `awk '/<!-- DO-NOT-REGENERATE/{...}'` is a regex match on a hard-coded literal pattern; the marker text in `THIRD-PARTY-NOTICES.md` is content (printed via `{print}`) not interpreted as code. No `system()` call inside the new awk. | @security verifies no `system()` or shell expansion in the awk additions (single quotes around awk script preserved). |
+| OI-B4 | File-not-exist edge case | If `THIRD-PARTY-NOTICES.md` is absent (cold bootstrap), does step error? | NO — `if [ -f ... ]` guards the awk; else branch emits an empty tail file. AC-B4. | @security verifies the `[ -f ... ]` guard is present. |
+| OI-B5 | Marker absent edge case | If marker is absent from existing file, does step duplicate header content or error? | NO — `awk '/<!-- DO-NOT-REGENERATE/{found=1} found{print}'` has `found=0` initially; with no match, no lines are printed. Output: empty tail file → `cat generated empty` = generated only. AC-B4. | @security verifies behavior via Phase 2 simulation (`bash -c '<patched step>'` against a marker-less fixture). |
+| OI-B6 | Output ordering / race | Could `cat A B > A` race-condition? | NO — input is `/tmp/notices-generated.md` and `/tmp/notices-tail.md`; output is `THIRD-PARTY-NOTICES.md`. Disjoint paths, no in-place edit. | @security verifies all 3 paths are distinct. |
+| OI-B7 | `set -e` behavior | Does the new awk return non-zero on no-match? | NO — `awk` with no match returns 0. Even under `set -e`, the step does not fail when marker absent. | @security simulates with `set -euo pipefail; <step body>` against marker-less input. |
+
+**Combined threat-model conclusion (architect's binding):** Path 1 introduces NO new attack vectors. The workflow continues to operate on internally-trusted files. Permissions block (`permissions: read-all` workflow-level + per-job `contents: write` / `pull-requests: write`) is byte-unchanged. The peter-evans SHA pin on line 359 is byte-unchanged. @security Phase 2 reviews to confirm.
+
+### 7. Scope B — Acceptance criteria binding
+
+| AC | Verification at Phase 5 |
+|----|--------------------------|
+| AC-B1 | @qa runs `bash -c '<patched step body>'` locally against the v2.5.3 HEAD `THIRD-PARTY-NOTICES.md` (containing the marker + Direct Pattern Incorporations section) using a fixture upstream-LICENSE; output diff vs HEAD shows ONLY the regenerated header timestamp/SHA/LICENSE block changed; `## Direct Pattern Incorporations` section byte-identical. |
+| AC-B2 | `awk '/^### addyosmani/,/^---|^$/' <output>` and same against v2.5.2 committed HEAD → byte-identical (full MIT text, copyright line, pinned commit SHA, source-file note). |
+| AC-B3 | Header section regenerated correctly: `head -15 <output>` contains updated `Last regenerated:` timestamp and `Lock file: ... (pinned commit: ...)` matching the simulated NEW_SHA env var. |
+| AC-B4 | Two simulations: (a) marker-absent fixture (delete lines 61+ from a fixture copy) → output = generated section only, no error, exit 0; (b) file-absent fixture (`rm` the file) → output = generated section only, no error, exit 0. |
+| AC-B5 | CI green on PR push: `quality.yml` + (PR-only) `sync-agency-dry-run` if it exists. V45-A3 discipline: orchestrator runs local CI smoke before push. |
+| AC-B6 | `git diff main -- .github/workflows/sync-agency.yml` shows ONLY the regeneration step edits; `permissions: read-all` (line 23) byte-unchanged; per-job `contents: write` / `pull-requests: write` lines byte-unchanged; `peter-evans/create-pull-request@67ccf781...` SHA byte-unchanged (spec edge case 5). |
+
+### 8. Anti-pattern Scan (across both scopes)
+
+| Pattern | Verdict | Rationale |
+|---------|---------|-----------|
+| Premature optimization | NONE | All edits are user-visible quality fixes, not perf. |
+| Leaky abstraction | NONE | Path 1 keeps the marker contract AT the file boundary; the workflow respects file content as authoritative. |
+| God module | NONE | No module growth; one workflow step is patched in-place. |
+| Tight coupling | NONE | Tail-extract logic depends only on a literal marker string; replaceable. |
+| Missing separation of concerns | NONE | Generated header (workflow) and hand-maintained tail (cowork authors) are now cleanly separated. |
+| Hidden dependency | NONE | The marker contract is documented in the file (line 61–10), spec, this section, and the workflow step name. |
+| N+1 / loop-in-loop | NONE | Single-pass awk + cat. |
+| Hallucinated SHA (per `feedback_github_ci_pitfalls`) | NONE | NO new Action SHAs introduced; existing peter-evans SHA byte-unchanged. |
+| Relative GitHub link breakage (lychee) | NONE | No new GitHub links added in workflow; new README/CONTRIBUTING content uses absolute paths or repo-relative links to existing files only. |
+| Competitor naming in public copy | NONE — must be verified by @qa | "Who is this for" bullets bound to archetype names (student / knowledge worker / project manager) per spec edge case 3 + `feedback_no_competitor_naming_public`. |
+| Version-bump completeness miss (per `feedback_version_bump_completeness`) | WATCH — bound | @dev MUST update README badge AND preserve "Next up (v2.6)" line (AC-A4 + AC-REL-3). 2-cycle pattern; explicit verification step in § 9 below. |
+| Worktree path mismatch (per V45-A2) | WATCH — bound | Orchestrator updated registry to point at `/home/user/claude-cowork-config` before Phase 4. Branch `release/v2.5.3` created in-place (no sibling worktree dir), so registry path is consistent. @dev verifies `git -C $(jq -r '.projects."claude-cowork-config".path' .claude/projects/registry.json) branch --show-current` returns `release/v2.5.3`. |
+| CI smoke pre-empt (per V45-A3) | BOUND | @dev runs local CI smoke (`act`-style or `markdownlint` + `yamllint` on the modified files) before first push. |
+
+**Verdict: 0 BLOCKER, 0 LOW, 2 WATCH (both bound to verification steps).** Proceed.
+
+### 9. Phase 4 File-Modification Map (binding for @dev)
+
+@dev creates / modifies exactly the following on branch `release/v2.5.3`:
+
+| # | File | Change type | Bound to AC | Approx line delta |
+|---|------|-------------|-------------|-------------------|
+| 1 | `README.md` | RESTRUCTURE (10 distinct edits per § 4 table) | AC-A1, AC-A2, AC-A3, AC-A4, AC-REL-3, AC-REL-4 | ~ +25/-10 lines net (net +15) |
+| 2 | `SETUP-CHECKLIST.md` | TOUCH (intro paragraph + tone audit; no structural change) | AC-A5 | ~ ±5 lines |
+| 3 | `CONTRIBUTING.md` | INSERT (1–2 sentence contributor value statement) | AC-A6 | ~ +3 lines |
+| 4 | `templates/public-artifact/release-body.md` | CREATE (NEW directory + file per public-artifact-strategy.md § 7) | AC-A7 | ~ +30 lines (NEW) |
+| 5 | `.github/workflows/sync-agency.yml` | PATCH (regeneration step per § 6) | AC-B1..B6 | ~ +9 lines net |
+| 6 | `VERSION` | REPLACE single line `2.5.2` → `2.5.3` | AC-REL-1, AC-A9 | -1/+1 |
+| 7 | `CHANGELOG.md` | PREPEND `## [2.5.3] — 2026-05-10` section above `## [2.5.2]` | AC-REL-2, AC-A9 | ~ +20 lines |
+| 8 | `docs/architecture.md` | This Phase 1 design record (already appended in this commit) | AC-ZD-3 (re-interpreted, § 2) | ~ +320 lines (this section) |
+| 9 | `docs/spec.md` | APPEND `## Architectural Modifications` v2.5.3 entry per Step 4a (§ 11) | n/a | ~ +6 lines |
+
+**Total: 9 files. 1 NEW, 8 MODIFIED.** No deletions. No renames. Worktree branch: `release/v2.5.3`.
+
+**Files explicitly zero-diff (deny-list, @dev MUST NOT modify; verified by `git diff main -- <path>` returning empty):**
+
+1. `cowork.lock.json` (AC-ZD-1, spec WILL-NOT-DO)
+2. `CLAUDE.md` (AC-ZD-2)
+3. `examples/*/global-instructions.md` (AC-ZD-4)
+4. `skills/*/SKILL.md` (AC-ZD-4)
+5. `selection-presets.md` (AC-ZD-4)
+6. `curated-skills-registry.md` (AC-ZD-4)
+7. `prompts/correcting-course.md` (AC-ZD-5)
+8. `skills/prompt-gate/SKILL.md` (AC-ZD-5)
+9. `THIRD-PARTY-NOTICES.md` — **byte-unchanged this cycle** (Path 1 fixes the workflow, NOT the file; the file already contains the correct hand-maintained section from v2.5.2)
+10. `.github/templates/THIRD-PARTY-NOTICES.template.md` — byte-unchanged (Path 1 does not require template edits)
+11. `.github/workflows/quality.yml`, `.github/workflows/release-assets.yml` — byte-unchanged
+12. Any existing ADR section (32 `^## ADR-` entries — ADR-001..ADR-030 + 5 amendments — byte-unchanged; § 2)
+13. Any preset core file (`cowork-profile-starter.md`, `working-rules.md`, `writing-profile.md`, `project-instructions-starter.txt`)
+
+If @dev believes any file outside the allow-list needs modification, escalate to @architect via Phase 1 amendment BEFORE committing.
+
+**README "Next up" + badge dual-verification (per `feedback_version_bump_completeness` 2-cycle pattern):**
+
+```bash
+# AC-A4 — version badge bumped
+grep -F 'version-2.5.3-green' README.md && ! grep -F 'version-2.5.2-green' README.md
+
+# AC-REL-3 — Next up byte-identical
+git show v2.5.2:README.md | grep -F 'Next up (v2.6)' > /tmp/v252-nextup.txt
+grep -F 'Next up (v2.6)' README.md > /tmp/v253-nextup.txt
+diff /tmp/v252-nextup.txt /tmp/v253-nextup.txt && echo "BYTE-IDENTICAL" || echo "FAIL"
+```
+
+@qa Phase 5 runs both checks; both must PASS.
+
+### 10. Classification Re-Run (post-file-discovery)
+
+**Re-confirmed: SECURITY-SENSITIVE.**
+
+Trigger: Scope B modifies `.github/workflows/sync-agency.yml`, a supply-chain workflow with `contents: write` + `pull-requests: write` job-level permissions. Per `docs/pipeline-policy.md` § Classification + the Council's guard PR rule analog (`feedback_guard_pr_rule`), any modification to this workflow requires:
+
+- Phase 2 `/review` (@security FULL pass on the workflow diff + threat model in § 6)
+- Phase 6 `/audit` (@security code audit)
+- @security MUST produce a Guard Change Summary on the PR description (what changed, what could break, what's protected, what to verify after merge) BEFORE the user approves merge
+
+Scope A is STANDARD (markdown polish; no auth/RLS/workflow/dependency surface). Combined classification: **SECURITY-SENSITIVE** (higher of the two).
+
+**Phase 2 input bundle for @security:**
+
+- This Phase 1 record (§ 6 patch + § 6 threat model OI-B1..B7).
+- Spec § Scope B + § Risks (R2 LOW shell-bug risk).
+- The exact diff to `.github/workflows/sync-agency.yml` (will be in the Phase 4 commit).
+
+### 11. Spec Divergence (Step 4a)
+
+@architect appends to `docs/spec.md` `## Architectural Modifications`:
+
+```
+- AC: AC-ZD-3 — "No new ADRs added. No existing ADR sections modified." → Re-interpreted as: no new ADRs, no ADR mutations, BUT append-only Phase 1 design record under a new top-level heading is permitted. Verification: 32 ^## ADR- entries in docs/architecture.md unchanged from v2.5.2 HEAD. — Reason: Established convention since v2.0; documented in v2.5.2 § 2; @dev binds verification command in v2.5.3 § 9.
+- AC: AC-A7 path choice (release-body template location: NEW file vs. CONTRIBUTING.md section) → Bound to NEW file `templates/public-artifact/release-body.md`. — Reason: Cowork's existing convention (`templates/preset-template/`, `templates/skill-template/`); CONTRIBUTING.md is for contributor process, not authorial templates.
+- AC: Scope B Path 1 vs Path 2 → Bound to Path 1 (workflow tail-preserve). — Reason: Marker-driven semantics preserve the v2.5.2 design contract; lower attack-surface delta (1-file diff vs 2-file); generalizes for future hand-maintained entries; no secret handling change.
+```
+
+### 12. scope_allow_delta
+
+```yaml
+scope_allow_delta:
+  add: []
+  rationale: "External project cycle (V44-S5). No agent scope_allow changes needed; cowork is a downstream consumer of v43 framework, no The-Council guard adjustments warranted."
+```
+
+### 13. Round 1 Close
+
+**Constraint catalog:** 0 new C-IDs (no new architectural constraints — all bindings are content-level + workflow-step-local). **AC catalog:** 24 spec ACs unchanged (9 Scope A + 6 Scope B + 4 REL + 5 ZD). **Files-in-scope:** 9. **Open issues for @security at Phase 2:** OI-B1..OI-B7 (§ 6). **Combined-path eligibility:** NOT eligible (SECURITY-SENSITIVE classification confirmed). Ready for Phase 2 `/review` (@security FULL) and then Phase 3 `/gate`.
+

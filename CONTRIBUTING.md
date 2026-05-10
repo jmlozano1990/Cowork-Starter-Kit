@@ -2,6 +2,8 @@
 
 Thank you for contributing to Claude Cowork Config. This guide explains how to add a new preset.
 
+Cowork-starter-kit is community-maintained. Every preset PR widens the goals the wizard can route a new user through — your contribution helps a future user reach a working workspace faster.
+
 ---
 
 ## Adding a new preset
