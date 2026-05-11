@@ -1370,3 +1370,190 @@ The following spec items were modified during Phase 1 architecture design (2026-
 
 - **Spec § Risks amendment:** the risk row "skill_bundle: retained creates permanent maintenance debt" is rendered moot by D4 hard-break and is replaced by the new risk: "CI gate parser lock-step missed, byte-mirror silently no-ops" — captured as ADR-034 §Consequences and as Guard Change Summary §I "What could break" item 1. Mitigation: ADR-016 v2.6 amendment is committed in lock-step with ADR-034.
 
+---
+
+# Product Spec — v2.6.1 — Release Archive Hygiene
+
+> **Cycle:** v2.6.1 — Release Archive Hygiene
+> **Version bump:** 2.6.0 → 2.6.1 (patch — no new product surface)
+> **Status:** Phase 0 — Requirements DONE
+> **Date:** 2026-05-11T00:00:00Z
+> **Mode:** quick
+> **Classification:** STANDARD
+> **Routing:** Phase 1 `/design` after Phase 0 sign-off.
+
+---
+
+## Problem
+
+Users who download the release ZIP from the GitHub release page receive every tracked file in the repository — dev tooling, CI workflows, contributor guides, internal docs, tests, and template scaffolding — mixed in with the actual product content. The `release-assets.yml` workflow uses plain `git archive` with no `.gitattributes` `export-ignore` rules, which defaults to including all tracked files. A user installing Cowork from the archive must manually sift product files from tooling, and risks placing contributor-only files (CONTRIBUTING.md, CI configs, test fixtures) into their Claude working environment.
+
+**Goal:** The release ZIP and tar.gz contain only files a user needs to set up and run Cowork — nothing else.
+
+---
+
+## Target Users
+
+**Primary: Alex — University Student (20, biochemistry).** Downloads the release ZIP to bootstrap a new Claude project. Expects a clean, usable folder — not a dev repo dump.
+
+**Secondary: Maria — Knowledge Worker (35, research analyst).** May download a versioned release as a stable reference point. Same expectation.
+
+---
+
+## Core Features (MVP)
+
+### F1 — `.gitattributes` Export-Ignore Rules
+
+Author a `.gitattributes` file at the repo root. Add `export-ignore` attributes for every file and folder in the DROP list. `git archive` respects these attributes natively; no changes to `release-assets.yml` workflow logic are required beyond the sanity check in F2.
+
+**AC-F1-1:** `.gitattributes` exists at the repo root. `test -f .gitattributes` exits 0.
+
+**AC-F1-2:** Every DROP-list entry appears in `.gitattributes` with the `export-ignore` attribute. Verified by the sanity check script in F2.
+
+### F2 — CI Sanity Check (Release Archive Regression Guard)
+
+Add a step to `.github/workflows/release-assets.yml` (or a standalone `scripts/verify-release-archive.sh` called from CI) that: (1) extracts the built archive to a temp directory, (2) asserts that none of the DROP-list entries are present, (3) fails the CI step if any DROP-list file is found. This prevents silent regressions if a new tracked file is added without a corresponding `export-ignore` entry.
+
+**AC-F2-1:** CI sanity check step exists in `release-assets.yml`. `grep -c "verify" .github/workflows/release-assets.yml` >= 1 (or `scripts/verify-release-archive.sh` exists).
+
+**AC-F2-2:** When run against a locally-built archive at HEAD, the sanity check exits 0.
+
+**AC-F2-3:** When run against a test archive that includes a DROP-list file (e.g., `.github/` injected), the sanity check exits non-zero (regression guard fires).
+
+### F3 — Version Bump and Release Artifacts
+
+Bump VERSION 2.6.0 → 2.6.1, add `[2.6.1]` entry to CHANGELOG.md (Keep a Changelog format, date 2026-05-11), update README badge, update "Next up" teaser if applicable.
+
+**AC-F3-1:** `cat VERSION` = `2.6.1`.
+
+**AC-F3-2:** `head -8 CHANGELOG.md | grep -c "2.6.1"` >= 1 ([2.6.1] is in the first 8 lines).
+
+**AC-F3-3:** `grep "2.6.1" README.md` >= 1 (badge updated).
+
+**AC-F3-4:** No product functionality regressed — install setup wizard flow (`WIZARD.md`, `SETUP-CHECKLIST.md`, `CLAUDE.md`, `skills/`, `selection-presets.md`) byte-unchanged from v2.6.0 HEAD. `git diff HEAD~1 -- WIZARD.md CLAUDE.md skills/ selection-presets.md` = 0 lines (or confirms only no-content changes).
+
+---
+
+## KEEP / DROP Classification
+
+> **Revision notes (2026-05-11, Phase 1 REVISION 2 + post-amendment 15:30:00Z):** The Phase-1 Revision-1 classification originally DROP'd 5 files that user-facing docs reference by path. **3 misclassifications were corrected to KEEP** (`CLAUDE.md`, `scripts/setup-folders.{sh,ps1}`, `docs/architecture.md`) — these are user-instructed setup artifacts whose absence from the archive would break setup. **2 originally-DROP items (`CHANGELOG.md`, `CONTRIBUTING.md`) STAY DROP** per the user's explicit confirmation at the Revision-2 gate review: both files remain readable on GitHub, and the user's stated intent is that the release archive be lean product surface, not a dev/contributor mirror. To prevent the Rev-1 broken-link failure mode while honoring that intent, **@dev's implementation now includes a link-rewrite task**: README.md (lines 5, 141, 169, 175, 191) and SETUP-CHECKLIST.md (line 149) relative links to `CHANGELOG.md` / `CONTRIBUTING.md` MUST be rewritten to absolute `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/...` GitHub URLs. Revision 2 binds **file-granularity** classification for `scripts/` and `docs/`. **Cross-check method:** for every DROP candidate, `grep -l "<file>" README.md SETUP-CHECKLIST.md WIZARD.md CLAUDE.md THIRD-PARTY-NOTICES.md` — path-reference hits force EITHER reclassification to KEEP (default) OR a link-rewrite task (when user explicitly elects DROP, as with CHANGELOG.md and CONTRIBUTING.md). The corrected table below is the binding ruleset for @dev. The Revision-2 design memo in `docs/architecture.md` contains the full evidence trail (R2.1 + R2.2 tables), the verbatim `.gitattributes` ruleset (§R2.4), and the @dev implementation checklist for the link-rewrite task (§R2.5.5).
+
+Classification rationale: **KEEP** = a user cloning for product use needs this file to set up or run Cowork, OR a user-facing doc references it by path (broken-link prevention). **DROP** = contributor tooling, CI infrastructure, internal docs, tests, or upstream-management artifacts the end user has no reason to touch, AND no user-facing doc references the file by path.
+
+| Entry | Class | Reason |
+|-------|-------|--------|
+| `CLAUDE.md` | **KEEP** (was DROP in Rev-1) | Primary AI instruction file — referenced from README + SETUP-CHECKLIST + WIZARD. Claude Code reads it in the installed workspace (wizard/onboarding/safety/attribution instructions) |
+| `WIZARD.md` | KEEP | Setup wizard — core product UX |
+| `SETUP-CHECKLIST.md` | KEEP | Post-install checklist — user-facing setup guide |
+| `README.md` | KEEP | Product intro — users read this before downloading |
+| `LICENSE` | KEEP | Required legal artifact for distribution |
+| `THIRD-PARTY-NOTICES.md` | KEEP | Required attribution for upstream content (supply-chain transparency for users) |
+| `VERSION` | KEEP | Machine-readable version (referenced by CI and scripts) |
+| `selection-presets.md` | KEEP | Preset definitions — read by wizard at setup |
+| `.cowork-allowlist.json` | KEEP | Upstream content allow/block list — consumed by install-time wizard logic |
+| `cowork.lock.json` | KEEP | Supply-chain lock file — consumed by `sync-agency.yml` CI at install; SHA pins are the trust anchor described in README + SETUP-CHECKLIST |
+| `curated-skills-registry.md` | KEEP | Skill discovery registry — read by wizard |
+| `skills/` | KEEP | All product skills — installed into user environment |
+| `examples/` | KEEP | Preset example environments — the product's deliverable structure |
+| `prompts/` | KEEP | AI prompt library — product content |
+| `templates/` | KEEP | Skill and writing-profile templates — product scaffolding |
+| `.claude/` | KEEP | Setup wizard skill — `.claude/skills/setup-wizard/SKILL.md` is product content |
+| `CHANGELOG.md` | **DROP** (post-amendment 2026-05-11T15:30:00Z) | Readable on GitHub — user's stated intent is that the release archive be lean product surface, not a dev/contributor mirror. README:5 badge href + README:169 + SETUP-CHECKLIST:149 references **MUST be rewritten** to `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md` absolute GitHub URLs by @dev (see architecture.md §R2.5.5 implementation checklist). Without the link rewrite this row would re-trigger the Rev-1 broken-link failure mode |
+| `CONTRIBUTING.md` | **DROP** (post-amendment 2026-05-11T15:30:00Z) | Readable on GitHub — user's stated intent (same rationale as CHANGELOG.md). README:141/175/191 references **MUST be rewritten** to `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md` absolute GitHub URLs by @dev (see architecture.md §R2.5.5 implementation checklist) |
+| `docs/architecture.md` | **KEEP** (was folder-DROP in Rev-1) | README:142 + THIRD-PARTY-NOTICES.md:8,53,73 reference ADRs by file path |
+| `scripts/setup-folders.sh` | **KEEP** (was folder-DROP in Rev-1) | SETUP-CHECKLIST.md:38 — "run `scripts/setup-folders.sh` (macOS)" verbatim user instruction |
+| `scripts/setup-folders.ps1` | **KEEP** (was folder-DROP in Rev-1) | SETUP-CHECKLIST.md:38 — "or `scripts/setup-folders.ps1` (Windows)" verbatim user instruction |
+| `.github/` | DROP | CI workflows, PR templates, CODEOWNERS — all CI/contributor tooling. THIRD-PARTY-NOTICES mentions `.github/workflows/sync-agency.yml` only as the regeneration source for itself; users do not run workflows from the extracted archive |
+| `docs/` (all files except `architecture.md`) | DROP each | Internal pipeline docs — ADRs, retros, QA reports, security reviews, specs, competitive analysis, compliance reviews, dev deliberations, personas, OUTPUT-STRUCTURE, skills-roadmap, UX reviews, plus `docs/research/` + `docs/security/` subtrees. None referenced by path from user-facing docs. **Per-file enumeration required** because `gitattributes(5)` does NOT support negation (verified empirically — see architecture.md R2.3) |
+| `scripts/install-pre-commit.sh` | DROP | Contributor pre-commit hook installer — not referenced by user-facing docs |
+| `tests/` | DROP | CI test fixtures and checklists — not user-facing |
+| `upstream-contribution/` | DROP | Upstream PR drafts — contributor artifact, not user content |
+| `.gitignore` | DROP | Repo hygiene file — irrelevant to users installing from archive |
+| `.markdownlint.jsonc` | DROP | Contributor linting config — CI tooling |
+| `.markdownlintignore` | DROP | Contributor linting config — CI tooling |
+| `.gitattributes` | DROP (self) | Packaging-config file; users have no use for it in the extracted archive |
+
+**`cowork.lock.json` verdict: KEEP** (unchanged). The lock file is referenced in both README.md and SETUP-CHECKLIST.md as the "trust anchor" and "integrity anchor for upstream content." `quality.yml` has a CI gate that checks its presence and its `pinned_commit_sha` field. More critically, `sync-agency.yml` reads it at every upstream-sync run, and the architecture (ADR-028) specifies it as a required file at the repo root.
+
+**`docs/` verdict (REVISED): file-granularity DROP.** All 40 internal-doc files in `docs/` plus the `docs/research/` and `docs/security/` subtrees are DROP'd via explicit per-file `export-ignore` lines in `.gitattributes`. `docs/architecture.md` is the sole survivor — referenced by path from README and THIRD-PARTY-NOTICES. Per `gitattributes(5)` negation limitation (verified empirically — git warns "Negative patterns are ignored in git attributes"), folder-level DROP with negation IS NOT a viable strategy. See architecture.md R2.4 for the verbatim `.gitattributes` ruleset.
+
+**`scripts/` verdict (REVISED): file-granularity DROP.** `scripts/install-pre-commit.sh` is contributor tooling (DROP via single explicit entry). `scripts/setup-folders.sh` and `scripts/setup-folders.ps1` are KEEP because SETUP-CHECKLIST.md instructs users to run them by name from the extracted archive. No `scripts/` folder-level entry — only the one surgical DROP line.
+
+**`.claude/` verdict: KEEP (unchanged).** Contains only `skills/setup-wizard/SKILL.md`. Product content — the wizard skill itself. `.gitignore` already excludes `.claude/projects/` so no pipeline state leaks.
+
+**Positive-assertion list update (CI sanity check):** the F2 sanity check's KEEP-list MUST positive-assert all 10 of: `VERSION`, `README.md`, `LICENSE`, `WIZARD.md`, `SETUP-CHECKLIST.md`, `cowork.lock.json`, `CLAUDE.md`, `scripts/setup-folders.sh`, `scripts/setup-folders.ps1`, `docs/architecture.md`. (Expanded from the original 6-file list to cover the 4 reclassified KEEP files: `CLAUDE.md`, both `setup-folders.*`, `docs/architecture.md`. **`CHANGELOG.md` and `CONTRIBUTING.md` are NOT in the positive-assertion list** — they are DROP per post-amendment 2026-05-11T15:30:00Z and are exercised as DROP canaries in the negative-assertion `DROP_PATHS` set instead.) Positive-assertion list stays at 10 KEEP files. See architecture.md R2.5 for the verbatim updated CI step and R2.5.5 for the @dev link-rewrite implementation checklist.
+
+---
+
+## Out of Scope (v2.6.1)
+
+- Renaming, restructuring, or refactoring any product file
+- Changing `release-assets.yml` beyond adding the export-ignore mechanism and sanity check step
+- New product features or capabilities
+- Breaking changes (patch only)
+- Modifying the release body or GitHub release notes generation (separate cycle)
+- Per-file granular `docs/` export (e.g., keeping `docs/OUTPUT-STRUCTURE.md` while dropping retros) — entire folder drops for simplicity; `OUTPUT-STRUCTURE.md` content belongs in README or WIZARD if user-facing
+
+---
+
+## Technical Constraints
+
+- Stack: Bash, GitHub Actions, `git archive` (no new tooling dependencies)
+- `.gitattributes` `export-ignore` is the standard mechanism — no custom archive script needed
+- Sanity check must use only tools available on `ubuntu-latest` GitHub Actions runner (bash, tar, unzip, grep)
+- `release-assets.yml` minimal change: add sanity check step only; do not restructure the workflow
+- `sync-agency.yml` and `quality.yml` BYTE-UNCHANGED (not in scope)
+
+---
+
+## Acceptance Criteria
+
+- [ ] **AC1 (gitattributes):** `.gitattributes` exists at repo root. All DROP-list entries have `export-ignore` attribute. `test -f .gitattributes` exits 0.
+- [ ] **AC2 (clean archive):** Built release archive (zip + tar.gz from `git archive`) contains ONLY files in the KEEP list. No DROP-list entry (`CHANGELOG.md`, `CONTRIBUTING.md`, `.github/`, `docs/`, `tests/`, `scripts/`, `upstream-contribution/`, `.gitignore`, `.markdownlint.jsonc`, `.markdownlintignore`) is present in the extracted archive.
+- [ ] **AC3 (CI regression guard):** Sanity check step in CI exits non-zero if any DROP-list file appears in the archive. Verified via test with an injected DROP-list file in the archive before the check step.
+- [ ] **AC4 (version):** `cat VERSION` = `2.6.1`. `head -8 CHANGELOG.md | grep -c "2.6.1"` >= 1. `grep -c "2.6.1" README.md` >= 1.
+- [ ] **AC5 (no regression):** Product files (`WIZARD.md`, `CLAUDE.md`, `skills/`, `selection-presets.md`, `examples/`, `prompts/`, `templates/`, `.cowork-allowlist.json`, `cowork.lock.json`) byte-unchanged from v2.6.0. `git diff HEAD~1 -- WIZARD.md CLAUDE.md skills/ selection-presets.md examples/ prompts/ templates/ .cowork-allowlist.json cowork.lock.json` = 0 lines.
+- [ ] **AC6 (link-rewrite, post-amendment 2026-05-11T15:30:00Z):** `README.md` and `SETUP-CHECKLIST.md` contain ZERO remaining relative-link references to `CHANGELOG.md` or `CONTRIBUTING.md`. `grep -nE '\((CHANGELOG\.md\|CONTRIBUTING\.md)\)' README.md SETUP-CHECKLIST.md` returns zero matches. All previously-relative links are rewritten to absolute `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/...` URLs. Verified by archive extraction: `git archive --format=zip HEAD > /tmp/test.zip && unzip -q -d /tmp/test /tmp/test.zip && grep -RnE '\((CHANGELOG\.md\|CONTRIBUTING\.md)\)' /tmp/test --include='*.md'` returns zero matches.
+
+---
+
+## Edge Cases
+
+1. **New tracked file added after this cycle without an `export-ignore` rule:** CI sanity check catches it on next release tag push. Regression guard prevents silent product bloat.
+2. **`.gitattributes` applied to a `git clone` (not archive):** `export-ignore` rules have no effect on clones — contributor workflow is unaffected.
+3. **`docs/` partial keep request:** Out of scope for this patch. If a specific doc is needed user-side, add it to README inline or via a link; don't carve out exceptions in `.gitattributes` (complexity risk).
+
+---
+
+## Risks
+
+| Risk | Likelihood | Severity | Mitigation |
+|------|-----------|----------|------------|
+| `cowork.lock.json` is a runtime requirement missed in audit | LOW — verified via grep + README/SETUP-CHECKLIST references | HIGH — archive users couldn't run `/sync-agency` | KEEP classification; AC5 byte-unchanged guard |
+| `.gitattributes` rule silently ignored (e.g., wrong glob syntax) | LOW — git archive rule is well-established | HIGH — archive would still include DROP files | AC2 explicitly extracts and inspects archive contents |
+| New file added to repo after this cycle without export-ignore | MEDIUM — likely over time | LOW — minor bloat | AC3 CI regression guard catches on next tag push |
+| `docs/` drop breaks a user flow relying on a specific doc | LOW — no user-facing doc in `docs/` is a setup requirement | LOW — discoverable via GitHub | Not in scope; treat as known acceptable tradeoff |
+
+---
+
+## Rollback
+
+Revert the `.gitattributes` commit. The `release-assets.yml` sanity check is additive and safe to leave. No product files are modified by this cycle — rollback risk is zero for user functionality.
+
+---
+
+## Success Metrics
+
+- **Primary:** Release archive contains zero DROP-list entries (AC2 green on CI).
+- **Secondary:** CI regression guard fires correctly on injected test (AC3 green).
+- **Tertiary:** No user-reported "what is CONTRIBUTING.md for" confusion in install feedback after v2.6.1 ships.
+
+---
+
+## Assumptions
+
+- [CONFIRMED] `git archive` respects `.gitattributes` `export-ignore` rules — standard git behavior.
+- [CONFIRMED] `cowork.lock.json` is required for `sync-agency.yml` CI and is referenced in user-facing README/SETUP-CHECKLIST — KEEP.
+- [ESTIMATED] No user has built a workflow that depends on `docs/` being present in the archive.
+- [UNTESTED] The sanity check approach (extract + grep) will not add meaningful CI time (expected < 10s on ubuntu-latest).
+

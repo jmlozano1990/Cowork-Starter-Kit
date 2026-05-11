@@ -7967,3 +7967,403 @@ Phase 1 row append handled in `/home/user/The-Council/.claude/projects/claude-co
 
 End of v2.6.0 Phase 1 design.
 
+
+---
+
+## v2.6.1 — Release Archive Hygiene (Design Memo)
+
+**Mode:** quick. **Classification:** STANDARD (packaging hygiene; no schema, no auth, no AI-instruction surface, no security boundary changes). **No new ADR.** **scope_allow_delta: SKIP — external project cycle (V44-S5, ADR-115 §Implications).**
+
+### 1. Impact Statement
+
+- **Schema impact:** none
+- **New auth surface:** none
+- **Rationale:** v2.6.1 introduces `.gitattributes export-ignore` rules and a CI sanity check step in `release-assets.yml`. Both are packaging-layer artifacts; no product code, no AI instructions, no AuthN/AuthZ surface, and no runtime path changes. Product files remain byte-unchanged (AC5).
+
+### 2. `.gitattributes` Ruleset (exact file content for @dev)
+
+Repo-root `.gitattributes` — paste verbatim. Patterns use gitignore-style syntax per `gitattributes(5)`; directory-with-trailing-slash form is honored by `git archive` and is the convention used by Laravel, Symfony, and other major OSS projects.
+
+```gitattributes
+# Release archive hygiene — drop contributor/CI/dev artifacts from `git archive` output.
+# Affects only `git archive` (release ZIPs/tarballs), not `git clone` or working tree.
+# See docs/spec.md "v2.6.1 — Release Archive Hygiene" for KEEP/DROP rationale.
+
+# --- Files ---
+CHANGELOG.md            export-ignore
+CONTRIBUTING.md         export-ignore
+CLAUDE.md               export-ignore
+.gitignore              export-ignore
+.markdownlint.jsonc     export-ignore
+.markdownlintignore     export-ignore
+
+# --- Directories ---
+.github/                export-ignore
+docs/                   export-ignore
+scripts/                export-ignore
+tests/                  export-ignore
+upstream-contribution/  export-ignore
+
+# --- Meta ---
+.gitattributes          export-ignore
+```
+
+**Pattern-correctness notes (@dev MUST NOT edit these without re-running AC2):**
+
+- `CHANGELOG.md` form is exact-path (no leading slash needed for repo-root files). Will NOT match `examples/*/CHANGELOG.md` or `skills/*/CHANGELOG.md` because gitattributes patterns without a slash prefix anchor at the matching depth — verify via AC2 archive extraction.
+- `CLAUDE.md` — repo-root only. Note: `examples/*/.claude/skills/setup-wizard/SKILL.md` is product content; the `.claude/` directory under `examples/*/` is NOT affected (different path). Verify via AC2 + AC5 byte-unchanged guard.
+- `.gitignore` matches as a literal filename. Confirmed safe.
+- `.markdownlint.jsonc` and `.markdownlintignore` listed as separate explicit entries (no `.markdownlint*` wildcard) to avoid any future accidental over-match.
+- Directory entries use the `path/` form. `git archive` excludes the entire subtree.
+- `.gitattributes` itself is `export-ignore` — release archives should not ship the packaging-config file (low-stakes hygiene; users would have no use for it).
+- **No `*.md` or other broad wildcards** — protects README.md, WIZARD.md, SETUP-CHECKLIST.md, THIRD-PARTY-NOTICES.md, and every `examples/*/*.md` / `skills/*/SKILL.md` / `prompts/*.md` / `templates/*.md` from accidental exclusion.
+
+### 3. `.github/` Classification — DROP
+
+**Decision: DROP `.github/` entirely** (added to ruleset above).
+
+Workflows in `.github/workflows/` (`release-assets.yml`, `quality.yml`, `sync-agency.yml`) run on the canonical repo (`jmlozano1990/Cowork-Starter-Kit`) via GitHub Actions. End users install from the release archive into Claude Cowork as a project folder; they do not fork-and-rerun these workflows from an extracted archive. README and SETUP-CHECKLIST reference workflow outcomes (`/sync-agency` PR cadence, `cowork.lock.json` integrity) as canonical-repo behavior, not user-runnable steps. No evidence in README/SETUP-CHECKLIST that users are expected to copy workflows. Verdict: DROP.
+
+### 4. Release Sanity Check — Option A (inline workflow step)
+
+**Selected:** Option A (inline YAML step) — keeps the verification colocated with the build, well under 25 lines, no new script file.
+
+Insert this step into `.github/workflows/release-assets.yml` **after** the `Build release archives` step and **before** the `Upload assets to release` step:
+
+```yaml
+      - name: Verify archive contents
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          ZIP="cowork-starter-kit-${VERSION}.zip"
+          LISTING="$(unzip -Z1 "${ZIP}")"
+
+          # Negative assertions — these MUST NOT appear in the archive.
+          DROP_PATHS=(
+            "CHANGELOG.md"
+            "CONTRIBUTING.md"
+            "CLAUDE.md"
+            ".gitignore"
+            ".markdownlint.jsonc"
+            ".markdownlintignore"
+            ".github/"
+            "docs/"
+            "scripts/"
+            "tests/"
+            "upstream-contribution/"
+            ".gitattributes"
+          )
+          for path in "${DROP_PATHS[@]}"; do
+            if printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}" >/dev/null; then
+              echo "FAIL: DROP-list path present in archive: ${path}"
+              exit 1
+            fi
+          done
+
+          # Positive assertions — these MUST be present (guards against over-greedy export-ignore).
+          KEEP_PATHS=(
+            "VERSION"
+            "README.md"
+            "LICENSE"
+            "WIZARD.md"
+            "SETUP-CHECKLIST.md"
+            "cowork.lock.json"
+          )
+          for path in "${KEEP_PATHS[@]}"; do
+            if ! printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}$" >/dev/null; then
+              echo "FAIL: KEEP-list path missing from archive: ${path}"
+              exit 1
+            fi
+          done
+
+          echo "PASS: archive contents verified (DROP=${#DROP_PATHS[@]}, KEEP=${#KEEP_PATHS[@]})"
+```
+
+**Notes for @dev:**
+- Uses `unzip -Z1` (already in `ubuntu-latest`). Lists archive contents once into `LISTING`, then greps each path — avoids re-shelling per path.
+- Negative assertions use prefix-match (`^prefix/path`) so `docs/` matches both `docs/` and `docs/foo.md`. Trailing-slash directories in `DROP_PATHS` match the directory entry itself.
+- Positive assertions use exact-match (`^prefix/path$`) — protects against partial matches (e.g., a hypothetical `WIZARD.md.bak` would not satisfy `WIZARD.md`).
+- `set -euo pipefail` per repo CI convention (v2.0.4 hotfix MF-1 established `pipefail` as house style).
+- Only the `.zip` is verified — both archives derive from the same `git archive` invocation, so verifying one is sufficient (gitattributes rules are format-independent).
+
+### 5. Version Bump Checklist (@dev MUST tick all)
+
+From `feedback_version_bump_completeness.md`: README badge + "Next up" teaser have been forgotten 2 cycles in a row. Explicit checklist:
+
+- [ ] `VERSION` file: `2.6.0` → `2.6.1` (single line, no trailing newline change)
+- [ ] `CHANGELOG.md`: prepend `## [2.6.1] - 2026-05-11` section in Keep a Changelog format. Subsection: `### Changed` summarizing `.gitattributes export-ignore` + CI sanity check + DROP-list rationale. One-line entry referencing the spec section.
+- [ ] `README.md` version badge: line 5, `version-2.6.0-green` → `version-2.6.1-green` (grep for badge URL pattern to verify single edit point)
+- [ ] `README.md` "Next up" teaser (line 163): `**Next up (v2.7+):** Multi-tool skill authoring...` — KEEP byte-unchanged (v2.6.1 is a patch; v2.7+ teaser is still the next minor surface)
+- [ ] No product files touched (AC5 byte-unchanged guard — `WIZARD.md`, `CLAUDE.md`, `skills/`, `selection-presets.md`, `examples/`, `prompts/`, `templates/`, `.cowork-allowlist.json`, `cowork.lock.json`)
+- [ ] `SETUP-CHECKLIST.md` — no edit (no version reference that changes per-patch; verify via grep "2.6.0" returns zero in SETUP-CHECKLIST.md)
+
+### 6. scope_allow_delta
+
+```yaml
+scope_allow_delta:
+  add: []
+  rationale: "External project cycle — scope_allow_delta is no-op per ADR-115 §Implications. @dev operates against /home/user/claude-cowork-config, not The-Council/dev.md."
+```
+
+### 7. Classification
+
+**Classification: STANDARD.** No new external content, no schema migration, no auth surface, no AI-instruction surface, no security boundary. Pure packaging hygiene. Phase 2 `/review` is OPTIONAL per pipeline policy; if invoked, expected verdict is PASS-FAST.
+
+### 8. Risks
+
+- **R1:** `.gitattributes` pattern silently does not match (e.g., directory-with-slash form not honored by `git archive` in some edge case) → DROP file ships in archive. **Mitigation:** Section 4 negative assertion fails CI loudly with the offending path.
+- **R2:** Over-greedy pattern accidentally drops a KEEP file (e.g., future maintainer adds `*.md export-ignore` without thinking). **Mitigation:** Section 4 positive assertion fails CI if any of VERSION/README.md/LICENSE/WIZARD.md/SETUP-CHECKLIST.md/cowork.lock.json is missing.
+- **R3:** A workflow runtime references a DROP'd file (e.g., a future `release-assets.yml` step that reads `CHANGELOG.md`). **Mitigation:** Workflows run on the canonical repo via `actions/checkout` (full repo clone), not on the built archive — they always see all files. The DROP only affects what end users receive. Spec AC5 explicit no-regression guard backstops this.
+
+End of v2.6.1 Phase 1 design.
+
+---
+
+## v2.6.1 — Release Archive Hygiene (Design Memo, REVISION 2)
+
+> **Supersedes Revision 1** — Revision 1 (above) contained misclassifications caught at Phase 3 gate review. Specifically, Revision 1 classified at folder granularity for `scripts/` and `docs/` and DROP'd files that are referenced by name from user-facing docs (`README.md`, `SETUP-CHECKLIST.md`, `WIZARD.md`, `CLAUDE.md`, `THIRD-PARTY-NOTICES.md`). The extracted release archive would therefore have contained broken links and missing files referenced from the user's own setup instructions. Revision 2 applies a stricter, file-granularity audit with mandatory user-doc cross-checking and explicit verification of `git archive` pattern semantics. **Revision 2 is the binding ruleset for @dev.**
+
+**Mode:** quick. **Classification:** STANDARD. **No new ADR.** **scope_allow_delta: SKIP** (external project cycle, V44-S5).
+
+### R2.1 — Misclassifications Corrected (5 total)
+
+Three were caught by the user during spot review (1–3). Two additional misclassifications were uncovered by the Revision-2 strict cross-check (4–5).
+
+| # | File | Rev-1 Class | Rev-2 Class | User-doc evidence |
+|---|------|-------------|-------------|-------------------|
+| 1 | `CLAUDE.md` (repo root) | DROP | **KEEP** | Referenced from `README.md`, `SETUP-CHECKLIST.md`, `WIZARD.md` — primary AI instruction file Claude Code reads in the installed workspace |
+| 2 | `scripts/setup-folders.sh` | DROP (folder) | **KEEP** | `SETUP-CHECKLIST.md:38` — "run `scripts/setup-folders.sh` (macOS)" verbatim |
+| 2 | `scripts/setup-folders.ps1` | DROP (folder) | **KEEP** | `SETUP-CHECKLIST.md:38` — "or `scripts/setup-folders.ps1` (Windows)" verbatim |
+| 3 | `docs/architecture.md` | DROP (folder) | **KEEP** | `README.md:142` "`docs/architecture.md` contains all ADRs"; `THIRD-PARTY-NOTICES.md:8,53,73` references ADR-024 + ADR-format guide |
+| 4 (new) | `CHANGELOG.md` | DROP | **KEEP** | `README.md:5` version-badge link target; `README.md:169` "The CHANGELOG lists which presets changed"; `SETUP-CHECKLIST.md:149` "`CHANGELOG.md` lists which presets changed" — three references by path |
+| 5 (new) | `CONTRIBUTING.md` | DROP | **KEEP** | `README.md:141,175,191` — three references by name including direct link `[CONTRIBUTING.md](CONTRIBUTING.md)` — relative link would 404 in extracted archive |
+
+**Method:** for every file currently classified DROP, ran `grep -l "$f" README.md SETUP-CHECKLIST.md WIZARD.md CLAUDE.md THIRD-PARTY-NOTICES.md`. Any hit was inspected in context. Hits that referenced the file *by path* (vs incidental string match like THIRD-PARTY-NOTICES.md mentioning `.github/workflows/sync-agency.yml` as a self-regeneration source) were reclassified KEEP. The `.github` reference in THIRD-PARTY-NOTICES.md is the only borderline case: it names the workflow file but only as documentation about how the notice file is regenerated — users do not read or run that file from the extracted archive. `.github/` remains DROP.
+
+### R2.2 — Cross-Check Results Table (full)
+
+DROP candidates from Revision 1 vs. Revision 2 strict user-doc cross-check:
+
+| DROP candidate | README | SETUP-CHECKLIST | WIZARD | CLAUDE.md | THIRD-PARTY-NOTICES | Final class |
+|----------------|--------|-----------------|--------|-----------|---------------------|-------------|
+| `CHANGELOG.md` | Y (badge + body) | Y (line 149) | N | N | N | **KEEP** |
+| `CONTRIBUTING.md` | Y (3 refs incl. relative link) | N | N | N | N | **KEEP** |
+| `CLAUDE.md` | Y | Y | Y | n/a | N | **KEEP** |
+| `.gitignore` | N | N | N | N | N | DROP |
+| `.markdownlint.jsonc` | N | N | N | N | N | DROP |
+| `.markdownlintignore` | N | N | N | N | N | DROP |
+| `.github/` | N | N | N | N | Y (self-regen mention only) | DROP |
+| `docs/architecture.md` | Y | N | N | N | Y | **KEEP** |
+| `docs/*` (40 other files) | N | N | N | N | N | DROP each |
+| `scripts/install-pre-commit.sh` | N | N | N | N | N | DROP |
+| `scripts/setup-folders.sh` | N | Y | N | N | N | **KEEP** |
+| `scripts/setup-folders.ps1` | N | Y | N | N | N | **KEEP** |
+| `tests/` | N | N | N | N | N | DROP |
+| `upstream-contribution/` | N | N | N | N | N | DROP |
+| `.cowork-allowlist.json` | already KEEP in Rev-1 | — | — | — | — | KEEP (unchanged) |
+
+### R2.3 — `git archive` Negation Verification
+
+Verified empirically in `/tmp/gitarchive-test`. `gitattributes(5)` does NOT support negation in the same shape as `.gitignore`. Git emits a warning and ignores the negative pattern entirely:
+
+```
+warning: Negative patterns are ignored in git attributes
+Use '\!' for literal leading exclamation.
+```
+
+With `docs/* export-ignore` + `!docs/architecture.md export-ignore`, the archive output was empty docs/ — i.e., `architecture.md` was dropped along with everything else. Negation **does not work** for `export-ignore`.
+
+**Mitigation:** use explicit per-file DROP entries for every file in `docs/` except `architecture.md`. Verified working: with 40 explicit `docs/<file>.md export-ignore` lines + 2 subdir entries (`docs/research/`, `docs/security/`), `git archive` correctly retains only `docs/architecture.md`. Same approach for `scripts/install-pre-commit.sh` (single explicit line — `scripts/setup-folders.sh` and `setup-folders.ps1` are not listed and therefore retained).
+
+### R2.4 — Final `.gitattributes` Content (verbatim, paste-ready for @dev)
+
+```gitattributes
+# Release archive hygiene — drop contributor/CI/dev artifacts from `git archive` output.
+# Affects only `git archive` (release ZIPs/tarballs), not `git clone` or working tree.
+# See docs/spec.md "v2.6.1 — Release Archive Hygiene" (REVISION 2) for KEEP/DROP rationale.
+#
+# IMPORTANT — `gitattributes(5)` does NOT honor negation (`!pattern`) — verified empirically
+# 2026-05-11. Files inside `docs/` and `scripts/` are therefore listed explicitly to surgically
+# DROP internal files while preserving the user-facing files (docs/architecture.md,
+# scripts/setup-folders.sh, scripts/setup-folders.ps1) referenced from README/SETUP-CHECKLIST.
+
+# --- Root files (DROP) ---
+.gitignore              export-ignore
+.markdownlint.jsonc     export-ignore
+.markdownlintignore     export-ignore
+CHANGELOG.md            export-ignore
+CONTRIBUTING.md         export-ignore
+
+# --- Directories (DROP entire subtree) ---
+.github/                export-ignore
+tests/                  export-ignore
+upstream-contribution/  export-ignore
+
+# --- Surgical DROP: scripts/ (KEEP setup-folders.sh and setup-folders.ps1; DROP install-pre-commit.sh) ---
+scripts/install-pre-commit.sh   export-ignore
+
+# --- Surgical DROP: docs/ (KEEP docs/architecture.md only; DROP all other docs/*) ---
+docs/OUTPUT-STRUCTURE.md                    export-ignore
+docs/assumptions.md                         export-ignore
+docs/competitive.md                         export-ignore
+docs/compliance-review.md                   export-ignore
+docs/compliance-review-v2.5.md              export-ignore
+docs/compliance-review-v2.5.2.md            export-ignore
+docs/dev-deliberation-v2.3.1.md             export-ignore
+docs/patterns.md                            export-ignore
+docs/personas.md                            export-ignore
+docs/qa-report.md                           export-ignore
+docs/qa-report-v2.3.0.md                    export-ignore
+docs/qa-report-v2.3.1.md                    export-ignore
+docs/qa-report-v2.4.md                      export-ignore
+docs/qa-report-v2.5.md                      export-ignore
+docs/qa-report-v2.5.1.md                    export-ignore
+docs/qa-report-v2.5.2.md                    export-ignore
+docs/qa-report-v2.5.3.md                    export-ignore
+docs/qa-report-v2.5.4.md                    export-ignore
+docs/qa-report-v2.6.0.md                    export-ignore
+docs/retro.md                               export-ignore
+docs/retro-template.md                      export-ignore
+docs/security-audit.md                      export-ignore
+docs/security-audit-v1.1.md                 export-ignore
+docs/security-audit-v2.3.1.md               export-ignore
+docs/security-audit-v2.4.md                 export-ignore
+docs/security-audit-v2.5.md                 export-ignore
+docs/security-audit-v2.5.2.md               export-ignore
+docs/security-review.md                     export-ignore
+docs/security-review-v1.1.md                export-ignore
+docs/security-review-v2.3.0.md              export-ignore
+docs/security-review-v2.3.1.md              export-ignore
+docs/security-review-v2.4.md                export-ignore
+docs/security-review-v2.5.md                export-ignore
+docs/security-review-v2.5.3.md              export-ignore
+docs/security-review-v2.6.0.md              export-ignore
+docs/skills-roadmap.md                      export-ignore
+docs/spec.md                                export-ignore
+docs/ux-review.md                           export-ignore
+docs/research/                              export-ignore
+docs/security/                              export-ignore
+
+# --- Meta (self-ignore) ---
+.gitattributes          export-ignore
+```
+
+**Note for @dev (must-read):**
+- The complete docs/ enumeration above is generated from `find docs/ -type f` at HEAD `0f42903`. If any new internal docs/* file is added to the repo (e.g., a `qa-report-v2.6.1.md` from this very cycle), `.gitattributes` MUST be updated in the same PR. The sanity check in §R2.5 catches the regression at CI time, but adding the line up-front is cleaner.
+- `docs/security-review-v2.6.1.md` and `docs/qa-report-v2.6.1.md` (created by this cycle) MUST be added to `.gitattributes` as part of the @dev commit that creates them. Per-cycle internal report files follow the same DROP convention as their v2.5.x and v2.6.0 predecessors.
+- **Do NOT add `CLAUDE.md` to `.gitattributes`** — KEEP file (per R2.1 cross-check). Revision 1 had this as DROP; Revision 2 corrects this.
+- **`CHANGELOG.md` and `CONTRIBUTING.md` are DROP** (post-amendment 2026-05-11T15:30:00Z — per user's explicit confirmation that they remain readable on GitHub). README.md and SETUP-CHECKLIST.md relative links to these files MUST be rewritten to absolute GitHub URLs in the @dev implementation (see §R2.5.5 link-rewrite checklist). Without the link rewrite, extracted-archive readers would 404 the README badge and the inline CONTRIBUTING.md link.
+- **Do NOT add `scripts/setup-folders.sh` or `scripts/setup-folders.ps1`** — KEEP files referenced verbatim from SETUP-CHECKLIST.md.
+- **Do NOT add `docs/architecture.md`** — KEEP file referenced from README.md and THIRD-PARTY-NOTICES.md.
+
+### R2.5 — Updated CI Sanity Check (Option A inline workflow step)
+
+Replaces the Revision-1 step in `.github/workflows/release-assets.yml`. Positive-assert list expanded from 6 to 10 KEEP files (CLAUDE.md, scripts/setup-folders.sh, scripts/setup-folders.ps1, docs/architecture.md added — CHANGELOG.md and CONTRIBUTING.md NOT added per post-amendment 2026-05-11T15:30:00Z: they remain DROP). Negative-assert list updated (CLAUDE.md removed; surgical paths added; **CHANGELOG.md + CONTRIBUTING.md remain in DROP_PATHS** per amendment).
+
+```yaml
+      - name: Verify archive contents
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          ZIP="cowork-starter-kit-${VERSION}.zip"
+          LISTING="$(unzip -Z1 "${ZIP}")"
+
+          # Negative assertions — these MUST NOT appear in the archive.
+          DROP_PATHS=(
+            ".gitignore"
+            ".markdownlint.jsonc"
+            ".markdownlintignore"
+            "CHANGELOG.md"
+            "CONTRIBUTING.md"
+            ".github/"
+            "tests/"
+            "upstream-contribution/"
+            "scripts/install-pre-commit.sh"
+            "docs/spec.md"
+            "docs/retro.md"
+            "docs/personas.md"
+            "docs/qa-report.md"
+            "docs/security-review.md"
+            "docs/security-audit.md"
+            "docs/competitive.md"
+            "docs/research/"
+            "docs/security/"
+            ".gitattributes"
+          )
+          for path in "${DROP_PATHS[@]}"; do
+            if printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}" >/dev/null; then
+              echo "FAIL: DROP-list path present in archive: ${path}"
+              exit 1
+            fi
+          done
+
+          # Positive assertions — these MUST be present (guards against over-greedy export-ignore).
+          KEEP_PATHS=(
+            "VERSION"
+            "README.md"
+            "LICENSE"
+            "WIZARD.md"
+            "SETUP-CHECKLIST.md"
+            "cowork.lock.json"
+            "CLAUDE.md"
+            "scripts/setup-folders.sh"
+            "scripts/setup-folders.ps1"
+            "docs/architecture.md"
+          )
+          for path in "${KEEP_PATHS[@]}"; do
+            if ! printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}$" >/dev/null; then
+              echo "FAIL: KEEP-list path missing from archive: ${path}"
+              exit 1
+            fi
+          done
+
+          echo "PASS: archive contents verified (DROP=${#DROP_PATHS[@]}, KEEP=${#KEEP_PATHS[@]})"
+```
+
+**Notes:**
+- `DROP_PATHS` is a representative sample of the DROP-list (canaries from each category: root, dirs, surgical scripts/, surgical docs/, meta) — not exhaustive enumeration. If the canary set passes, the gitattributes pattern is correct in shape. Exhaustive `docs/*` enumeration would bloat the step without adding signal — the canaries (`docs/spec.md`, `docs/retro.md`, `docs/personas.md`, `docs/qa-report.md`, `docs/security-review.md`, `docs/security-audit.md`, `docs/competitive.md`, plus the two subdirs) cover every category of internal docs.
+- `KEEP_PATHS` is exhaustive for the corrected (10-file) positive-assertion list. Every file the user-facing docs reference by path must be physically present in the archive.
+- Section 4 / Option A invariants from Revision 1 still apply: `unzip -Z1`, `set -euo pipefail`, exact-match for KEEP, prefix-match for DROP.
+
+### R2.5.5 — @dev Implementation Checklist Addendum (POST-AMENDMENT 2026-05-11T15:30:00Z)
+
+**Context:** Per user's explicit confirmation at the Revision-2 gate review, `CHANGELOG.md` and `CONTRIBUTING.md` STAY in the DROP list (they remain readable on the GitHub web UI; the user's stated intent is that the release archive be a lean "extracted product surface," not a dev/contributor mirror). To keep that intent without breaking README/SETUP-CHECKLIST cross-links inside the extracted archive, @dev MUST rewrite all relative links to these two files to absolute GitHub URLs.
+
+**Absolute URL base for both files:**
+- `CHANGELOG.md` → `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md`
+- `CONTRIBUTING.md` → `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md`
+
+**Implementation checklist (@dev MUST tick all):**
+
+- [ ] Rewrite relative links to dropped files in `README.md` and `SETUP-CHECKLIST.md` to absolute GitHub URLs:
+  - `README.md:5` — version badge href (currently relative to `CHANGELOG.md`) → use `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md`
+  - `README.md:169` — `CHANGELOG.md` reference → absolute GitHub URL
+  - `README.md:141`, `README.md:175`, `README.md:191` — `CONTRIBUTING.md` references → `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md`
+  - `SETUP-CHECKLIST.md:149` — `CHANGELOG.md` reference → absolute GitHub URL
+  - After edits, verify zero remaining relative-link patterns: `grep -nE '\((CHANGELOG\.md|CONTRIBUTING\.md)\)' README.md SETUP-CHECKLIST.md` MUST return zero matches. Any hit = relative link still present = link-rewrite incomplete.
+- [ ] After link rewrites, build the archive locally and grep it for any surviving relative link:
+  ```bash
+  git archive --format=zip HEAD > /tmp/test-v2.6.1.zip
+  rm -rf /tmp/test-v2.6.1 && unzip -q -d /tmp/test-v2.6.1 /tmp/test-v2.6.1.zip
+  grep -RnE '(CHANGELOG\.md|CONTRIBUTING\.md)' /tmp/test-v2.6.1 --include='*.md' || echo "PASS: no relative references found"
+  ```
+  Acceptable hits: only absolute `https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/(CHANGELOG|CONTRIBUTING).md` URLs. Any bare `(CHANGELOG.md)` or `(CONTRIBUTING.md)` relative-link form in the archived `.md` files is a FAIL — re-grep, re-edit, re-test.
+- [ ] Confirm `.gitattributes` includes the two added DROP lines: `grep -E '^(CHANGELOG|CONTRIBUTING)\.md\s+export-ignore$' .gitattributes | wc -l` returns exactly `2`.
+- [ ] Confirm the CI sanity check's `DROP_PATHS` canary set includes `CHANGELOG.md` and `CONTRIBUTING.md` (added as part of this amendment — see R2.5 step block).
+
+**Note on positive-assertion list:** unchanged at 10 KEEP files. `CHANGELOG.md` and `CONTRIBUTING.md` are NOT added to `KEEP_PATHS` (they are DROP). Their presence in the source tree is exercised by version-bump ACs (F3-2 / F3-4 `head -8 CHANGELOG.md | grep -c "2.6.1"`); their *absence* from the archive is exercised by the DROP canary set in `DROP_PATHS`.
+
+### R2.6 — Updated Risks
+
+Revision-1 R1–R3 still apply. Adds:
+
+- **R4:** A future maintainer renames an internal docs/* file (e.g., `qa-report-v2.6.0.md` → `qa-archive/qa-report-v2.6.0.md`) without updating `.gitattributes`. **Mitigation:** the file would no longer match the explicit per-file DROP entry, but @dev's release-assets sanity check would not catch it unless the file matches a canary in §R2.5. Lower-impact than R1/R2 because the leakage would be a single rotated file, not a broad pattern miss; flagged here so a future cycle can decide whether to add a `find docs/ -type f | wc -l vs DROP-count` parity check.
+- **R5:** A future maintainer adds a new file to `docs/` and forgets to add the `export-ignore` line. **Mitigation:** same as R4. The canary set will not flag it. Acceptable risk for v2.6.1 patch scope; a v2.7+ enhancement could add an "every `docs/*` file except `architecture.md` must have an export-ignore line" CI check using `git ls-files docs/` vs `.gitattributes` grep.
+
+### R2.7 — Classification (unchanged)
+
+STANDARD. Packaging hygiene only. No security boundary, no schema, no AI-instruction surface. Phase 2 `/review` remains OPTIONAL.
+
+End of v2.6.1 Phase 1 design — REVISION 2.
