@@ -114,7 +114,7 @@ All 33 acceptance criteria verified at HEAD `5a09f12`. Observed values below.
 | Item | Verifier | Status |
 |------|----------|--------|
 | CF-L1-1 → C-v2.5-11 | `grep -ci "writing.profile" upstream-contribution/meeting-notes-upstream.md` = 0; SF-S4 prose-read: no paraphrased writing-profile semantics detected (see §4 F3) | PASS |
-| CF-L4-1 → C-v2.5-13 | PR #521 body: `*Originally authored for [cowork-starter-kit](https://github.com/JmLozano/claude-cowork-config) and adapted to The Agency format.*` | PASS |
+| CF-L4-1 → C-v2.5-13 | PR #521 body: `*Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format.*` | PASS |
 
 ### Security MUST-FIX (MF-S1 → C-v2.5-8; MF-S2 → C-v2.5-14)
 
@@ -204,7 +204,7 @@ Re-run at time of Phase 5 QA (`gh pr checks 44` via `jmlozano1990/Cowork-Starter
 - **State:** OPEN
 - **Title:** "Add Meeting Notes Specialist - project-management"
 - **HTTP response:** 200 (AC-F3-5 PASS)
-- **Attribution line in PR body:** `*Originally authored for [cowork-starter-kit](https://github.com/JmLozano/claude-cowork-config) and adapted to The Agency format.*` — verbatim CF-L4-1 attribution present. **PASS.**
+- **Attribution line in PR body:** `*Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format.*` — verbatim CF-L4-1 attribution present. **PASS.**
 - **Writing-profile reference in PR body:** None detected. **PASS.**
 
 ---

@@ -130,7 +130,7 @@ Tested across rough bullet-point notes, formal transcripts, and voice-memo summa
 - [x] Tested in real scenarios
 
 ---
-*Originally authored for [cowork-starter-kit](https://github.com/JmLozano/claude-cowork-config) and adapted to The Agency format.*
+*Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format.*
 ```
 
 **Copy-pasteable commit message for the upstream PR branch:**
