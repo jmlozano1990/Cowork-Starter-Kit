@@ -146,7 +146,7 @@ v2.0 adds upstream content from `msitarzewski/agency-agents`. Any file installed
 
 ## Keeping up to date
 
-When a new version ships, check the [Releases tab on GitHub](https://github.com/jmlozano1990/cowork-starter-kit/releases). `CHANGELOG.md` lists which presets changed. To update a specific example: download the new `examples/<name>/` folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours — they won't be overwritten.
+When a new version ships, check the [Releases tab on GitHub](https://github.com/jmlozano1990/cowork-starter-kit/releases). The [CHANGELOG](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md) lists which presets changed. To update a specific example: download the new `examples/<name>/` folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours — they won't be overwritten.
 
 ### Upgrading from v2.0.x to v2.1.0
 
