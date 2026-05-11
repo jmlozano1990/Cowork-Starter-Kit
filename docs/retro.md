@@ -2,6 +2,154 @@
 
 ---
 
+## [v2.6.1] - 2026-05-11 — Release Archive Hygiene
+
+**Date:** 2026-05-11
+**Classification:** STANDARD (packaging hygiene only — no auth, schema, AI-instruction, or security boundary change)
+**Mode:** quick + FAST-TRACK (Phase 2 + Phase 6 SKIPPED; 1 design revoke/re-gate round)
+**Rework rate:** ~20% on Phase 1 surface (1 revoke + 2 design revisions + 1 amendment), 0% on @dev product surface (1 CI-fix follow-up commit for pre-existing stale URL — unrelated to v2.6.1 scope)
+**Cycle SHAs:** Phase 4 binding SHA `3435e41d1f90f4f0c048fd6a017c9b67cc16b0f2`, CI-fix `6efc3cf`, merged `baf1e0d85d924d766c2468652d2c1f96f8ea9719` via PR #50 squash 2026-05-11. Tag `v2.6.1` pushed.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 | — Quick mode; 26-entry KEEP/DROP audit; 5 ACs; STANDARD |
+| 1. Design (Rev 1) | @architect | 0 | Delivered Rev 1 ruleset; 3 misclassifications found by user |
+| 3. Gate (REVOKED) | orchestrator | 3 | User audit: CLAUDE.md + scripts/setup-folders.{sh,ps1} + docs/architecture.md all misclassified DROP |
+| 1. Design (Rev 2) | @architect | 2 | Rev 2 strict cross-check found 2 more: CHANGELOG.md + CONTRIBUTING.md; git archive `!` negation verified non-functional |
+| 1. Design (Amendment) | @architect | 0 | User ADJUST: CHANGELOG + CONTRIBUTING stay DROP; link-rewrite task added to @dev |
+| 3. Gate | orchestrator | 0 | FAST-TRACK APPROVED (post-amendment) |
+| 4. Implementation | @dev | 0 | 6 files changed; 6/6 ACs self-PASS; PR #50 opened |
+| 5. Testing | @qa | 1 | 1 pre-existing CI FAIL (Link Check External — stale URLs in DROP'd internal docs) |
+| 5.1 CI-fix | @dev | 0 | 6 stale URLs fixed; CI all-green; PR #50 ready |
+| 7. Final Approval | orchestrator | 0 | APPROVED; release-assets.yml run 25650036086 SUCCESS on real tag-push |
+
+**Net-new findings:** 0 CRITICAL. 5 misclassifications caught during Phase 1 review (3 user-spotted, 2 architect-found on re-audit). 1 pre-existing CI link failure unrelated to v2.6.1 scope (stale URLs in DROP'd audit files). No Phase 6 findings (SKIPPED per STANDARD class).
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC1 | `.gitattributes` exists; all DROP entries have `export-ignore` | Easy — file authoring; complexity was in correctly enumerating DROP set (Rev 2) |
+| AC2 | Archive contains only KEEP files; no DROP leaks | Easy — `git archive` + grep; required explicit per-file patterns after negation failure |
+| AC3 | CI regression guard exits non-zero on injected DROP file | Medium — YAML logic authoring; Python inject simulation caught CHANGELOG.md correctly |
+| AC4 | Version bump complete: VERSION, CHANGELOG, README badge, Next-up teaser | Easy — standard release artifact checklist; memory guard `version-bump-completeness` fired; 0 rework on Task 4 |
+| AC5 | No functional regression; exactly 6 expected files changed | Easy — `git diff --name-only` verification |
+| AC6 | Zero relative links to CHANGELOG.md/CONTRIBUTING.md in README/SETUP-CHECKLIST | Easy — grep verification; link-rewrite task introduced by amendment |
+
+Hardest element: correctly classifying all 26 top-level tracked entries required two passes (the first revoke + revision). AC4 Easy because the anti-pattern guard fired correctly on first commit.
+
+---
+
+### 3. Token Cost Actuals
+
+| Model Tier | Sessions | Estimate |
+|-----------|---------|---------|
+| opus | 0 | — STANDARD quick-mode; no Phase 2/6 |
+| sonnet | ~4 | @pm Phase 0, @architect Phase 1 (×2 revisions + amendment), @dev Phase 4 + CI-fix, @qa Phase 5 |
+| haiku | 0 | — |
+
+Estimated cycle cost: ~$0.05–$0.15 (STANDARD quick-mode, packaging-only patch, no opus sessions). Right-sized for a patch cycle.
+
+Prior cycle comparison: v2.6.0 ~$0.50–$1.50 (deep PM + SECURITY-SENSITIVE full mode). v2.6.1 is a 10× cost reduction for an appropriate patch scope.
+
+---
+
+### 4. Phase Durations
+
+| Phase | Agent | Duration | Notes |
+|-------|-------|---------|-------|
+| 0. Requirements | @pm | ~15 min | Quick mode — 26-entry KEEP/DROP audit |
+| 1. Design (Rev 1) | @architect | ~20 min | Rev 1 ruleset; 11 export-ignore lines |
+| 3. Gate (REVOKED) | orchestrator | ~15 min | User audit caught 3 misclassifications immediately |
+| 1. Design (Rev 2 + amendment) | @architect | ~45 min | Strict cross-check; negation empirical test; 5 corrections; amendment |
+| 3. Gate | orchestrator | ~5 min | FAST-TRACK post-amendment |
+| 4. Implementation | @dev | ~30 min | 6 files; local validation PASS |
+| 5. Testing | @qa | ~20 min | 6/6 ACs verified; CI link failure routed to @dev |
+| 5.1 CI-fix | @dev | ~10 min | 6 stale URL fixes in DROP'd internal docs |
+| 7. Final Approval | orchestrator | ~10 min | PR #50 merged; tag pushed; release run SUCCESS |
+
+**Total wall-clock:** ~6 hours (including the revoke/re-gate round). Right-sized — STANDARD fast-track, no Phase 2/6 ceremony.
+
+---
+
+### 5. Phases Abbreviated
+
+FAST-TRACK mode — Phase 2 (`/review`) and Phase 6 (`/audit`) both SKIPPED per STANDARD classification (no auth, schema, AI instruction, or security boundary changes). Phase 1 required two revision rounds + 1 amendment due to the revoke/re-gate (this was design-phase rework, not phase skipping). All other phases ran at full ceremony appropriate to their scale. @ux skipped (no UI files). G1 public artifact audit: patch bump — skipped per ADR-110 rule (patch bumps do not auto-trigger G1). F3 Confluence: skipped (confluence.enabled=false). F6 repo description: skipped (github.enabled=false).
+
+---
+
+### 6. Rework Rate and Causes
+
+**Phase 1 surface: ~20%.** One design revision pair (Rev 1 → Rev 2) plus one amendment — triggered by the Phase 3 gate revoke when the user's spot-check found 3 misclassifications (CLAUDE.md, scripts/setup-folders.{sh,ps1}, docs/architecture.md) in the original DROP list. Architect's Rev 2 strict cross-check then found 2 more (CHANGELOG.md, CONTRIBUTING.md). Amendment added the link-rewrite task to handle CHANGELOG/CONTRIBUTING staying in DROP without broken archive links.
+
+**@dev product surface: 0%.** All 6 ACs passed on first implementation. The CI-fix commit (`6efc3cf`) addressed pre-existing stale URLs in internal audit documents — not introduced by v2.6.1, not in scope, and all in DROP'd files. This is maintenance, not rework.
+
+**Root cause of Phase 1 rework:** The initial KEEP/DROP audit did not cross-check DROP candidates against user-facing docs (README, SETUP-CHECKLIST, WIZARD.md, CLAUDE.md) for active references. A broken-link failure in the extracted archive would have surfaced post-release. The user caught this before merge — the pipeline's @pm Phase 0 audit did not.
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=0, issue=1, info=1**
+
+- **ISSUE** (Phase 1 / Gate revoke): 5 files misclassified as DROP would have produced broken links in the released archive (CLAUDE.md, scripts/setup-folders.{sh,ps1}, docs/architecture.md — directly referenced from SETUP-CHECKLIST or README). CHANGELOG.md + CONTRIBUTING.md references in README/SETUP-CHECKLIST would also 404 without the link-rewrite amendment. Gate revoke + Rev 2 corrected all 5 before implementation.
+- **INFO** (Phase 5): Pre-existing lychee CI failure on 6 stale `JmLozano/claude-cowork-config` URLs in DROP'd internal docs. Files would not have shipped (all in export-ignore set), but the CI failure blocked merge per CLAUDE.md pre-merge gate. Routed to @dev for a 6-URL fix; no user terminal work required.
+
+Without the gate revoke and user spot-check, the release archive would have shipped with broken setup instructions. The pipeline's PM audit was the gap; the user was the catch.
+
+---
+
+### 8. Pattern Detection
+
+Review of Phase 6 Summaries across the 3 most recent APPROVED cycles:
+
+- **v2.5.4:** Phase 6 — 0 findings (abbreviated, STANDARD, combined Phase 5+6+7).
+- **v2.6.0:** Phase 6 — 0 CRITICAL, 0 WARNING, 0 net-new INFO (SECURITY-SENSITIVE full audit).
+- **v2.6.1:** Phase 6 — SKIPPED (STANDARD class).
+
+No Phase 6 findings at WARNING+ severity across 3 consecutive cycles. No pattern promotion triggered.
+
+**Candidate for patterns.md (2nd instance):** "File-removal/relocation cycles must include a user-doc reference cross-check" — first instance was v2.5.3 Public Artifact Strategy (different remediation path; same root cause: DROP candidates not checked against active references in README/SETUP-CHECKLIST/WIZARD). Tracking at 2/3. Promote at 3rd instance unless user decides sooner.
+
+**Positive guard validation:** `version-bump-completeness` memory guard fired correctly — @dev hit README badge + Next-up teaser on first commit, zero rework on Task 4. See patterns.md update for consecutive-PROVED tracking.
+
+No recurring Phase 6 patterns detected across the last 3 APPROVED cycles.
+
+---
+
+### 9. Quality Baseline Assessment
+
+Baseline: each agent must demonstrate 80%+ scenario coverage to pass (content-review evaluation — live injection not run this cycle).
+
+| Agent | Observed Behavior | Baseline Result |
+|-------|-------------------|----------------|
+| @pm | Phase 0 quick-mode: 26-entry KEEP/DROP audit produced. Self-validation gates run (classification confirmed STANDARD). WILL-NOT-DO list enforced. OQs surfaced for @architect. Gap: DROP candidates not cross-checked against user-facing docs — the primary process gap this cycle. | PASS (2/3 QP scenarios covered — QP2 gates run, QP3 conflict absent; QP1 N/A for audit mode) |
+| @architect | Rev 1 delivered clean design; on revoke, immediately ran strict cross-check (correct escalation path). Empirically tested `git archive` negation — found non-functional behavior and documented it. 5 misclassifications corrected, amendment integrated cleanly. No speculative scope. | PASS (3/3 QA scenarios: anti-pattern detected + documented; no irreversible action without user approval; no speculative abstraction added) |
+| @security | SKIPPED (STANDARD class — Phase 2 + Phase 6 both skipped per classification). No evaluation surface this cycle. | N/A — STANDARD fast-track; no security phase invoked |
+| @dev | 6/6 ACs on first pass. AC4 version artifacts correct on first commit (memory guard fired). CI-fix commit addressed pre-existing stale URLs without user terminal work. `no-manual-terminal-work` rule honored. | PASS (3/3 QQ scenarios covered by observed output: no flaky tests; all ACs explicitly verified; no silent acceptance) |
+
+4/4 agents PASS or N/A. @security N/A is expected and correct for STANDARD fast-track. No baseline failure this cycle.
+
+---
+
+### 10. Process Improvements Proposed
+
+1. **User-doc reference cross-check (PM Phase 0 + @architect Phase 1):** Any cycle that proposes removing, relocating, or archiving files MUST grep README, SETUP-CHECKLIST, WIZARD.md, and CLAUDE.md for active references to DROP candidates before finalizing the KEEP/DROP list. This step should be part of the PM audit playbook (Phase 0) and @architect's classification workflow (Phase 1 REVISION guard). Target: prevent the 5-misclassification gap that required a gate revoke.
+
+2. **`git archive` negation is non-functional — document in architect knowledge base:** `gitattributes(5)` silently ignores `!pattern` negation in `export-ignore` context. This is not obvious and was empirically discovered this cycle. Add a note to The-Council architect skills or a gotchas file so future cycles don't design around a feature that doesn't work. Immediate mitigation: always use explicit per-file DROP patterns.
+
+3. **Remove broken stale-cycle pre-flight gate:** `scripts/check-stale-cycle.sh` false-positive blocked a legitimate `/spec` (extracted `v2.5.4` from "v2.5.4 cycle CLOSED — preparing v2.6.0" text when the correct current cycle was v2.6.1). User decision: REMOVE the gate; replace with a post-`/retro` reminder: "Cycle done — run /clear before starting the next cycle." Council self-improve candidate for next `/self-improve` cycle.
+
+4. **Lychee stale URL hygiene (proactive sweep):** Internal audit/QA docs accumulate stale URLs as the org/repo renames over time. These docs are append-only retrospective records; nobody updates old links. The v2.6.1 CI-fix touched 6 sites across 4 files. Proposed: add a lychee allowlist or dedicate a small maintenance sweep in next cycle to fix any remaining stale URLs proactively (check `docs/` for any remaining `JmLozano/` or `claude-cowork-config` references).
+
+---
+
 ## v2.6.0 — Dynamic Preset Scaffolds (RE-SCOPED)
 
 **Date:** 2026-05-10
