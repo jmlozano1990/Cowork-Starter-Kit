@@ -121,7 +121,7 @@ Quality.yml L577–L606: awk uses `header_seen == 0 && /^\| / && /goal_tags/` to
 
 `gh pr view 521 --repo msitarzewski/agency-agents --json body` confirms the verbatim attribution line at PR body footer:
 
-> *Originally authored for [cowork-starter-kit](https://github.com/JmLozano/claude-cowork-config) and adapted to The Agency format.*
+> *Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format.*
 
 Phrase matches the @compliance template in `docs/compliance-review-v2.5.md` §4. PR is OPEN (state="OPEN"), title="Add Meeting Notes Specialist - project-management", author=jmlozano1990 (human, not bot — consistent with W2/S3 expectation).
 
@@ -185,7 +185,7 @@ Outbound trust model is correct (Cowork is upstream of upstream for this file; n
 ### PR body verbatim attribution
 `gh pr view 521 --repo msitarzewski/agency-agents --json body` body footer line:
 
-> `*Originally authored for [cowork-starter-kit](https://github.com/JmLozano/claude-cowork-config) and adapted to The Agency format.*`
+> `*Originally authored for [cowork-starter-kit](https://github.com/jmlozano1990/Cowork-Starter-Kit) and adapted to The Agency format.*`
 
 Matches the @compliance template structure (CF-L4-1 verifier PASS). PR title `Add Meeting Notes Specialist - project-management`, state OPEN.
 

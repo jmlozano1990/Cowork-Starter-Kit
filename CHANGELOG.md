@@ -4,6 +4,16 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.6.1] - 2026-05-11
+
+### Changed
+
+- Release archive hygiene: introduced `.gitattributes` with `export-ignore` rules so GitHub release ZIP/tarball contains only end-user product files (`.claude/`, `skills/`, `prompts/`, `templates/`, `examples/`, `CLAUDE.md`, `WIZARD.md`, `SETUP-CHECKLIST.md`, `README.md`, `LICENSE`, `VERSION`, `THIRD-PARTY-NOTICES.md`, `cowork.lock.json`, `.cowork-allowlist.json`, `scripts/setup-folders.{sh,ps1}`, `docs/architecture.md`, and product reference markdown). Internal artifacts (CI workflows, contributor docs, ADR retros, QA reports, security reviews, tests, upstream contribution notes, dev tooling configs) no longer ship to end users.
+- Release CI: added inline archive-content verification step in `release-assets.yml` — fails the release build if any DROP-list path leaks or any of 10 core KEEP files is missing.
+- README + SETUP-CHECKLIST: rewrote relative links to `CHANGELOG.md` and `CONTRIBUTING.md` to absolute GitHub URLs so extracted archives don't surface broken links.
+
+---
+
 ## [2.6.0] — 2026-05-10 (Dynamic Preset Scaffolds)
 
 ### Added

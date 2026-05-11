@@ -27,6 +27,65 @@ jobs:
           git archive --format=tar.gz --prefix="${PREFIX}" "${TAG}" > "cowork-starter-kit-${VERSION}.tar.gz"
           ls -lh cowork-starter-kit-${VERSION}.*
 
+      - name: Verify archive contents
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          ZIP="cowork-starter-kit-${VERSION}.zip"
+          LISTING="$(unzip -Z1 "${ZIP}")"
+
+          # Negative assertions — these MUST NOT appear in the archive.
+          DROP_PATHS=(
+            ".gitignore"
+            ".markdownlint.jsonc"
+            ".markdownlintignore"
+            "CHANGELOG.md"
+            "CONTRIBUTING.md"
+            ".github/"
+            "tests/"
+            "upstream-contribution/"
+            "scripts/install-pre-commit.sh"
+            "docs/spec.md"
+            "docs/retro.md"
+            "docs/personas.md"
+            "docs/qa-report.md"
+            "docs/security-review.md"
+            "docs/security-audit.md"
+            "docs/competitive.md"
+            "docs/research/"
+            "docs/security/"
+            ".gitattributes"
+          )
+          for path in "${DROP_PATHS[@]}"; do
+            if printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}" >/dev/null; then
+              echo "FAIL: DROP-list path present in archive: ${path}"
+              exit 1
+            fi
+          done
+
+          # Positive assertions — these MUST be present (guards against over-greedy export-ignore).
+          KEEP_PATHS=(
+            "VERSION"
+            "README.md"
+            "LICENSE"
+            "WIZARD.md"
+            "SETUP-CHECKLIST.md"
+            "cowork.lock.json"
+            "CLAUDE.md"
+            "scripts/setup-folders.sh"
+            "scripts/setup-folders.ps1"
+            "docs/architecture.md"
+          )
+          for path in "${KEEP_PATHS[@]}"; do
+            if ! printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}$" >/dev/null; then
+              echo "FAIL: KEEP-list path missing from archive: ${path}"
+              exit 1
+            fi
+          done
+
+          echo "PASS: archive contents verified (DROP=${#DROP_PATHS[@]}, KEEP=${#KEEP_PATHS[@]})"
+
       - name: Upload assets to release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
         with:

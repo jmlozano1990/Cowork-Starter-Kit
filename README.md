@@ -2,7 +2,7 @@ Configure your Claude Cowork workspace in 15 minutes — describe your goal, the
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.6.1-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 
 ---
 
@@ -138,7 +138,7 @@ Earlier highlights (v1.2):
 
 Want to go deeper? Three paths:
 
-- **Add a preset** — copy `templates/preset-template/` and follow the guide in `CONTRIBUTING.md`. Your new preset joins the wizard's suggestion pool.
+- **Add a preset** — copy `templates/preset-template/` and follow the guide in [`CONTRIBUTING.md`](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md). Your new preset joins the wizard's suggestion pool.
 - **Explore the architecture** — `docs/architecture.md` contains all ADRs and Phase 1 design records from v1.0 to present.
 - **Author a skill** — start from `templates/skill-template/` for the 9-section format the wizard installs.
 
@@ -166,13 +166,13 @@ v2.5.0 ships: ADR-028 `content_sha256` integrity field (all 110 lock entries bac
 
 ## Staying up to date
 
-This repo uses [semantic versioning](https://github.com/jmlozano1990/cowork-starter-kit/releases). When a new version ships, check the [Releases](https://github.com/jmlozano1990/cowork-starter-kit/releases) tab. The CHANGELOG lists which presets changed. To update: download the new preset folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours and are never overwritten.
+This repo uses [semantic versioning](https://github.com/jmlozano1990/cowork-starter-kit/releases). When a new version ships, check the [Releases](https://github.com/jmlozano1990/cowork-starter-kit/releases) tab. The [CHANGELOG](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md) lists which presets changed. To update: download the new preset folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours and are never overwritten.
 
 ---
 
 ## Contribute a preset
 
-Want to add a preset for a use case not covered here? See CONTRIBUTING.md — the templates/preset-template/ folder gives you a ready-to-fill scaffold. All contributions require a DCO sign-off and pass CI automatically.
+Want to add a preset for a use case not covered here? See [CONTRIBUTING.md](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md) — the templates/preset-template/ folder gives you a ready-to-fill scaffold. All contributions require a DCO sign-off and pass CI automatically.
 
 ---
 
@@ -188,4 +188,4 @@ MIT — see LICENSE.
 
 Upstream skill content sourced from [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) (MIT). Full third-party notices in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
-Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md).
+Want to contribute? See [CONTRIBUTING.md](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md).
