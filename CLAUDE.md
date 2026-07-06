@@ -42,7 +42,7 @@ Say: "These help me write in your voice, not generic AI."
 - Step 5: Style: 1) Concise  2) Thorough  3) Jargon  4) S) Suggest
 - Step 6 (optional): "Paste a sentence, or 'skip'." Extract 2+ patterns. Do NOT store raw sample.
 
-Generate `writing-profile.md`: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves.
+Generate `context/writing-profile.md`: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves.
 
 **Fast-track:** save stub `cowork-profile.md` first, then: "Basics saved. 1) Continue  2) Start now, /setup-wizard later"
 

@@ -31,7 +31,7 @@ Cowork sessions commonly run with **no internet access** — Claude may be unabl
 
 ## Wizard Instructions (for Cowork)
 
-Ask the following questions one at a time. Wait for the user's answer before proceeding. Do not ask multiple questions at once.
+Ask one question turn at a time and wait for the answer before proceeding. (Q2 deliberately bundles its three short fields into a single turn — that is one turn, not three.) The whole interview is 3 question turns: Q1, one bundle confirm, Q2.
 
 ---
 
@@ -123,76 +123,40 @@ Confirm final bundle once: "Final bundle: [skills]. Continue?" Wait for user con
 **Confirmed bundle:** [final skill list]
 ```
 
-Update this file as each later answer arrives (role, tools, output format, name, deadlines) and flip `Status:` to `complete` at the end of Step 1. This stub is what makes interruption recovery work: everything answered before this checkpoint used to live only in chat and was lost on a crash. Never skip it — including on the fast-track exit.
+Update this file as each later answer arrives (name, role, deadlines) and flip `Status:` to `complete` at the end of Step 1. This stub is what makes interruption recovery work: everything answered before this checkpoint used to live only in chat and was lost on a crash. Never skip it — including on the fast-track exit.
+
+**Fast-track (canonical placement — offer exactly once, here):** after the stub is saved, offer: "Basics saved. 1) Keep going — 2 minutes to a fully personalized workspace  2) Start now — run `/setup-wizard` later to finish". If the user fast-tracks, do NOT stop at the stub: immediately run the After-Q2 generation steps with defaults for everything unanswered (deadlines "none yet"; personalization placeholders left bracketed get filled next session per the preset instructions). A fast-track user still ends with skills and instructions on disk and the stub resumes cleanly later. Do not offer this exit at any other point.
 
 ---
 
-### Q2 — Output format preference
+### Q2 — Name, role, and deadlines (one turn)
 
-Ask the user:
+Ask everything remaining in ONE turn, phrased for the routed goal:
 
-> "When Cowork gives you information, do you prefer:
+> "Almost done — three quick things in one go:
 >
-> - **Detailed explanations** — thorough, step-by-step, full context
-> - **Bullet points** — concise, scannable, action-focused
-> - **Structured reports** — organized sections, headers, professional format
->
-> Which fits best?"
+> 1. What's your name (or what should I call you)?
+> 2. [Context question — pick the variant matching the routed preset:]
+>    - Study / research: "What subject or domain are you working in?"
+>    - Writing / creative: "What type of content do you create most?"
+>    - Project management: "What does your team use for project tracking?"
+>    - Business/Admin or Personal assistant: "What does a typical day look like for you?"
+>    - Custom (Path C): "Tell me a bit about your role or context."
+> 3. Any deadlines I should keep an eye on? (or 'none yet')"
 
-Record their output format preference.
+Record all three into the profile stub as they arrive. This is the LAST question turn of the interview.
 
----
+**Interview budget rule:** the full interview is Q1 (goal) + one bundle yes/adjust + Q2 (this turn). Do not add question turns. Everything else is defaulted or deferred:
 
-### Q3 — Role and context
-
-Ask the user a context question based on their routed preset (Path A/B) or inferred goal (Path C):
-
-- **Study / research:** "What subject or domain are you working in? (e.g. biochemistry, history, computer science)"
-- **Writing / creative:** "What type of content do you create most? (e.g. blog posts, essays, fiction, client copy)"
-- **Project management:** "What tools does your team use for project tracking? (e.g. Notion, Jira, spreadsheets, none)"
-- **Business/Admin:** "What does a typical work day look like for you? A sentence or two is fine."
-- **Personal assistant:** "What personal responsibilities take most of your time? (e.g. family logistics, personal finances, a busy inbox)"
-- **Custom/novel goal (Path C):** "Tell me a bit more about your role or context — that helps me personalize the instructions."
-
-Record their answer.
+- **Output format — defaulted, not asked.** Use the routed preset's `context/output-format.md` as the default. Note it in the closing message ("say 'more detail' or 'keep it brief' anytime to change it") and record `Output format preference: preset default` in the profile.
+- **Tools/connectors — deferred to point-of-need.** Never ask during setup. When the user first wants Gmail/Drive/Slack connected (or opens `connector-checklist.md`), ask which they use and trim the checklist then.
+- **Safety — a notice, not a question.** After Q2, state once: "One thing to know: Cowork always asks before deleting, moving, or overwriting any file or folder." The safety rule is always included in the generated instructions; there is nothing to ask.
 
 ---
 
-### Q4 — Tools in use
+## After Q2 — Generate output files
 
-Ask the user:
-
-> "Which of these do you use for work or study?
->
-> - Google Drive
-> - Gmail
-> - Slack
-> - None of these
-> - Not sure yet
->
-> Select all that apply."
-
-Record their tools. This determines which connectors go in their `connector-checklist.md`.
-
----
-
-### Q5 — Safety check
-
-**Before asking Q5, say this to the user:**
-
-> "One important thing — Cowork can read, write, and delete files in any folder you give it access to. The next setting makes sure it always asks before doing anything like that."
-
-Then ask:
-
-> "Does Cowork have access to any folders with files you would never want accidentally deleted? (Yes / No / Not sure)"
-
-Record their answer. Regardless of their answer, the safety rule is always included in their instructions — this question just helps calibrate the safety language.
-
----
-
-## After Q5 — Generate output files
-
-After collecting all answers, tell the user: "Great — I have everything I need. Generating your personalized workspace files now."
+After the Q2 turn and safety notice, tell the user: "Great — I have everything I need. Generating your personalized workspace files now." (Any reference elsewhere to "After Q5" means this section — Q3–Q5 were retired as separate turns in v2.7.)
 
 Then complete the following steps in order:
 
@@ -203,14 +167,14 @@ The F4 checkpoint already created `cowork-profile.md` as a stub. Now complete it
 ```
 # My Cowork Profile
 
-**Name:** [Ask the user: "Last question — what's your name or what should I call you?"]
+**Name:** [from Q2 — already collected; never re-ask]
 **Goal preset:** [their routed preset name, or "custom" for novel objectives]
 **Objective:** [user's verbatim goal description from Q1]
-**Role / context:** [their Q3 answer]
-**Tools in use:** [their Q4 answer]
-**Output format preference:** [their Q2 answer]
+**Role / context:** [from Q2]
+**Tools in use:** [not asked at setup — filled in when the user first connects a tool]
+**Output format preference:** [preset default — user can change anytime by asking]
 **Setup date:** [today's date]
-**Deadlines:** [ask: "Any deadlines coming up I should keep an eye on? (or 'none yet')" — record as date: description, one per line]
+**Deadlines:** [from Q2 — one `date: description` per line, or "none yet"]
 
 ---
 
@@ -230,7 +194,7 @@ Copy the `global-instructions.md` from the matching preset folder (`examples/<pr
 5. Save the result as `project-instructions.txt` in the user's workspace
 6. Verify no bracketed placeholder remains in the saved file — if one does, ask for the missing answer and fill it before finishing
 
-For custom/Path C workspaces, use `examples/personal-assistant/global-instructions.md` as the base template and replace `[YOUR ROLE]` with the user's Q3 context description.
+For custom/Path C workspaces, use `examples/personal-assistant/global-instructions.md` as the base template and replace `[YOUR ROLE]` with the user's Q2 context description.
 
 The file uses `.txt` extension because it is pasted directly into Cowork Project Settings > Custom Instructions — it is plain text, not a markdown document.
 
@@ -242,8 +206,8 @@ Copy the following files from `examples/<preset-name>/context/` to a `context/` 
 
 - `about-me.md` (user fills this in — leave as-is)
 - `working-rules.md` (pre-filled safe defaults)
-- `output-format.md` (pre-filled for their preset)
-- `writing-profile.md` (goal-appropriate writing voice defaults; user refines during the writing-profile questions — see CLAUDE.md Phase 3)
+- `output-format.md` (pre-filled for their preset — this is the output-format default recorded in the profile)
+- `writing-profile.md` — **canonical-location rule:** `context/writing-profile.md` is the ONLY writing profile. If CLAUDE.md Phase 3 already generated a personalized one there, DO NOT overwrite it with the preset copy — skip this file. Only copy the preset default when no personalized profile exists. Never leave two writing-profile files in the workspace; skills resolve `context/writing-profile.md`.
 
 ### Step 4 — Install skill files (dynamic, from pool)
 
@@ -269,6 +233,8 @@ Copy these files to the user's workspace:
 
 For custom/Path C workspaces, use `examples/personal-assistant/connector-checklist.md` as the base.
 
+Connectors are configured at point-of-need, not during setup: the first time the user asks to use Gmail/Drive/Slack (or opens the checklist), ask which tools they actually use, trim `connector-checklist.md` to those, and record the answer in the profile's `Tools in use:` field.
+
 ### Step 6 — Generate skills-as-prompts fallback (dynamic, from installed bundle)
 
 Generate `skills-as-prompts.md` in the user's workspace from the **installed bundle** (`core_skills` + any user-confirmed `optional_skills` adds from F4) — NOT copied from a preset folder. Cross-cutting skills NOT added at install time are NOT included in `skills-as-prompts.md` — they are loaded inline at runtime by the AI when the user invokes the swap affordance (per ADR-034 §Decision, D8). For each skill in the installed bundle:
@@ -288,19 +254,17 @@ This generates a file containing only the skills the user actually installed, no
 
 ---
 
-## Closing message
+## Closing message — end with a first task, not homework
 
-After completing all steps, say:
+After completing all steps, say (personalize the first-task invitation to their goal and installed bundle):
 
-> "Setup complete. Your personalized files are ready:
+> "Setup complete. On disk: `project-instructions.txt` (paste into Project Settings > Custom Instructions), `cowork-profile.md`, `context/`, `connector-checklist.md`, `skills-as-prompts.md` (fallback copy of your skills), and your installed skills: [list].
 >
-> - `project-instructions.txt` — paste this into Cowork Project Settings > Custom Instructions
-> - `cowork-profile.md` — your preferences on file
-> - `context/` — context files for Cowork to reference
-> - `connector-checklist.md` — connectors to authorize
-> - Installed skills: [list skill names from bundle]
+> I've set [preset output-format default, e.g. 'concise bullets'] as your default style — say 'more detail' or 'keep it brief' anytime.
 >
-> Open `SETUP-CHECKLIST.md` and follow the remaining steps to finish configuration."
+> **Let's put it to work right now:** [one concrete invitation using their actual goal and an installed skill — e.g. Study: 'Paste your lecture notes and I'll turn them into flashcards.' / PM: 'Tell me where [project] stands and I'll draft your first status update.' / Research: 'Share 2-3 sources and I'll synthesize them.' / Writing: 'Paste a paragraph you've written and I'll match your voice.']"
+
+Do NOT close with "open SETUP-CHECKLIST.md and follow the remaining steps" — the checklist is an optional reference for manual setups, mention it only if the user asks what else they can configure. The first thing a new user does should be their goal, not more configuration.
 
 ---
 
@@ -357,7 +321,7 @@ Example: `description = "the a of"` — lowercased tokens ["the","a","of"] — a
 If the user returns and says "Let's continue" or similar:
 
 1. Read `cowork-profile.md` if present.
-2. If `Status: in-progress` → this is a checkpoint stub from F4. Say: "Picking up where we left off — your goal was [Objective] and we confirmed this bundle: [Confirmed bundle]." Skip Q1 and F4 entirely; resume at the first unanswered field (fill any answers already recorded in the stub), then run the After-Q5 steps.
+2. If `Status: in-progress` → this is a checkpoint stub from F4. Say: "Picking up where we left off — your goal was [Objective] and we confirmed this bundle: [Confirmed bundle]." Skip Q1 and F4 entirely; resume at the first unanswered field (fill any answers already recorded in the stub), then run the After-Q2 generation steps.
 3. If `Objective:` is populated and Status is complete/absent → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
 4. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
 5. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.

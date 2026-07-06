@@ -45,10 +45,11 @@ Route the answer per WIZARD.md Q1 (Path A preset match / Path B tie / Path C cus
 
 ### Remaining interview (WIZARD.md is the script source)
 
-After routing, continue with WIZARD.md in order: F4 bundle customization, Q2 (output format), Q3 (role/context), Q4 (tools), Q5 (safety check), then the After-Q5 generation steps (profile, instructions, context files, skill install, checklists, skills-as-prompts). Key rules:
+After routing, continue with WIZARD.md in order: F4 bundle customization (ends with the profile-stub checkpoint), Q2 (name + role + deadlines, one turn), safety notice, then the After-Q2 generation steps (profile, instructions, context files, skill install, checklists, skills-as-prompts). Key rules:
 
+- The full interview is 3 question turns: Q1 goal, one bundle yes/adjust, Q2. Output format is defaulted from the preset; tools/connectors are asked at point-of-need; safety is a notice, not a question. Never re-ask anything already answered this session or recorded in the profile stub.
 - All skills install by copying from the local `skills/` pool — no internet or GitHub access is needed (WIZARD.md §Network & Offline Rule)
-- After Q2, offer the fast-track pause: "Your basic workspace is ready. 1) Yes, continue — deeper customization  2) Get started now — run `/setup-wizard` later"
+- The fast-track pause is offered exactly once, at the F4 checkpoint (see WIZARD.md) — not here, not after Q2
 - Skill add/remove offers show ≤3 suggestions at a time, each with a personalized example using the user's actual answers from earlier steps
 - CTA is `**Your answer:**` on its own line
 
