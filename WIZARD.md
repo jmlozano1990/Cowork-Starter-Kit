@@ -18,6 +18,17 @@ Attribution block injection is non-negotiable. Every file fetched from agency-ag
 
 ---
 
+## Network & Offline Rule (runtime)
+
+Cowork sessions commonly run with **no internet access** — Claude may be unable to reach github.com or any external site, and that is the expected default, not an error. The wizard is designed for it:
+
+1. **Everything installs locally.** All skills, presets, templates, and context files ship inside this folder. Step 4 installs skills by copying `skills/<slug>/SKILL.md` from the local pool — never by downloading. No wizard step requires the internet.
+2. **Never fetch from GitHub or the agency-agents upstream during a live session.** Upstream content enters this repo only through the maintainer-side `/sync-agency` CI workflow (`.github/workflows/sync-agency.yml`), where the ADR-024 attribution rule above is enforced before merge. At runtime there is nothing to download — do not attempt it, and do not treat `cowork.lock.json` or the registry's `source_url` values as runtime fetch targets.
+3. **If a step appears to need the internet** — the user asks for upstream agents, pastes a URL, or a fetch attempt fails with a network or permission error — do not retry silently and do not stall the interview. Say exactly what was blocked, state that setup needs no internet, and continue with the local pool. Example wording: "I can't reach external sites from this session, but nothing in setup requires it — everything installs from the local skills folder. External skills are not yet supported in v2.6 — coming in v2.7+."
+4. **If the user wants web-dependent features later** (web research, community skill discovery), point them to Cowork's settings to enable web access for their session — that is a user-side toggle the wizard cannot change, and it is never required to complete setup.
+
+---
+
 ## Wizard Instructions (for Cowork)
 
 Ask the following questions one at a time. Wait for the user's answer before proceeding. Do not ask multiple questions at once.
@@ -186,6 +197,7 @@ Create a file called `cowork-profile.md` in the user's workspace with this exact
 **Tools in use:** [their Q4 answer]
 **Output format preference:** [their Q2 answer]
 **Setup date:** [today's date]
+**Deadlines:** [ask: "Any deadlines coming up I should keep an eye on? (or 'none yet')" — record as date: description, one per line]
 
 ---
 

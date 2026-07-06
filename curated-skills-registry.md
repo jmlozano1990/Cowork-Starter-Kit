@@ -36,7 +36,12 @@ Each entry includes:
 | literature-review | Organize multiple sources into a thematic matrix with cross-source synthesis and gap analysis, stating detected theme and source counts at the top of the output. | builtin | 2026-04-18 | 1 | research |
 | source-analysis | Evaluate a single source across 7 structured fields (source type, authority, methodology, evidence quality, limitations, bias, bottom line) with an explicit citation recommendation. | builtin | 2026-04-18 | 1 | research,study |
 | research-synthesis | Synthesize sources at peer-review rigor using a 7-column matrix (claim, method, evidence, limitations, authority, recency, citation-network) with structured Agreements, Disagreements, Gaps, and Synthesis sections. | builtin | 2026-04-18 | 1 | research |
-| citation-formatter | Formats references and citations in APA, MLA, Chicago, or Harvard style | builtin | 2026-04-17 | 1 | research,study,writing |
+
+#### Disposition Annotations
+
+> `research-synthesis` appears in both the Study and Research sections intentionally (ADR-018): the canonical pool file `skills/research-synthesis/SKILL.md` is the research variant; `examples/study/.claude/skills/research-synthesis/SKILL.md` is a preserved study variant. Wizard installs resolve to the pool file.
+>
+> `citation-formatter` — `disposition: removed at v2.6.x audit` — was listed as `builtin` but has no `skills/citation-formatter/SKILL.md` pool file, so the wizard could offer a skill it cannot install. Re-add only together with a pool file meeting the 9-section template. Source: `docs/project-audit-v2.6.1.md`.
 
 ### Writing
 

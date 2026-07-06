@@ -4,6 +4,28 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Network & Offline Rule** (WIZARD.md new section + CLAUDE.md `## Offline Rule`) — codifies that Cowork sessions commonly have no internet access and that setup is offline by design: all skill installs copy from the local `skills/` pool; the wizard must never fetch from GitHub or the agency-agents upstream in a live session; includes exact fallback wording when a step appears to require the internet. Root-caused from the first field test, where the wizard attempted an upstream GitHub download without network permission and no guide surface explained the failure (`docs/project-audit-v2.6.1.md` F-1).
+- SETUP-CHECKLIST troubleshooting entry: "Claude says it can't access GitHub or the internet — skills/agents didn't download" — including a one-line reply users can paste to redirect Claude to the local pool.
+- README "Setup works fully offline" callout in Quick start.
+- SETUP-CHECKLIST Step 9 "Try this now" prompts for the Personal Assistant preset (previously 6 of 7 presets covered).
+- `**Deadlines:**` field in the WIZARD.md `cowork-profile.md` template, so CLAUDE.md's first-session "surface deadlines within 7 days" behavior has data to act on.
+- Full audit report: `docs/project-audit-v2.6.1.md` (11 findings; 6 fixed here, 5 open with recommendations).
+
+### Changed
+
+- `.claude/skills/setup-wizard/SKILL.md` realigned with the v2.4+ dynamic wizard: 7-preset menu (Personal Assistant was missing), routes through WIZARD.md Q1/F4/Q2–Q5 instead of the removed v1.x "11-step interview", and states the offline install rule.
+- README unified skill pool count corrected: 20 → 21.
+
+### Removed
+
+- `citation-formatter` registry entry — listed as `builtin` but no `skills/citation-formatter/SKILL.md` exists, so the wizard could offer a skill it cannot install. Disposition annotation added; re-add only together with a 9-section pool file.
+
+---
+
 ## [2.6.1] - 2026-05-11
 
 ### Changed

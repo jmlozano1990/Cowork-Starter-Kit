@@ -109,6 +109,11 @@ Pick one of the prompts below for your preset and try it right now:
 - File-based: "What files are in my Inbox/ folder? Draft a prioritized action list for today."
 - File-agnostic: "Draft a professional email declining a meeting request politely, keeping the relationship warm, in under 100 words. Then draft a version that's 30% more direct."
 
+**Personal Assistant**
+
+- File-based: "Read my Calendar/ and Tasks/ folders and give me a morning brief: what's on today, what's overdue, and what needs a follow-up."
+- File-agnostic: "Here's what's on my plate this week: [paste or describe]. Turn it into a prioritized plan with anything I owe other people flagged at the top."
+
 **Step 10 — Memory tip**
 
 Cowork remembers things you tell it within a Project. Ask Cowork: "Remember that I am [your role] and I prefer [output format] responses." Cowork will store this for future sessions.
@@ -118,6 +123,15 @@ Use the `/memory` command anytime to see, edit, or delete what Cowork has stored
 ---
 
 ## What if something goes wrong?
+
+**Claude says it can't access GitHub or the internet — "skills/agents didn't download"**
+
+This is expected, not a failure. Cowork sessions usually run **without internet access**, and setup is designed to work fully offline:
+
+- Everything the wizard installs already ships inside this folder. Skills are **copied from the local `skills/` folder**, never downloaded from GitHub or the upstream repo.
+- If Claude stalls trying to download something during setup, reply: "Don't download anything — install from the local `skills/` folder per WIZARD.md's Network & Offline Rule."
+- The references to `msitarzewski/agency-agents`, `cowork.lock.json`, and SHA pinning describe how **maintainers** review upstream content before it ships in a release — they are not something your session fetches live.
+- Enabling web access for Claude (in Cowork's settings, where available) is optional and only needed for web research features — never for setup.
 
 **Onboarding didn't start automatically**
 

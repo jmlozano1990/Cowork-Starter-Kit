@@ -25,9 +25,9 @@ For each question, use AskUserQuestion to present the options as clickable butto
 
 ---
 
-### Step 2 — Goal preset
+### Step 2 — Goal
 
-"What's your main goal for this workspace?
+"What's your main goal for this workspace? Describe it in your own words — or pick the closest:
 
 1. Study — exam prep, coursework, research-heavy learning
 2. Research — literature review, academic research, analysis
@@ -35,22 +35,21 @@ For each question, use AskUserQuestion to present the options as clickable butto
 4. Project Management — tracking projects, stakeholder updates, risk
 5. Creative — design, storytelling, creative strategy
 6. Business/Admin — email, reporting, scheduling, admin tasks
-S) Suggest — describe your work and I'll match it
+7. Personal Assistant — daily life, calendar, follow-ups, finances
 
 **Your answer:**"
 
-If user describes custom goal: match to closest preset, confirm. Record selected preset.
+Route the answer per WIZARD.md Q1 (Path A preset match / Path B tie / Path C custom). The 7 presets above are starting suggestions, not fixed selections.
 
 ---
 
-### Steps 3–11 (per preset)
+### Remaining interview (WIZARD.md is the script source)
 
-After recording the preset, run the full 11-step interview for that preset. The complete step sequences are in WIZARD.md (the script source). Key rules:
+After routing, continue with WIZARD.md in order: F4 bundle customization, Q2 (output format), Q3 (role/context), Q4 (tools), Q5 (safety check), then the After-Q5 generation steps (profile, instructions, context files, skill install, checklists, skills-as-prompts). Key rules:
 
-- Show "Step N" (not "Step N of 11") until after the fast-track decision
-- After Step 5, pause: "Your basic workspace is ready. 1) Yes, continue — deeper customization  2) Get started now — run `/setup-wizard` later"
-- Skill steps show 3 options: `1. Yes — activate  2. No — skip it  3. Show me more`
-- Each skill step shows a personalized example using the user's actual answers from earlier steps
+- All skills install by copying from the local `skills/` pool — no internet or GitHub access is needed (WIZARD.md §Network & Offline Rule)
+- After Q2, offer the fast-track pause: "Your basic workspace is ready. 1) Yes, continue — deeper customization  2) Get started now — run `/setup-wizard` later"
+- Skill add/remove offers show ≤3 suggestions at a time, each with a personalized example using the user's actual answers from earlier steps
 - CTA is `**Your answer:**` on its own line
 
 ---
