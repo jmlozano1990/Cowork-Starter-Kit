@@ -6,6 +6,22 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ## [Unreleased]
 
+### Added — second pass (audit recommendations implemented)
+
+- **Vendored upstream library** (`vendored/agency-agents/`, audit F-7 option a) — all 110 lock-pinned files + LICENSE from `msitarzewski/agency-agents`, fetched at the pinned commit, SHA-256-verified against `cowork.lock.json` (fail-closed), ADR-024 attribution-injected, S1-scanned (0 hits). The upstream agent library is now readable fully offline; wizard-managed *install* of vendored agents remains v2.7+ scope per the F4 pool boundary.
+- `scripts/vendor-agency.sh` — reproducible vendoring: fetch → hash-verify → inject attribution → round-trip strip-check. Run after every `/sync-agency` lock bump (added to the sync PR reviewer checklist).
+- CI job `vendored-integrity-check` — offline, on every PR: strips each vendored file's attribution block and asserts the remaining bytes hash to the lock's `content_sha256`; also verifies the vendored LICENSE. Lock bumps without a vendored refresh, and tampering on either side, fail CI.
+- CI job `wizard-consistency-check` (audit F-8) — drift gate across wizard surfaces: preset slugs ↔ pool files ↔ registry rows ↔ setup-wizard skill menu. Would have caught both the phantom `citation-formatter` registry entry (F-2) and the missing Personal Assistant preset (F-3).
+- `tests/offline-smoke-test.md` — required pre-release test: full wizard run with networking disabled (the scenario the first field report failed).
+- Assumptions register entry `A-v2.6.2-1` — "Cowork sessions have no internet access by default" [CONFIRMED by field report], superseding A-v2.0-3's fetch-at-install mechanism.
+
+### Changed — second pass
+
+- README Supply-Chain Integrity section rewritten to describe what actually ships (vendored, CI-verified, zero runtime downloads); "What's new" brought current to v2.6 (was v2.5); "Next up (v2.7+)" now names external skill install from the vendored library.
+- WIZARD.md Network & Offline Rule now directs offline reads of upstream agents to `vendored/agency-agents/`; SETUP-CHECKLIST troubleshooting and Supply-Chain Trust sections updated to match.
+- Model guidance made version-neutral in README, WIZARD.md, and SETUP-CHECKLIST (audit F-9): "most capable model available in your plan" replaces hardcoded "Opus 4.x" / `opusplan` references.
+- markdownlint and lychee link checks exclude `vendored/agency-agents/` (verbatim upstream content — integrity-checked against the lock instead); release archive keeps `vendored/` with a KEEP assertion for its LICENSE.
+
 ### Added
 
 - **Network & Offline Rule** (WIZARD.md new section + CLAUDE.md `## Offline Rule`) — codifies that Cowork sessions commonly have no internet access and that setup is offline by design: all skill installs copy from the local `skills/` pool; the wizard must never fetch from GitHub or the agency-agents upstream in a live session; includes exact fallback wording when a step appears to require the internet. Root-caused from the first field test, where the wizard attempted an upstream GitHub download without network permission and no guide surface explained the failure (`docs/project-audit-v2.6.1.md` F-1).

@@ -13,6 +13,7 @@ jobs:
           globs: |
             **/*.md
             !docs/**
+            !vendored/agency-agents/**
 
   link-check:
     name: Link Check (Internal)
@@ -21,7 +22,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: lycheeverse/lychee-action@f613c4a64e50d792e0b31ec34bbcbba12263c6a6 # v2.3.0
         with:
-          args: --no-progress --offline "**/*.md"
+          # vendored/agency-agents/ is verbatim upstream content (integrity-checked
+          # against cowork.lock.json) — its internal links are upstream's concern.
+          args: --no-progress --offline --exclude-path vendored/agency-agents "**/*.md"
           fail: true
 
   link-check-external:
@@ -32,7 +35,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: lycheeverse/lychee-action@f613c4a64e50d792e0b31ec34bbcbba12263c6a6 # v2.3.0
         with:
-          args: --no-progress "**/*.md"
+          args: --no-progress --exclude-path vendored/agency-agents "**/*.md"
           fail: true
 
   shellcheck:
@@ -1034,3 +1037,118 @@ jobs:
             exit 1
           fi
           echo "lock-content-sha-cross-check PASSED — ${CHECKED} entries verified in clean GHA runner."
+
+  vendored-integrity-check:
+    name: Vendored Integrity Check (audit F-7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify vendored/agency-agents/ matches cowork.lock.json (offline)
+        run: |
+          set -euo pipefail
+          # Every lock files[] entry must exist under vendored/agency-agents/ with the
+          # ADR-024 attribution block injected; stripping the block must reproduce the
+          # exact content_sha256 from the lock. Runs fully offline — no fetch, no flake.
+          # Tampering with either the lock or a vendored file fails this job.
+          END_MARK='<!-- COWORK-AGENCY-ATTRIBUTION-END -->'
+          FAIL=0
+          CHECKED=0
+          while IFS='|' read -r path stored_hash; do
+            vfile="vendored/agency-agents/${path}"
+            if [ ! -f "$vfile" ]; then
+              echo "::error::MISSING vendored file: ${vfile} — run scripts/vendor-agency.sh after lock bumps"
+              FAIL=1
+              continue
+            fi
+            if [ "$stored_hash" = "MISSING" ] || [ -z "$stored_hash" ]; then
+              echo "::error::${path} has no content_sha256 in lock — unverifiable vendored content"
+              FAIL=1
+              continue
+            fi
+            if ! grep -q 'COWORK-AGENCY-ATTRIBUTION-START' "$vfile"; then
+              echo "::error::MISSING ADR-024 attribution block in ${vfile}"
+              FAIL=1
+              continue
+            fi
+            ACTUAL=$(sed "1,/^${END_MARK}\$/d" "$vfile" | sed '1{/^$/d}' | sha256sum | awk '{print $1}')
+            if [ "$ACTUAL" != "$stored_hash" ]; then
+              echo "::error::vendored content mismatch on ${path}: stripped=${ACTUAL} lock=${stored_hash}"
+              FAIL=1
+            fi
+            CHECKED=$((CHECKED + 1))
+          done < <(jq -r '.files[] | "\(.path)|\(.content_sha256 // "MISSING")"' cowork.lock.json)
+          # LICENSE must also be vendored and match the lock
+          if [ ! -f "vendored/agency-agents/LICENSE" ]; then
+            echo "::error::MISSING vendored/agency-agents/LICENSE"
+            FAIL=1
+          else
+            LSHA=$(sha256sum vendored/agency-agents/LICENSE | awk '{print $1}')
+            LOCK_LSHA=$(jq -r '.license_file_sha256' cowork.lock.json)
+            if [ "$LSHA" != "$LOCK_LSHA" ]; then
+              echo "::error::vendored LICENSE hash mismatch: ${LSHA} vs lock ${LOCK_LSHA}"
+              FAIL=1
+            fi
+          fi
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::vendored-integrity-check FAILED."
+            exit 1
+          fi
+          echo "vendored-integrity-check PASSED — ${CHECKED} files + LICENSE verified offline."
+
+  wizard-consistency-check:
+    name: Wizard Consistency Check (audit F-8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify presets, pool, registry, and setup-wizard skill agree
+        run: |
+          set -euo pipefail
+          # Drift gate for the three wizard surfaces (audit v2.6.1 F-8 / F-2 / F-3 class):
+          # 1. Every core/optional slug in selection-presets.md has a skills/<slug>/SKILL.md pool file.
+          # 2. Every slug referenced by presets or shipped in skills/ has a curated-skills-registry.md row.
+          # 3. Every registry Tier-1 'builtin' row names a slug that exists in skills/ (no phantom skills).
+          # 4. Every preset display_name appears in the setup-wizard skill's menu.
+          FAIL=0
+
+          SLUGS=$(awk '/^```preset$/,/^```$/' selection-presets.md \
+            | grep -E '^(core_skills|optional_skills): ' \
+            | sed -E 's/^[a-z_]+: //' | tr ',' '\n' | tr -d ' ' | sort -u | grep -v '^$')
+          CROSS=$(awk '/^```cross_cutting$/,/^```$/' selection-presets.md \
+            | grep -E '^cross_cutting_skills: ' \
+            | sed -E 's/^cross_cutting_skills: //' | tr ',' '\n' | tr -d ' ' | grep -v '^$' || true)
+          ALL_REFS=$(printf '%s\n%s\n' "$SLUGS" "$CROSS" | sort -u | grep -v '^$')
+
+          for slug in $ALL_REFS; do
+            if [ ! -f "skills/${slug}/SKILL.md" ]; then
+              echo "::error::preset references slug '${slug}' with no skills/${slug}/SKILL.md pool file"
+              FAIL=1
+            fi
+          done
+
+          for d in skills/*/; do
+            slug=$(basename "$d")
+            if ! grep -qE "^\| ${slug} \|" curated-skills-registry.md; then
+              echo "::error::pool skill '${slug}' has no row in curated-skills-registry.md"
+              FAIL=1
+            fi
+          done
+
+          while IFS= read -r slug; do
+            if [ ! -d "skills/${slug}" ]; then
+              echo "::error::registry lists builtin '${slug}' but skills/${slug}/ does not exist (phantom skill — audit F-2 class)"
+              FAIL=1
+            fi
+          done < <(grep -E '^\| [a-z0-9-]+ \|.*\| builtin \|' curated-skills-registry.md | awk -F'|' '{gsub(/ /,"",$2); print $2}' | sort -u)
+
+          while IFS= read -r dname; do
+            if ! grep -qF "$dname" .claude/skills/setup-wizard/SKILL.md; then
+              echo "::error::preset '${dname}' missing from .claude/skills/setup-wizard/SKILL.md menu (audit F-3 class)"
+              FAIL=1
+            fi
+          done < <(awk '/^```preset$/,/^```$/' selection-presets.md | grep -E '^display_name: ' | sed -E 's/^display_name: //')
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::wizard-consistency-check FAILED — wizard surfaces have drifted."
+            exit 1
+          fi
+          echo "wizard-consistency-check PASSED — presets, pool, registry, and setup-wizard skill agree."

@@ -3,7 +3,7 @@
 ## Before you start
 
 - Toggle **Extended Thinking** ON in Cowork
-- Select **Opus 4.x** in the model dropdown
+- Select the most capable model available in your plan from the model dropdown
 
 ---
 
@@ -130,7 +130,7 @@ This is expected, not a failure. Cowork sessions usually run **without internet 
 
 - Everything the wizard installs already ships inside this folder. Skills are **copied from the local `skills/` folder**, never downloaded from GitHub or the upstream repo.
 - If Claude stalls trying to download something during setup, reply: "Don't download anything — install from the local `skills/` folder per WIZARD.md's Network & Offline Rule."
-- The references to `msitarzewski/agency-agents`, `cowork.lock.json`, and SHA pinning describe how **maintainers** review upstream content before it ships in a release — they are not something your session fetches live.
+- The references to `msitarzewski/agency-agents`, `cowork.lock.json`, and SHA pinning describe how **maintainers** review upstream content before it ships in a release — they are not something your session fetches live. The full reviewed upstream agent library already ships locally in `vendored/agency-agents/` — ask Claude to read from that folder if you want upstream agent content.
 - Enabling web access for Claude (in Cowork's settings, where available) is optional and only needed for web research features — never for setup.
 
 **Onboarding didn't start automatically**
@@ -156,7 +156,7 @@ Open `examples/<preset-name>/skills-as-prompts.md` for the preset closest to you
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-v2.0 adds upstream content from `msitarzewski/agency-agents`. Any file installed from that upstream is SHA-pinned, checksum-verified, and attribution-injected by the wizard. The `/sync-agency` workflow keeps the lock file current via monthly PRs with mandatory human review.
+Upstream content from `msitarzewski/agency-agents` ships vendored in `vendored/agency-agents/` — SHA-pinned, checksum-verified against `cowork.lock.json`, and attribution-injected before commit, with CI re-verifying the vendored tree on every pull request. Your session never downloads anything. The `/sync-agency` workflow keeps the lock file and vendored copy current via monthly PRs with mandatory human review.
 
 ## Keeping up to date
 

@@ -76,6 +76,7 @@ jobs:
             "scripts/setup-folders.sh"
             "scripts/setup-folders.ps1"
             "docs/architecture.md"
+            "vendored/agency-agents/LICENSE"
           )
           for path in "${KEEP_PATHS[@]}"; do
             if ! printf '%s\n' "${LISTING}" | grep -E "^cowork-starter-kit-${VERSION}/${path}$" >/dev/null; then

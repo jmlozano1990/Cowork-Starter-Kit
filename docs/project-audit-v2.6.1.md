@@ -41,10 +41,10 @@ will become a malfunction · LOW = hygiene. Status: FIXED in this change set, or
    redirect Claude to the local pool.
 4. README.md — "Setup works fully offline" callout in Quick start.
 
-**Recommended follow-up (OPEN):** add a QA checklist item / smoke test: *"wizard completes end-to-end
-with networking disabled."* This is the test the kit had never run and the one the field report ran
-first. Also add a formal assumption (suggest `A-v2.7-1`): "Cowork sessions have no internet access by
-default" — [CONFIRMED by field report 2026-07-06].
+**Follow-up (IMPLEMENTED, second pass):** `tests/offline-smoke-test.md` — full wizard run with
+networking disabled, required pre-release. Formal assumption added: `A-v2.6.2-1` "Cowork sessions
+have no internet access by default" — [CONFIRMED by field report 2026-07-06], superseding the
+fetch-at-install mechanism assumed in A-v2.0-3.
 
 ## F-2 — HIGH — Registry offered a skill that does not exist (FIXED)
 
@@ -81,7 +81,7 @@ cleaning next CI touch.
 "Try this now" prompts existed for every preset except Personal Assistant. Added file-based and
 file-agnostic PA prompts.
 
-## F-7 — MEDIUM — Supply-chain story oversells what users receive (OPEN)
+## F-7 — MEDIUM — Supply-chain story oversells what users receive (FIXED — option (a) implemented)
 
 README §Supply-Chain Integrity says "the wizard installs only allowlisted, checksum-verified,
 attribution-injected files," but at v2.6 the wizard installs only in-tree `builtin` skills — which the
@@ -95,25 +95,46 @@ present). The lock file currently anchors content that no user path consumes. Tw
 
 Either resolves the mismatch; (a) aligns best with the offline-first contract now codified in F-1.
 
-## F-8 — LOW — Three overlapping onboarding scripts (OPEN)
+**Implemented (second pass): option (a).** All 110 lock entries + LICENSE are now vendored at
+`vendored/agency-agents/`:
+
+- `scripts/vendor-agency.sh` fetches each file at the pinned SHA, verifies `content_sha256`
+  (fail-closed), verifies the LICENSE hash, injects the ADR-024 6-field attribution block, and
+  round-trip-checks that stripping the block reproduces the upstream hash exactly.
+- New CI job `vendored-integrity-check` re-runs that verification **offline** on every PR — a lock
+  bump without a vendored refresh, or any tamper on either side, fails CI. S1 8-pattern injection
+  scan ran clean over all 110 files at vendor time (0 hits, consistent with `requires_review: false`
+  across the lock).
+- `sync-agency.yml` reviewer checklist now includes the vendored refresh step; release archive keeps
+  `vendored/` (KEEP assertion added for `vendored/agency-agents/LICENSE`); markdownlint and lychee
+  exclude the verbatim upstream tree.
+- README/SETUP-CHECKLIST supply-chain sections rewritten to describe what actually ships; WIZARD.md
+  Network & Offline Rule now directs offline reads to `vendored/agency-agents/`. Wizard *install*
+  of vendored agents remains v2.7+ scope per the F4 pool boundary (ADR-034) — reading/quoting/adapting
+  is available offline today.
+
+## F-8 — LOW — Three overlapping onboarding scripts (MITIGATED — CI drift gate shipped)
 
 CLAUDE.md (Phases 1–4), WIZARD.md (Q1–Q5 + F-steps), and the setup-wizard skill each describe the
-interview. F-3 is what divergence looks like after a few cycles. Recommendation: WIZARD.md stays the
-single script source; the other two hold only pointers plus their CI-enforced rules; add a cheap CI
-drift check (e.g., preset count and slug list must match across selection-presets.md, registry, and
-the skill menus).
+interview. F-3 is what divergence looks like after a few cycles. **Implemented (second pass):** new
+CI job `wizard-consistency-check` asserts (1) every preset core/optional/cross-cutting slug has a
+pool file, (2) every pool skill has a registry row, (3) every registry `builtin` row names a real
+pool skill (would have caught F-2), (4) every preset display_name appears in the setup-wizard skill
+menu (would have caught F-3). Full consolidation to pointer-only secondary surfaces remains a future
+editorial pass; the drift gate removes the silent-failure mode.
 
-## F-9 — LOW — Stale model guidance (OPEN)
+## F-9 — LOW — Stale model guidance (FIXED)
 
-"Select **Opus 4.x**" / `opusplan` recommendations (README, WIZARD.md, SETUP-CHECKLIST) predate
-current model generations and will keep aging. Recommend neutral wording: "select the most capable
-model available in your plan and enable Extended Thinking."
+"Select **Opus 4.x**" / `opusplan` recommendations (README, WIZARD.md, SETUP-CHECKLIST) predated
+current model generations. Replaced with version-neutral wording ("most capable model available in
+your plan" / "planning-optimized alias where available") in all three files — no re-editing needed
+on future model launches.
 
-## F-10 — LOW — README version narrative is stale (OPEN)
+## F-10 — LOW — README version narrative is stale (FIXED)
 
-Badge says 2.6.1 while body headlines "v2.4 highlights" and "What's new in v2.5"; v2.6's actual
-feature (dynamic preset scaffolds, optional/cross-cutting tiers) is absent. Recommend a single
-"What's new" section regenerated per release from CHANGELOG.
+"What's new in v2.5" rewritten as "What's new in v2.6" summarizing 2.6.x (tiered scaffolds, skill
+swap, archive hygiene, offline-first + vendored library) with v2.5 kept as an "Earlier" line; "Next
+up (v2.7+)" updated to name external skill install from the vendored library.
 
 ## F-11 — LOW — CLAUDE.md is at 399/400 words (WATCH)
 

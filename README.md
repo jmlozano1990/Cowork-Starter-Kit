@@ -61,7 +61,7 @@ You                                Cowork
 ## Quick start
 
 - Toggle **Extended Thinking** ON in Cowork before you start
-- Select **Opus 4.x** in the model dropdown
+- Select the most capable model available in your plan from the model dropdown
 
 1. **[Download ZIP](https://github.com/jmlozano1990/cowork-starter-kit/archive/refs/heads/main.zip)** — unzip anywhere on your computer
 2. Open Claude Cowork → create a new Project → point it at the unzipped folder
@@ -152,17 +152,19 @@ Every preset includes a non-negotiable rule: **Cowork will always ask for your c
 
 ---
 
-## Supply-Chain Integrity (v2.0)
+## Supply-Chain Integrity
 
-v2.0 ships a supply-chain lock file (`cowork.lock.json`) that SHA-pins all upstream content from `msitarzewski/agency-agents`. The wizard installs only allowlisted, checksum-verified, attribution-injected files. The `/sync-agency` CI workflow opens a PR on every upstream SHA bump — no content reaches users without human review.
+All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.lock.json` and **ships vendored inside this repo** at `vendored/agency-agents/` — 110 agent files, each fetched at the pinned commit, checksum-verified against the lock, and attribution-injected (ADR-024) before commit. CI re-verifies the vendored tree against the lock on every pull request (`vendored-integrity-check`), fully offline. Nothing is downloaded at runtime — sessions need no GitHub access. The `/sync-agency` CI workflow opens a PR on every upstream SHA bump — no content reaches users without human review.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## What's new in v2.5
+## What's new in v2.6
 
-v2.5.0 ships: ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), MF-1/MF-2 CI hardening (`set -o pipefail` + structural awk header scan replacing positional `$7`), and local markdownlint pre-commit installer.
+v2.6.x ships: dynamic preset scaffolds with a 3-tier bundle schema (`core_skills` / `optional_skills` / cross-cutting pool), runtime skill-swap affordances in every preset's `global-instructions.md`, release-archive hygiene with CI verification, and — from the v2.6.1 project audit — the offline-first **Network & Offline Rule** plus the upstream agent library vendored locally at `vendored/agency-agents/` (hash-verified in CI, readable with zero network access).
 
-**Next up (v2.7+):** Multi-tool skill authoring — individual skills widened beyond the default tool, with structured routing intent.
+Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), and MF-1/MF-2 CI hardening.
+
+**Next up (v2.7+):** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
 ---
 

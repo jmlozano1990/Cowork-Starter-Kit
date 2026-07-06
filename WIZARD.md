@@ -6,9 +6,9 @@
 
 ## Before we begin — model check
 
-For best results, enable **Extended Thinking** and select **Opus 4.x** before starting. Tap the model selector (top-left) and choose Opus 4.x, then toggle Extended Thinking ON. The wizard works on any model, but Opus with Extended Thinking produces the most accurate goal routing and skill composition.
+For best results, enable **Extended Thinking** and select the most capable model available in your plan before starting. Tap the model selector (top-left), choose the strongest model listed, then toggle Extended Thinking ON. The wizard works on any model, but a top-tier model with Extended Thinking produces the most accurate goal routing and skill composition.
 
-**Note for Research, Writing, and Project Management users:** The `opusplan` alias (Opus for planning, Sonnet for execution) is the recommended daily-driver model for these presets. Study and Creative work well on Sonnet alone.
+**Note for Research, Writing, and Project Management users:** where your plan offers a planning-optimized alias (a stronger model for planning, a faster one for execution), it makes a good daily driver for these presets. Study and Creative work well on a mid-tier model alone.
 
 ---
 
@@ -23,7 +23,7 @@ Attribution block injection is non-negotiable. Every file fetched from agency-ag
 Cowork sessions commonly run with **no internet access** — Claude may be unable to reach github.com or any external site, and that is the expected default, not an error. The wizard is designed for it:
 
 1. **Everything installs locally.** All skills, presets, templates, and context files ship inside this folder. Step 4 installs skills by copying `skills/<slug>/SKILL.md` from the local pool — never by downloading. No wizard step requires the internet.
-2. **Never fetch from GitHub or the agency-agents upstream during a live session.** Upstream content enters this repo only through the maintainer-side `/sync-agency` CI workflow (`.github/workflows/sync-agency.yml`), where the ADR-024 attribution rule above is enforced before merge. At runtime there is nothing to download — do not attempt it, and do not treat `cowork.lock.json` or the registry's `source_url` values as runtime fetch targets.
+2. **Never fetch from GitHub or the agency-agents upstream during a live session.** Upstream content enters this repo only through the maintainer-side `/sync-agency` CI workflow (`.github/workflows/sync-agency.yml`), where the ADR-024 attribution rule above is enforced before merge. At runtime there is nothing to download — do not attempt it, and do not treat `cowork.lock.json` or the registry's `source_url` values as runtime fetch targets. The reviewed upstream library already ships locally under `vendored/agency-agents/` (attribution pre-injected, hash-verified against the lock by CI). When the user asks about upstream agents, read and quote from that folder offline; installing vendored agents as workspace skills remains v2.7+ scope per the F4 pool boundary.
 3. **If a step appears to need the internet** — the user asks for upstream agents, pastes a URL, or a fetch attempt fails with a network or permission error — do not retry silently and do not stall the interview. Say exactly what was blocked, state that setup needs no internet, and continue with the local pool. Example wording: "I can't reach external sites from this session, but nothing in setup requires it — everything installs from the local skills folder. External skills are not yet supported in v2.6 — coming in v2.7+."
 4. **If the user wants web-dependent features later** (web research, community skill discovery), point them to Cowork's settings to enable web access for their session — that is a user-side toggle the wizard cannot change, and it is never required to complete setup.
 
