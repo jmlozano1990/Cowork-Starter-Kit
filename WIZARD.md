@@ -112,6 +112,19 @@ Want to add or remove anything?
 
 Confirm final bundle once: "Final bundle: [skills]. Continue?" Wait for user confirmation before proceeding to F5.
 
+**Checkpoint — persist state now (non-optional).** The moment the bundle is confirmed, write `cowork-profile.md` to the user's workspace as a STUB before asking anything else:
+
+```
+# My Cowork Profile
+
+**Status:** in-progress
+**Goal preset:** [routed preset, or "custom"]
+**Objective:** [user's verbatim goal from Q1]
+**Confirmed bundle:** [final skill list]
+```
+
+Update this file as each later answer arrives (role, tools, output format, name, deadlines) and flip `Status:` to `complete` at the end of Step 1. This stub is what makes interruption recovery work: everything answered before this checkpoint used to live only in chat and was lost on a crash. Never skip it — including on the fast-track exit.
+
 ---
 
 ### Q2 — Output format preference
@@ -183,9 +196,9 @@ After collecting all answers, tell the user: "Great — I have everything I need
 
 Then complete the following steps in order:
 
-### Step 1 — Generate cowork-profile.md
+### Step 1 — Complete cowork-profile.md
 
-Create a file called `cowork-profile.md` in the user's workspace with this exact structure (fill in the blanks from their answers):
+The F4 checkpoint already created `cowork-profile.md` as a stub. Now complete it to this exact structure (fill in the blanks from their answers), remove the `Status: in-progress` line or set it to `complete`:
 
 ```
 # My Cowork Profile
@@ -344,8 +357,9 @@ Example: `description = "the a of"` — lowercased tokens ["the","a","of"] — a
 If the user returns and says "Let's continue" or similar:
 
 1. Read `cowork-profile.md` if present.
-2. If `Objective:` is populated → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
-3. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
-4. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.
+2. If `Status: in-progress` → this is a checkpoint stub from F4. Say: "Picking up where we left off — your goal was [Objective] and we confirmed this bundle: [Confirmed bundle]." Skip Q1 and F4 entirely; resume at the first unanswered field (fill any answers already recorded in the stub), then run the After-Q5 steps.
+3. If `Objective:` is populated and Status is complete/absent → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
+4. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
+5. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.
 
 **Partial install detection:** After recovering the objective, the wizard inspects `<workspace>/.claude/skills/` to see which skills are already installed. For each expected bundle skill not yet present, the wizard asks: "Still want [Skill] — [role]?" before re-running the install step. The user can drop, keep, or swap any pending skill without re-doing the objective conversation.

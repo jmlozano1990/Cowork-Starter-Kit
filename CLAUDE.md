@@ -1,6 +1,6 @@
 # Cowork Workspace Setup
 
-Use AskUserQuestion buttons when available; otherwise numbered lists.
+Use AskUserQuestion buttons when available, else numbered lists.
 
 ## First session
 
@@ -44,11 +44,11 @@ Say: "These help me write in your voice, not generic AI."
 
 Generate `writing-profile.md`: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves.
 
-**Fast-track:** "Workspace ready. 1) Continue  2) Start now, /setup-wizard later"
+**Fast-track:** save stub `cowork-profile.md` first, then: "Basics saved. 1) Continue  2) Start now, /setup-wizard later"
 
 ### Phase 4: Full Setup
 
-Run `/setup-wizard` for workspace design, skills, and folders.
+Run `/setup-wizard` for skills and folders.
 
 Generate `cowork-profile.md`: Name, Goal, Role, Setup date, Deadlines.
 
