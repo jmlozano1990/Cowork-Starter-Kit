@@ -133,6 +133,10 @@ This is expected, not a failure. Cowork sessions usually run **without internet 
 - The references to `msitarzewski/agency-agents`, `cowork.lock.json`, and SHA pinning describe how **maintainers** review upstream content before it ships in a release — they are not something your session fetches live. The full reviewed upstream agent library already ships locally in `vendored/agency-agents/` — ask Claude to read from that folder if you want upstream agent content.
 - Enabling web access for Claude (in Cowork's settings, where available) is optional and only needed for web research features — never for setup.
 
+**"Where did all the setup files go?" (after finishing the wizard)**
+
+That's the Step 7 handover working as designed: when setup completes, the wizard replaces `CLAUDE.md` with your personalized workspace instructions and moves the installer (wizard script, skill pool, preset examples, vendored agent library) into `_setup-kit/`. Nothing is deleted — `/setup-wizard`, the 23-skill pool, and the offline agent library all keep working from the archive.
+
 **Onboarding didn't start automatically**
 
 Type `/setup-wizard` to invoke the onboarding interview explicitly. Make sure you pasted `project-instructions-starter.txt` into Project Settings > Custom Instructions first (Step 1).

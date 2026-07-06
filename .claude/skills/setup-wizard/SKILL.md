@@ -5,7 +5,7 @@ description: Run the Cowork workspace onboarding wizard — personalized setup f
 
 ## Setup Wizard
 
-This skill runs the Cowork workspace onboarding interview. **WIZARD.md is the single script source — this file only routes into it.** Never re-ask a field already answered in this session or recorded in `cowork-profile.md`.
+This skill runs the Cowork workspace onboarding interview. **WIZARD.md is the single script source — this file only routes into it.** Locate it at `WIZARD.md` (fresh kit) or `_setup-kit/WIZARD.md` (after the Step 7 handover archived the installer); the same rule applies to `skills/`, `selection-presets.md`, and every other kit path the script references. Never re-ask a field already answered in this session or recorded in `cowork-profile.md`.
 
 **Resume guard:** if `cowork-profile.md` exists with `Status: in-progress`, do NOT reset — resume per WIZARD.md Fallback (recap goal + bundle, continue from the first unanswered field).
 
@@ -35,7 +35,7 @@ Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). The 7 
 
 ### Everything after Q1
 
-Follow WIZARD.md in order: F4 bundle customization → profile-stub checkpoint → fast-track offer (exactly once, there) → Q2 (name + role + deadlines, one turn) → safety notice → optional Q3 voice turn → After-Q2 generation steps. The interview is 3 core turns plus the optional voice turn; output format is defaulted from the preset, tools/connectors are asked at point-of-need, and all skills install by copying from the local `skills/` pool — no internet needed (WIZARD.md Network & Offline Rule).
+Follow WIZARD.md in order: F4 bundle customization → profile-stub checkpoint → fast-track offer (exactly once, there) → Q2 (name + role + deadlines, one turn) → safety notice → optional Q3 voice turn → After-Q2 generation steps → Step 7 handover (generate the personalized workspace CLAUDE.md, archive the installer to `_setup-kit/`, offer working folders). The interview is 3 core turns plus the optional voice turn; output format is defaulted from the preset, tools/connectors are asked at point-of-need, and all skills install by copying from the local `skills/` pool — no internet needed (WIZARD.md Network & Offline Rule).
 
 ---
 

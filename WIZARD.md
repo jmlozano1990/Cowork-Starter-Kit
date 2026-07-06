@@ -269,13 +269,48 @@ Generate `skills-as-prompts.md` in the user's workspace from the **installed bun
 
 This generates a file containing only the skills the user actually installed, not the full preset bundle. The file is a fallback for users who cannot use SKILL.md file upload.
 
+### Step 7 — Handover: from installer to workspace (the transition)
+
+Setup machinery must not live in the finished workspace. After Step 6, run the handover:
+
+**7a — Generate the workspace CLAUDE.md.** Fill `templates/workspace-claude-md-template.md` from the interview answers (name, role, goal, deadlines, preset default format, installed skill list). This personalized file REPLACES the wizard-bootstrap CLAUDE.md as the workspace's standing instructions.
+
+- Overwriting CLAUDE.md requires explicit confirmation (Safety rule). Ask: "Setup's done — I'll replace the setup instructions in CLAUDE.md with your personalized workspace instructions. The setup version stays in the archive. OK?"
+- The generated file must keep the verbatim safety rule, stay under 350 words, and avoid em dashes.
+
+**7b — Archive the installer (only when the workspace IS the kit folder).** Detection: `WIZARD.md` present in the workspace root. If present, ask:
+
+> "Want me to tidy up? I'll move the setup machinery into `_setup-kit/` so your workspace contains only your files. Nothing is deleted, and `/setup-wizard` keeps working from the archive. (Yes / keep as-is)"
+
+On Yes, MOVE (never delete) into `_setup-kit/`: `WIZARD.md`, `selection-presets.md`, `curated-skills-registry.md`, `skills/`, `examples/`, `templates/`, `vendored/` (with `THIRD-PARTY-NOTICES.md` — the notice travels with the content it covers), `prompts/`, `scripts/`, `docs/`, `SETUP-CHECKLIST.md`, `cowork.lock.json`, `.cowork-allowlist.json`, `VERSION`, and the kit `README.md`. `LICENSE` stays at root. Confirm once for the batch, not per file. If the workspace is NOT the kit folder (manual path), skip 7b — there is nothing to archive.
+
+**7c — Create the working folders (optional, one question).** Offer the preset's `folder-structure.md` layout: "Want me to create your working folders now ([e.g. Papers/, Notes/, Exams/])?" Create on yes.
+
+**Final workspace layout after handover:**
+
+```
+<workspace>/
+  CLAUDE.md              <- personalized workspace instructions (7a)
+  cowork-profile.md      <- profile, Status: complete
+  project-instructions.txt
+  connector-checklist.md
+  skills-as-prompts.md
+  LICENSE
+  context/               <- about-me, working-rules, output-format, writing-profile
+  .claude/skills/        <- installed bundle only
+  [working folders]      <- per preset, if accepted (7c)
+  _setup-kit/            <- entire installer, archived; pool + vendored library + wizard
+```
+
+**Post-handover path rule:** wherever this document says `skills/<slug>/SKILL.md` or `vendored/agency-agents/`, read `_setup-kit/skills/...` and `_setup-kit/vendored/...` after the archive exists. The F4 pool boundary, the Network & Offline Rule, and ADR-024 apply unchanged to the archived paths.
+
 ---
 
 ## Closing message — end with a first task, not homework
 
 After completing all steps, say (personalize the first-task invitation to their goal and installed bundle):
 
-> "Setup complete. On disk: `project-instructions.txt` (paste into Project Settings > Custom Instructions), `cowork-profile.md`, `context/`, `connector-checklist.md`, `skills-as-prompts.md` (fallback copy of your skills), and your installed skills: [list].
+> "Setup complete. Your workspace now contains only your files — the setup kit is archived in `_setup-kit/` (nothing was deleted). On disk: `CLAUDE.md` (your personalized workspace instructions), `project-instructions.txt` (paste into Project Settings > Custom Instructions), `cowork-profile.md`, `context/`, `connector-checklist.md`, `skills-as-prompts.md` (fallback copy of your skills), and your installed skills: [list].
 >
 > I've set [preset output-format default, e.g. 'concise bullets'] as your default style — say 'more detail' or 'keep it brief' anytime.
 >
