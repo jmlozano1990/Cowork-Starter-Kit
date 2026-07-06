@@ -171,7 +171,7 @@ Generate `context/writing-profile.md` (the canonical location — see Step 3 rul
 
 ---
 
-## After Q2 — Generate output files
+## F5 / After Q2 — Generate output files
 
 After the Q2 turn, safety notice, and optional Q3 voice turn, tell the user: "Great — I have everything I need. Generating your personalized workspace files now." (Any reference elsewhere to "After Q5" means this section — the old Q3–Q5 question turns were retired in v2.7.)
 
@@ -285,15 +285,23 @@ Do NOT close with "open SETUP-CHECKLIST.md and follow the remaining steps" — t
 
 ---
 
-## Fallback — legacy v2.3.x workspace detected
+## Fallback — existing workspace detected
 
-If the user opens this wizard and `<workspace>/.claude/skills/` already exists with 3 skills matching a known v2.3.x preset signature (e.g., flashcard-generation + note-taking + research-synthesis = Study preset), say:
+If `<workspace>/.claude/skills/` already contains ANY installed skills (regardless of count or which preset they came from — partial and customized workspaces count too), say:
 
 > "Looks like you have an existing workspace set up. Your installed skills: [list detected skills].
 >
 > Want to: 1) Keep this setup as-is  2) Add or remove skills from your bundle  3) Start fresh from a new goal"
 
-**NEVER auto-modify** an existing workspace without explicit user confirmation. If the user selects option 2, route to F4 (bundle customization) with the existing skills as the starting bundle. If the user selects option 3, restart from Q1.
+**Precedence:** this friendly menu always comes BEFORE any reset confirmation — the scary "this will reset your profile" confirm fires only inside option 3 (see `.claude/skills/setup-wizard/SKILL.md` Reset guard). **NEVER auto-modify** an existing workspace without explicit user confirmation.
+
+**Option 2 — add/remove flow (defined):** route to F4 with the existing skills as the starting bundle, then run ONLY these F5 steps against the delta:
+
+1. Step 4 for newly added slugs (copy from `skills/`, one confirmation line each); delete removed slugs' folders only after explicit per-folder confirmation (Safety rule).
+2. Step 6 regenerate `skills-as-prompts.md` from the now-installed set — this file must always reflect what is actually installed.
+3. Update the profile's `Confirmed bundle:` line. Do NOT touch the existing profile fields, context files, or instructions — no other F5 step runs.
+
+**Option 3:** restart from Q1 after the reset confirmation; the old profile is only overwritten at the F4 checkpoint of the new run.
 
 ---
 
