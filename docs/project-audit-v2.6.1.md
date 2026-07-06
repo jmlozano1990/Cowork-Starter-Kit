@@ -136,10 +136,15 @@ on future model launches.
 swap, archive hygiene, offline-first + vendored library) with v2.5 kept as an "Earlier" line; "Next
 up (v2.7+)" updated to name external skill install from the vendored library.
 
-## F-11 — LOW — CLAUDE.md is at 399/400 words (WATCH)
+## F-11 — LOW — CLAUDE.md word budget + locale-sensitive CI count (FIXED)
 
-The offline rule consumed nearly all remaining budget (380 → 399 after trims). The next CLAUDE.md
-addition must trim elsewhere or push detail into WIZARD.md per the ADR-021 overflow precedent.
+The offline rule initially consumed nearly all remaining budget, and the first PR run exposed a
+latent CI gotcha: the word-count gate runs `wc -w` under the GitHub runner's `C.UTF-8` locale,
+where **each em dash counts as an additional word** (the file measured 399 under `LC_ALL=C` but
+417 in CI — exactly the 18 em dashes). Fixed by restyling CLAUDE.md without em dashes and trimming
+filler: the file now measures **397 under both `C` and `C.UTF-8`**, eliminating the locale drift
+entirely. Contributor note: verify CLAUDE.md edits with `LC_ALL=C.UTF-8 wc -w CLAUDE.md` (the CI
+locale), and avoid em dashes in this file — each one costs a budget word in CI.
 
 ---
 

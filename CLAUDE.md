@@ -14,41 +14,41 @@ Check if `cowork-profile.md` exists in this project folder.
 
 ## Onboarding
 
-### Phase 1 — Objective & Team
+### Phase 1: Objective & Team
 
-Ask: "What do you need help with? Tell me what you want this workspace to do for you — I'll assemble the right team."
+Ask: "What do you need help with? Tell me what you want this workspace to do; I'll assemble the right team."
 
 **Route to a team:**
 
-- **Fits one area:** "For [objective]: [Skill] — [role]; [Skill] — [role]. Sound right?"
-- **Spans areas:** "For [objective], a cross-area team: [Skill] — [role]; [Skill] — [role]; [Skill] — [role]. Full team, or adjust?"
-- **Novel:** "I'll build a [objective] workspace from scratch: [Skill] — [role]; [Skill] — [role]. Continue?"
+- **Fits one area:** "For [objective]: [Skill] as [role]; [Skill] as [role]. Sound right?"
+- **Spans areas:** "For [objective], a cross-area team: [Skill] as [role]; [Skill] as [role]; [Skill] as [role]. Full team, or adjust?"
+- **Novel:** "I'll build a [objective] workspace from scratch: [Skill] as [role]; [Skill] as [role]. Continue?"
 
-Every branch names team members + objective-specific roles, then asks one yes/adjust question. Type `stop` anytime to exit with what's confirmed.
+Every branch names team members with roles, then asks one yes/adjust question. Type `stop` anytime to exit with what's confirmed.
 
-If uncertain, see WIZARD.md §Phase 1 Uncertainty Fallback.
+If uncertain, see WIZARD.md Phase 1 Uncertainty Fallback.
 
-### Phase 2 — Profile
+### Phase 2: Profile
 
 - Step 1: Name
 - Step 2: Role or context
 
-### Phase 3 — Writing Profile
+### Phase 3: Writing Profile
 
 Say: "These help me write in your voice, not generic AI."
 
-- Step 3: Tone — 1) Casual  2) Professional  3) Academic  4) Mixed
-- Step 4: Audience — 1) Colleagues  2) Clients  3) Students/public  4) Personal
-- Step 5: Style — 1) Concise  2) Thorough  3) Jargon  4) S) Suggest
-- Step 6 (optional): "Paste a sentence — or 'skip'." If provided: extract 2+ patterns. Do NOT store raw sample.
+- Step 3: Tone: 1) Casual  2) Professional  3) Academic  4) Mixed
+- Step 4: Audience: 1) Colleagues  2) Clients  3) Students/public  4) Personal
+- Step 5: Style: 1) Concise  2) Thorough  3) Jargon  4) S) Suggest
+- Step 6 (optional): "Paste a sentence, or 'skip'." Extract 2+ patterns. Do NOT store raw sample.
 
 Generate `writing-profile.md`: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves.
 
-**Fast-track:** "Workspace ready. 1) Continue  2) Start now — /setup-wizard later"
+**Fast-track:** "Workspace ready. 1) Continue  2) Start now, /setup-wizard later"
 
-### Phase 4 — Full Setup
+### Phase 4: Full Setup
 
-Run `/setup-wizard` for workspace design, skill discovery, and folders.
+Run `/setup-wizard` for workspace design, skills, and folders.
 
 Generate `cowork-profile.md`: Name, Goal, Role, Setup date, Deadlines.
 
@@ -60,7 +60,7 @@ Attribution block injection is non-negotiable. Every file fetched from agency-ag
 
 ## Offline Rule
 
-Install skills only from local `skills/` — never fetch from GitHub at runtime. Setup needs no internet (WIZARD.md §Network & Offline Rule).
+Install skills only from local `skills/`; never fetch from GitHub at runtime. Setup needs no internet (see WIZARD.md).
 
 ## Safety
 
