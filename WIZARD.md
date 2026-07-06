@@ -31,7 +31,9 @@ Cowork sessions commonly run with **no internet access** — Claude may be unabl
 
 ## Wizard Instructions (for Cowork)
 
-Ask one question turn at a time and wait for the answer before proceeding. (Q2 deliberately bundles its three short fields into a single turn — that is one turn, not three.) The whole interview is 3 question turns: Q1, one bundle confirm, Q2.
+**Single-source rule (v2.7):** this file is the ONLY interview script. CLAUDE.md bootstraps and defers here; `.claude/skills/setup-wizard/SKILL.md` defers here. Never re-ask a field that was already answered in this session's chat or is recorded in `cowork-profile.md` — carry it forward silently. One `cowork-profile.md` schema exists: the Step 1 template below.
+
+Ask one question turn at a time and wait for the answer before proceeding. (Q2 deliberately bundles its three short fields into a single turn — that is one turn, not three.) The whole interview is 3 core question turns — Q1, one bundle confirm, Q2 — plus the optional Q3 voice turn.
 
 ---
 
@@ -90,7 +92,7 @@ User confirms or adjusts. Proceed to F4.
 
 ---
 
-### F3 — After Q1: Bundle customization (F4)
+### F4 — Bundle customization (after Q1 routing)
 
 After routing (Path A, B, or C), the user has a proposed skill bundle. Before installing, offer one round of customization:
 
@@ -156,9 +158,22 @@ Record all three into the profile stub as they arrive. This is the LAST question
 
 ---
 
+### Q3 — Voice (one optional turn, canonical writing-profile step)
+
+Frame it, then ask ONE turn (sample-first — one paste teaches tone, audience, and style at once):
+
+> "Last one, and it's optional — this helps me write in your voice, not generic AI. Paste a sentence or two you've written (an email, a note, anything), or just pick: 1) Casual  2) Professional  3) Academic — and 1) Concise  2) Thorough. Or say 'skip'."
+
+- **Sample pasted:** extract 2+ concrete patterns (sentence rhythm, formality, vocabulary quirks). Do NOT store the raw sample — only the extracted patterns.
+- **Options picked or skipped:** use the picks, or the preset's writing defaults on skip.
+
+Generate `context/writing-profile.md` (the canonical location — see Step 3 rule) with sections: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves. On skip, the file still generates with goal-appropriate defaults.
+
+---
+
 ## After Q2 — Generate output files
 
-After the Q2 turn and safety notice, tell the user: "Great — I have everything I need. Generating your personalized workspace files now." (Any reference elsewhere to "After Q5" means this section — Q3–Q5 were retired as separate turns in v2.7.)
+After the Q2 turn, safety notice, and optional Q3 voice turn, tell the user: "Great — I have everything I need. Generating your personalized workspace files now." (Any reference elsewhere to "After Q5" means this section — the old Q3–Q5 question turns were retired in v2.7.)
 
 Then complete the following steps in order:
 
@@ -295,6 +310,12 @@ Ask: "Three angles to start from:
 Which is closest? Or just describe what's on your mind."
 
 Then resume CLAUDE.md Phase 1 routing with the user's clarified objective.
+
+---
+
+## Appendix — Engineering spec (not part of the interview script)
+
+Everything below this banner is implementation contract for maintainers and CI, not dialogue to run. When executing the interview, use the sections above; consult the appendix only when a rule explicitly points here.
 
 ---
 

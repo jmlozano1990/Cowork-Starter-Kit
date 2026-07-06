@@ -5,27 +5,19 @@ description: Run the Cowork workspace onboarding wizard — personalized setup f
 
 ## Setup Wizard
 
-This skill runs your personalized Cowork workspace onboarding interview.
+This skill runs the Cowork workspace onboarding interview. **WIZARD.md is the single script source — this file only routes into it.** Never re-ask a field already answered in this session or recorded in `cowork-profile.md`.
 
-**Reset guard:** If `cowork-profile.md` already exists with real content, say: "This will reset your profile and re-run onboarding. Your past sessions are unaffected. Confirm? (Yes / No)" — only proceed on Yes.
+**Resume guard:** if `cowork-profile.md` exists with `Status: in-progress`, do NOT reset — resume per WIZARD.md Fallback (recap goal + bundle, continue from the first unanswered field).
+
+**Reset guard:** if `cowork-profile.md` exists with real completed content, first offer the friendly menu: "You already have a workspace set up. 1) Keep it as-is  2) Add or remove skills  3) Start fresh from a new goal". Only option 3 triggers the reset confirmation: "This will reset your profile and re-run onboarding. Your past sessions are unaffected. Confirm? (Yes / No)" — proceed only on Yes; on No, return to the menu.
 
 ---
 
 ## Interview
 
-For each question, use AskUserQuestion to present the options as clickable buttons if available. If not available, use the numbered list format below. Ask one question at a time. Wait for the user's answer before proceeding.
+Run WIZARD.md from Q1. Use AskUserQuestion buttons when available; otherwise numbered lists, with `**Your answer:**` on its own line.
 
-**Your answer:** appears on its own line after every question. Options use numbered format (1, 2, 3). "S) Suggest" appears on knowledge-gap questions only.
-
----
-
-### Step 1 — Name
-
-"What's your name, or what should I call you?" (free text)
-
----
-
-### Step 2 — Goal
+### Q1 — Goal
 
 "What's your main goal for this workspace? Describe it in your own words — or pick the closest:
 
@@ -39,36 +31,27 @@ For each question, use AskUserQuestion to present the options as clickable butto
 
 **Your answer:**"
 
-Route the answer per WIZARD.md Q1 (Path A preset match / Path B tie / Path C custom). The 7 presets above are starting suggestions, not fixed selections.
+Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). The 7 presets above are starting suggestions, not fixed selections.
+
+### Everything after Q1
+
+Follow WIZARD.md in order: F4 bundle customization → profile-stub checkpoint → fast-track offer (exactly once, there) → Q2 (name + role + deadlines, one turn) → safety notice → optional Q3 voice turn → After-Q2 generation steps. The interview is 3 core turns plus the optional voice turn; output format is defaulted from the preset, tools/connectors are asked at point-of-need, and all skills install by copying from the local `skills/` pool — no internet needed (WIZARD.md Network & Offline Rule).
 
 ---
 
-### Remaining interview (WIZARD.md is the script source)
+## After the interview
 
-After routing, continue with WIZARD.md in order: F4 bundle customization (ends with the profile-stub checkpoint), Q2 (name + role + deadlines, one turn), safety notice, then the After-Q2 generation steps (profile, instructions, context files, skill install, checklists, skills-as-prompts). Key rules:
+`cowork-profile.md` follows the WIZARD.md Step 1 template — the only profile schema. Close with the task-first message (WIZARD.md Closing), using the matching first-task invitation:
 
-- The full interview is 3 question turns: Q1 goal, one bundle yes/adjust, Q2. Output format is defaulted from the preset; tools/connectors are asked at point-of-need; safety is a notice, not a question. Never re-ask anything already answered this session or recorded in the profile stub.
-- All skills install by copying from the local `skills/` pool — no internet or GitHub access is needed (WIZARD.md §Network & Offline Rule)
-- The fast-track pause is offered exactly once, at the F4 checkpoint (see WIZARD.md) — not here, not after Q2
-- Skill add/remove offers show ≤3 suggestions at a time, each with a personalized example using the user's actual answers from earlier steps
-- CTA is `**Your answer:**` on its own line
+- Study: "Your [Subject] study space is ready. Paste something you're studying and I'll turn it into flashcards or notes."
+- Research: "Your [Domain] research workspace is ready. Share 2–3 sources and I'll synthesize them."
+- Writing: "Your writing space is ready. Paste a paragraph you've written and I'll match your voice, or let's outline something new."
+- Project Management: "Your [Role] workspace is ready. Tell me where a project stands and I'll draft your first status update."
+- Creative: "Your creative workspace is ready. Give me a half-formed idea and I'll help you develop it."
+- Business/Admin: "Your workspace is ready. Forward me the gist of an email you need to write and I'll draft it."
+- Personal Assistant: "Your workspace is ready. Tell me what's on your plate this week and I'll organize it."
+- Custom (Path C): "[Goal] workspace is ready. [One-sentence invitation using an installed skill on their actual goal.]"
 
----
-
-## After interview
-
-Generate `cowork-profile.md` from all answers. Include: Name, Goal preset, Role/context, Tools, Output format, Setup date, Upcoming deadlines.
-
-Then say: "Setup complete — your workspace is ready. What would you like to work on?"
-
-**First-session completion prompt (personalized per preset):**
-- Study: "Your [Subject] study space is ready. Want to start with a concept breakdown, a flashcard set, or share something you're reading?"
-- Research: "Your [Domain] research workspace is ready. Want to start a literature search, organize sources, or discuss your research question?"
-- Writing: "Your writing space is ready. Want to draft something, outline a new piece, or import a draft to work on?"
-- Project Management: "Your [Role] workspace is ready. Want to draft a status update, review a project, or set up your tracking system?"
-- Creative: "Your creative workspace is ready. Want to explore ideas, develop a concept, or get feedback on something you're working on?"
-- Business/Admin: "Your workspace is ready. Want to draft an email, summarize a document, or work through your inbox?"
-
-**Skill validation:** After each activated skill, tell the user: "Run `/skill-creator` to confirm this skill is properly installed. If `/skill-creator` is not available, confirm the file exists at `.claude/skills/<skill-name>/SKILL.md`."
+**Skill verification (once, not per skill):** confirm each installed file exists at `.claude/skills/<slug>/SKILL.md` and say so in one line. Cowork auto-discovers these files; `skills-as-prompts.md` is the fallback for surfaces that don't.
 
 Always ask for explicit confirmation before deleting, moving, or overwriting any file or folder.
