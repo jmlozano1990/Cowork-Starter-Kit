@@ -406,6 +406,7 @@ jobs:
             - [ ] Review any files with `requires_review: true` in lock file
             - [ ] If LICENSE hash changed: route to `/legal` review before merge
             - [ ] Review `THIRD-PARTY-NOTICES.md` changes — verify timestamps and SHA match
+            - [ ] Run `bash scripts/vendor-agency.sh` and commit the refreshed `vendored/agency-agents/` — the `vendored-integrity-check` CI job fails until vendored content matches the new lock
             - [ ] If first sync (bootstrap): treat as SECURITY-SENSITIVE per `docs/security-review.md` Open Issue #3
 
             > **24h soak rule (S7):** Do not merge this PR within 24h of opening. Allow time for community eyes.

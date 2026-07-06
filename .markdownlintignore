@@ -1,2 +1,4 @@
 # Internal pipeline documentation — excluded from markdown linting
 docs/
+# Verbatim upstream content — integrity-checked against cowork.lock.json, not linted
+vendored/agency-agents/

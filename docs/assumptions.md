@@ -616,3 +616,18 @@ v2.6.0 introduces a tiered skill schema (`core` / `optional` / `cross_cutting`) 
 
 **[SUPERSEDED by D4 at Phase 0 gate, 2026-05-10 — hard-break locked; no dual-parse]**
 
+---
+
+## v2.6.2 Assumptions (project audit cycle)
+
+_Added: 2026-07-06T00:00:00Z — Project Audit v2.6.1 (docs/project-audit-v2.6.1.md)_
+
+### A-v2.6.2-1 — Cowork sessions have no internet access by default [CONFIRMED — field report]
+
+**ID:** A-v2.6.2-1
+**Confidence:** [CONFIRMED — field report 2026-07-06]
+**Assumption:** A Cowork/Claude session running the wizard cannot reach github.com or any external site unless the user has explicitly enabled web access. The offline state is the default and the common case, not an error condition.
+**Evidence:** First live field test (2026-07-06): the wizard attempted to download agents from the agency-agents upstream, Claude "did not have in options allowed to visit github," nothing installed, and no guide surface explained the failure. This falsified the implicit reachability assumption in A-v2.0-3 ("the wizard can fetch the file content from the pinned URL").
+**Risk:** Any runtime step that depends on a live fetch fails silently or stalls onboarding for most users. This was the highest-impact defect found in the v2.6.1 audit (F-1 CRITICAL).
+**Mitigation (shipped):** Network & Offline Rule in WIZARD.md + CLAUDE.md (never fetch at runtime; local pool installs only); SETUP-CHECKLIST troubleshooting entry; upstream library vendored locally at `vendored/agency-agents/` with offline CI integrity verification (`vendored-integrity-check`), removing the only remaining reason to fetch.
+**Validation path:** `tests/offline-smoke-test.md` — run the full wizard with networking disabled before each release. Supersedes the fetch-at-install mechanism assumed in A-v2.0-3 Option B; the shipped design is a strengthened Option A (CI-verified local content, zero runtime fetch).
