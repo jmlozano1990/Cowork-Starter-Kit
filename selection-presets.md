@@ -13,7 +13,7 @@ name: study
 display_name: Study
 description: Studying, exam prep, research-heavy coursework.
 core_skills: flashcard-generation, note-taking, research-synthesis
-optional_skills: editing-pass, outline-generator
+optional_skills: editing-pass, outline-generator, citation-formatter
 scaffold_source: examples/study/
 match_signals: study, studying, exam, exams, finals, midterm, midterms, test, coursework, class, classes, semester, learn, learning, course, school
 ```
@@ -25,7 +25,7 @@ name: research
 display_name: Research
 description: Academic research, literature review, analysis.
 core_skills: literature-review, source-analysis, research-synthesis
-optional_skills: note-taking, doc-summary
+optional_skills: note-taking, doc-summary, citation-formatter
 scaffold_source: examples/research/
 match_signals: research, literature, sources, source, papers, paper, academic, citations, thesis, dissertation, analysis, analyzing, review, reviews
 ```
@@ -85,7 +85,7 @@ name: personal-assistant
 display_name: Personal Assistant
 description: Daily life, calendar, finances, tasks, follow-ups.
 core_skills: daily-briefing, follow-up-tracker, spend-awareness
-optional_skills: action-items, doc-summary
+optional_skills: action-items, doc-summary, list-tracker
 scaffold_source: examples/personal-assistant/
 match_signals: personal, assistant, daily, calendar, finances, budget, family, home, organize, organizing, planning, errands, follow-up, reminders, life
 ```

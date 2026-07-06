@@ -121,7 +121,7 @@ You describe your goal in plain language. The wizard routes to the closest prese
 **v2.4 highlights:**
 
 - **Dynamic Workspace Architect** — open-ended goal discovery replaces preset menus. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
-- **Unified skill pool** — 21 skills (`skills/<slug>/SKILL.md`) consolidated from former per-preset folders into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
+- **Unified skill pool** — 23 skills (`skills/<slug>/SKILL.md`) consolidated from former per-preset folders into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
 - **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
 - **Q&A bundle customization** — after proposing a skill bundle, the wizard offers add/remove suggestions (≤3 at a time). You confirm when done. No batch-install surprises.
 - **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
