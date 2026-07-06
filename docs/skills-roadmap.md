@@ -67,7 +67,7 @@ Personas: **Alex** (student, biochem), **Maria** (research analyst), **Sam** (cr
 |------|------|-------|-----|-------|-------|--------|
 | J1: Synthesize 15–20 papers into structured summary | FULL (research-synthesis, literature-review) | FULL (same) | EMPTY | EMPTY | PARTIAL (research-synthesis) | PARTIAL |
 | J2: Generate flashcards for active recall | FULL (flashcard-generation) | EMPTY | EMPTY | EMPTY | EMPTY | EMPTY |
-| J3: Format citations (APA/MLA/Chicago) | FULL (citation-formatter) | FULL | FULL | EMPTY | PARTIAL | PARTIAL |
+| J3: Format citations (APA/MLA/Chicago) | FULL (citation-formatter — phantom 2026-05→07, pool file shipped 2026-07-06 per audit F-2 / roadmap idea 10) | FULL | FULL | EMPTY | PARTIAL | PARTIAL |
 | J4: Draft and revise structured documents | PARTIAL (editing-pass stub, outline-generator stub) | PARTIAL (editing-pass stub) | PARTIAL (editing-pass, voice-matching, outline-generator — all stubs) | EMPTY | EMPTY | EMPTY |
 | J5: Produce PM status updates | FULL (status-update) | FULL | EMPTY | EMPTY | FULL | FULL |
 | J6: Extract action items from meetings | FULL (meeting-notes, action-items stub) | FULL | EMPTY | PARTIAL (meeting-notes) | FULL | FULL |

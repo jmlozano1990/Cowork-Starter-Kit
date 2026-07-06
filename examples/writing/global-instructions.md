@@ -1,5 +1,14 @@
 # Global Instructions — Writing Preset
 
+## Who you're working with
+
+- **Name:** [YOUR NAME]
+- **Role / context:** [YOUR ROLE]
+- **Goal:** [GOAL]
+- **Deadlines to track:** [DEADLINES]
+
+Personalize every response to this person and goal. If these fields still show bracketed placeholders, ask the user for them once and update this section.
+
 ## Proactive skill behavior
 
 Apply skills proactively based on context. Do not wait to be asked.

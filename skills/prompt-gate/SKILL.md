@@ -12,9 +12,9 @@ trigger_examples:
 
 ## When to use
 
-Use this skill when a user submits a prompt that is vague, low-context, or could plausibly map to multiple intents. The skill fires before execution, not after — its job is to enrich the request with workspace context and targeted clarifying questions so the output actually matches what the user needs.
+Use this skill when a user submits a prompt that is vague, low-context, or could plausibly map to multiple intents. This is a behavior you (the assistant) apply while reading the prompt, not a separate system component: before drafting any answer to a vague request, first enrich it with workspace context and targeted clarifying questions so the output actually matches what the user needs.
 
-Skip this skill for: any prompt prefixed with `*` (bypass marker), prompts that are obviously trivial (greetings, single-word answer requests, simple arithmetic), or prompts where the conversation history already resolves the ambiguity. The decision to fire is made at the moment the prompt arrives, before any execution begins.
+Skip this behavior for: any prompt prefixed with `*` (bypass marker), prompts that are obviously trivial (greetings, single-word answer requests, simple arithmetic), or prompts where the conversation history already resolves the ambiguity. Decide whether to apply it as the first thing you do with a new prompt, before starting the substantive answer.
 
 If all relevant context files are present and filled, and the prompt's intent is unambiguous after a quick workspace scan, proceed directly to execution without surfacing any enrichment form.
 

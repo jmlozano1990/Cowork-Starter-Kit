@@ -56,9 +56,9 @@ Read the permission scope note for each connector before authorizing. Pay attent
 - **Gmail:** Creates drafts only — cannot send emails without you clicking Send.
 - **Google Workspace accounts (school or employer):** Your IT admin must authorize Claude in Google Workspace Admin Console before your personal authorization will work.
 
-**Step 7 — Upload your skill ZIP**
+**Step 7 — Upload your skill ZIP (usually unnecessary)**
 
-The Dynamic Workspace Architect installs skills from the unified pool automatically during the wizard Q&A (Steps 4–5). If you skipped the wizard or want to add skills manually:
+If you opened the kit folder as a Cowork Project, skills installed to `.claude/skills/` are auto-discovered by Cowork — no upload needed, and `skills-as-prompts.md` exists only as a fallback for surfaces without auto-discovery. The Dynamic Workspace Architect installs skills from the unified pool automatically during the wizard Q&A. If you skipped the wizard or work outside a connected folder and want to add skills manually:
 
 1. Identify the skills you want from `skills/` — each skill lives at `skills/<slug>/SKILL.md`
 2. Zip the skill folders you want: the ZIP must have `skill-name/SKILL.md` at the root — no double-nesting

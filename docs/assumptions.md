@@ -631,3 +631,25 @@ _Added: 2026-07-06T00:00:00Z — Project Audit v2.6.1 (docs/project-audit-v2.6.1
 **Risk:** Any runtime step that depends on a live fetch fails silently or stalls onboarding for most users. This was the highest-impact defect found in the v2.6.1 audit (F-1 CRITICAL).
 **Mitigation (shipped):** Network & Offline Rule in WIZARD.md + CLAUDE.md (never fetch at runtime; local pool installs only); SETUP-CHECKLIST troubleshooting entry; upstream library vendored locally at `vendored/agency-agents/` with offline CI integrity verification (`vendored-integrity-check`), removing the only remaining reason to fetch.
 **Validation path:** `tests/offline-smoke-test.md` — run the full wizard with networking disabled before each release. Supersedes the fetch-at-install mechanism assumed in A-v2.0-3 Option B; the shipped design is a strengthened Option A (CI-verified local content, zero runtime fetch).
+
+---
+
+## v2.7 Assumptions (user-case test + research campaign)
+
+_Added: 2026-07-06T00:00:00Z — 16-agent swarm campaign (docs/research/v2.7-usercase-test-and-improvement-research.md)_
+
+### A2 — REOPENED and REVERSED: Cowork DOES auto-discover .claude/skills/ in connected folders
+
+**Confidence:** [ESTIMATED — strong multi-source web evidence + one live in-session corroboration; platform-owned behavior]
+**Prior state:** Closed v1.1 as "Cowork does NOT auto-discover SKILL.md files."
+**Evidence (mid-2026):** support.claude.com skill docs, code.claude.com/docs claude-directory, multiple credible 2026 Cowork guides agree Cowork auto-discovers skills from `~/.claude/skills/` and from `.claude/skills/` inside connected project folders. Corroborated live: this session's harness surfaced the kit's example skills automatically.
+**Decision (hedged per feasibility review):** treat auto-discovery as a primary delivery channel but keep BOTH channels documented — `.claude/skills/` copies for connected-folder users, `skills-as-prompts.md` as explicit fallback for surfaces without discovery. Do not remove the fallback; the assumption flip-flopped once already and the kit cannot feature-detect the platform.
+**Validation path:** re-verify each release cycle in a clean Cowork session ("What skills do you have active?" with a fresh workspace).
+
+### A14/A15/A5 — refreshed from platform research
+
+- **A14 CONFIRMED:** `/skill-creator` ships pre-installed in Cowork/Desktop (Claude Code needs `/plugin install skill-creator@anthropic-agent-skills`). Kit guidance now mentions it once, not per-skill.
+- **A15 CONFIRMED (stronger):** AskUserQuestion renders real buttons/multi-select in Cowork — the wizard can lean on it confidently; numbered lists remain the non-Cowork fallback.
+- **A5 REFRAMED:** the platform itself now natively prompts before deletions and uses plan-approval for batch destructive ops. The kit's verbatim safety rule remains as defense-in-depth, not the only line.
+- **A1 DOWNGRADED from CRITICAL:** practical Project custom-instructions limit ≈8,000 chars (~2,000 words) per third-party testing — 4-5x headroom over the kit's 350-word target. The 400-word CI cap is retained as prompt-quality discipline (ADR-011), not a truncation guard.
+- **Offline nuances (extends A-v2.6.2-1):** network-egress setting changes apply only to NEW sessions (troubleshooting: restart the session after changing it); web search/fetch is governed separately from egress.

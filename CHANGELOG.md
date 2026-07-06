@@ -6,6 +6,27 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ## [Unreleased]
 
+### Added — third pass (v2.7 roadmap implementation, from the 16-agent test campaign)
+
+- **Two new pool skills (roadmap idea 10):** `skills/citation-formatter` (APA/MLA/Chicago/Harvard with missing-field flagging — closes the Alex persona's J3 gap and honors the audit F-2 re-add condition) and `skills/list-tracker` (guest lists/RSVPs/vendors/applications as local markdown tables — closes the Jordan persona's zero-coverage gap). Wired into study/research/personal-assistant optional tiers; pool is now 23 skills.
+- **Profile-stub checkpoint (idea 2):** bundle confirmation immediately persists `cowork-profile.md` with `Status: in-progress`; the interruption fallback resumes from it (skipping Q1/F4), and fast-track runs generation with defaults instead of exiting empty. Fixes the two outright persona-sim failures (fast-track dead-end, crash recovery losing everything).
+- **Personalization placeholders (idea 1):** all 7 presets gain a "Who you're working with" block (`[YOUR NAME]`/`[YOUR ROLE]`/`[GOAL]`/`[DEADLINES]`); WIZARD.md Step 2 fills all four and verifies none remain; `wizard-consistency-check` CI fails any preset missing one (the replace-placeholders step had been a verified no-op — no preset contained them).
+- **Optional Q3 voice turn (ideas 4+7):** the writing profile moves into WIZARD.md as one sample-first optional turn; `context/writing-profile.md` is the single canonical profile with an explicit do-not-overwrite rule.
+- Timing scorecard in `tests/offline-smoke-test.md` (idea 12) and a v2.7 assumptions-register section reversing A2 — Cowork now auto-discovers `.claude/skills/` in connected folders (idea 13, hedged both-channels decision).
+
+### Changed — third pass
+
+- **Interview cut from ~10 questions to 3 core turns (idea 3):** Q1 goal + one bundle confirm + Q2 (name/role/deadlines in one turn). Output format defaults from the preset; connectors are configured at point-of-need; the safety question became a one-line notice (its answer never changed anything). Closing message now ends with a personalized first task instead of checklist homework (idea 5).
+- **F3 routing fixed (idea 6):** light stemming, `match_signals` enriched to ≤16 tokens/preset, Path A threshold ≥2 with runner-up separation, Path B tie band defined, and a codified judgment tie-break. Regression-tested against all 7 persona goals — Alex/Riley/Taylor now route correctly (previously Path C), Maria correctly ties.
+- **Single-source interview (idea 7):** WIZARD.md is the only script (engineering spec split behind an appendix banner; F4 header fixed; "F5" now exists as the generation phase). CLAUDE.md rewritten as bootstrap+pointer (400→326 words under the CI locale) with an in-progress resume branch; setup-wizard SKILL.md is a pure router with resume-guard-before-reset-guard precedence and first-task prompts for all 7 presets + custom.
+- **Returning-user path defined (idea 8):** existing-workspace fallback generalized beyond exact v2.3.x signatures; option 2 add/remove flow specified (delta install + `skills-as-prompts.md` regeneration + profile bundle update, nothing else touched).
+- **Skill hygiene (idea 9, targeted):** daily-briefing's ambient first-message trigger replaced with verbatim phrases + do-not-fire rule (worst collision found); prompt-gate reframed honestly as assistant behavior, not middleware; research-synthesis's false "distinct Study variant" claim corrected (files were byte-identical) — example copies re-mirrored.
+
+### Deferred (with rationale)
+
+- **Idea 11 (generate instructions/checklists from installed bundle):** superseded-by-design tension with idea 1's placeholder approach, judged L-effort/6.7 — revisit in the v2.7 cycle proper as a template-assembly redesign.
+- **Idea 14 (plugin-marketplace manifest + catalog publishing):** lowest judge score (4.3); adds a new distribution artifact no CI invariant covers. Needs its own lock-style drift controls before shipping.
+
 ### Added — second pass (audit recommendations implemented)
 
 - **Vendored upstream library** (`vendored/agency-agents/`, audit F-7 option a) — all 110 lock-pinned files + LICENSE from `msitarzewski/agency-agents`, fetched at the pinned commit, SHA-256-verified against `cowork.lock.json` (fail-closed), ADR-024 attribution-injected, S1-scanned (0 hits). The upstream agent library is now readable fully offline; wizard-managed *install* of vendored agents remains v2.7+ scope per the F4 pool boundary.

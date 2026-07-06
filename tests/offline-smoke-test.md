@@ -32,3 +32,14 @@ report effectively ran (2026-07-06) and the kit failed. Run it before every rele
 Any download attempt, stall, or "I can't access GitHub" dead-end during setup is a
 release blocker — file it against WIZARD.md §Network & Offline Rule and
 `docs/project-audit-v2.6.1.md` F-1.
+
+## Timing scorecard (fill in per run — validates the "15 minutes" hero claim)
+
+| Run | Path | Question turns (target ≤4) | Wall-clock to closing message (target ≤15 min) | Time to first task completed | Notes |
+|-----|------|---------------------------|-----------------------------------------------|------------------------------|-------|
+| 1 | Path A (clear goal) | | | | |
+| 2 | Path C (novel goal) | | | | |
+| 3 | Fast-track exit at F4 checkpoint | | | | |
+| 4 | Returning user, option 2 add-skill | | | | |
+
+A release claiming "15 minutes" with an empty scorecard is making the claim on zero evidence — fill this in before tagging. The v2.7 interview budget is 3 core turns + optional voice turn; a run needing more turns is a regression against WIZARD.md's single-source rule.

@@ -1,58 +1,28 @@
 # Cowork Workspace Setup
 
-Use AskUserQuestion buttons when available; otherwise numbered lists.
+Use AskUserQuestion buttons when available, else numbered lists.
 
 ## First session
 
-Check if `cowork-profile.md` exists in this project folder.
+Check `cowork-profile.md` in this project folder.
 
-**Exists with real content:** Greet by name. Surface deadlines within 7 days. Ask what to work on.
+**Exists with `Status: in-progress`:** resume per WIZARD.md Fallback — recap goal and bundle, continue from the first unanswered field.
 
-**Absent (or "[Your name]"):** Run onboarding below.
+**Exists with real content:** greet by name. Surface deadlines within 7 days. Ask what to work on.
 
----
+**Absent (or "[Your name]"):** run onboarding below.
 
-## Onboarding
+## Onboarding — single-source rule
 
-### Phase 1: Objective & Team
+WIZARD.md is the only interview script. Follow it exactly; never re-ask a field already answered in chat or recorded in `cowork-profile.md`. The flow:
 
-Ask: "What do you need help with? Tell me what you want this workspace to do; I'll assemble the right team."
+1. Ask: "What do you need help with? Tell me what you want this workspace to do; I'll assemble the right team."
+2. Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). Present the bundle as a team — "[Skill] as [role]" per the Role-Generation Rule — and confirm once.
+3. F4 customization, then save the `cowork-profile.md` stub checkpoint and offer the fast-track exactly once ("Basics saved...").
+4. Q2 — name, role/context, deadlines in one turn. Then the safety notice, and the optional Q3 voice turn (generates `context/writing-profile.md`).
+5. Run the After-Q2 generation steps. Close with a personalized first task, not a checklist.
 
-**Route to a team:**
-
-- **Fits one area:** "For [objective]: [Skill] as [role]; [Skill] as [role]. Sound right?"
-- **Spans areas:** "For [objective], a cross-area team: [Skill] as [role]; [Skill] as [role]; [Skill] as [role]. Full team, or adjust?"
-- **Novel:** "I'll build a [objective] workspace from scratch: [Skill] as [role]; [Skill] as [role]. Continue?"
-
-Every branch names team members with roles, then asks one yes/adjust question. Type `stop` anytime to exit with what's confirmed.
-
-If uncertain, see WIZARD.md Phase 1 Uncertainty Fallback.
-
-### Phase 2: Profile
-
-- Step 1: Name
-- Step 2: Role or context
-
-### Phase 3: Writing Profile
-
-Say: "These help me write in your voice, not generic AI."
-
-- Step 3: Tone: 1) Casual  2) Professional  3) Academic  4) Mixed
-- Step 4: Audience: 1) Colleagues  2) Clients  3) Students/public  4) Personal
-- Step 5: Style: 1) Concise  2) Thorough  3) Jargon  4) S) Suggest
-- Step 6 (optional): "Paste a sentence, or 'skip'." Extract 2+ patterns. Do NOT store raw sample.
-
-Generate `writing-profile.md`: Tone & Voice, Style, Anti-AI Guidance, Workspace Rules, Pet Peeves.
-
-**Fast-track:** "Workspace ready. 1) Continue  2) Start now, /setup-wizard later"
-
-### Phase 4: Full Setup
-
-Run `/setup-wizard` for workspace design, skills, and folders.
-
-Generate `cowork-profile.md`: Name, Goal, Role, Setup date, Deadlines.
-
----
+If the user is uncertain, see WIZARD.md Phase 1 Uncertainty Fallback. Type `stop` anytime to exit with what's confirmed and saved.
 
 ## Attribution (non-overridable, ADR-024)
 

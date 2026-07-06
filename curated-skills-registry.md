@@ -36,12 +36,13 @@ Each entry includes:
 | literature-review | Organize multiple sources into a thematic matrix with cross-source synthesis and gap analysis, stating detected theme and source counts at the top of the output. | builtin | 2026-04-18 | 1 | research |
 | source-analysis | Evaluate a single source across 7 structured fields (source type, authority, methodology, evidence quality, limitations, bias, bottom line) with an explicit citation recommendation. | builtin | 2026-04-18 | 1 | research,study |
 | research-synthesis | Synthesize sources at peer-review rigor using a 7-column matrix (claim, method, evidence, limitations, authority, recency, citation-network) with structured Agreements, Disagreements, Gaps, and Synthesis sections. | builtin | 2026-04-18 | 1 | research |
+| citation-formatter | Format references and citations in APA, MLA, Chicago, or Harvard style from pasted source details, with missing-field flagging and style conversion. | builtin | 2026-07-06 | 1 | research,study,writing |
 
 #### Disposition Annotations
 
 > `research-synthesis` appears in both the Study and Research sections intentionally (ADR-018): the canonical pool file `skills/research-synthesis/SKILL.md` is the research variant; `examples/study/.claude/skills/research-synthesis/SKILL.md` is a preserved study variant. Wizard installs resolve to the pool file.
 >
-> `citation-formatter` — `disposition: removed at v2.6.x audit` — was listed as `builtin` but has no `skills/citation-formatter/SKILL.md` pool file, so the wizard could offer a skill it cannot install. Re-add only together with a pool file meeting the 9-section template. Source: `docs/project-audit-v2.6.1.md`.
+> `citation-formatter` — removed at the v2.6.x audit as a phantom entry (no pool file), re-added 2026-07-06 together with a 9-section `skills/citation-formatter/SKILL.md` per the audit's disposition condition. Source: `docs/project-audit-v2.6.1.md` F-2, roadmap idea 10.
 
 ### Writing
 
@@ -89,6 +90,7 @@ Each entry includes:
 | daily-briefing | Summarize today's schedule, open tasks, and pending follow-ups into a concise morning brief from local files | builtin | 2026-04-19 | 1 | personal-assistant |
 | follow-up-tracker | Log and surface pending commitments — things you owe others and things others owe you — from conversations, notes, and inbox snippets | builtin | 2026-04-19 | 1 | personal-assistant |
 | spend-awareness | Summarize pasted transaction data by category in plain language to surface spending patterns — descriptive only, does not provide investment advice, budgeting recommendations, or savings plans | builtin | 2026-04-19 | 1 | personal-assistant |
+| list-tracker | Create and maintain structured tracking lists — guest lists, RSVPs, vendors, applications — as local markdown tables with statuses, counts, and follow-up flags | builtin | 2026-07-06 | 1 | personal-assistant,project-management,business-admin |
 
 ---
 

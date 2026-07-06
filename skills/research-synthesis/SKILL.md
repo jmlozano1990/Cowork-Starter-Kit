@@ -14,7 +14,7 @@ trigger_examples:
 
 Use this skill when the user needs a rigorous multi-source synthesis at peer-review standards — where source authority, citation networks, and methodology comparisons matter as much as the substantive claims. This skill always operates at peer-review rigor regardless of source count.
 
-This is the **Research preset variant** of `research-synthesis`. It is intentionally distinct from the Study preset's `research-synthesis`, which auto-selects a simplified mode by source count for exam-prep use. The Research variant is always peer-review-oriented: it evaluates source authority, citation chains, and methodology explicitly. Use this skill when the output will inform a paper, thesis, systematic review, or peer-review process.
+This is the canonical `research-synthesis` skill: peer-review-oriented — it evaluates source authority, citation chains, and methodology explicitly. Use it when the output will inform a paper, thesis, systematic review, or peer-review process. For lighter exam-prep synthesis, scale the depth down to the user's stated purpose (a study session does not need a citation-network analysis) rather than expecting a separate skill. (ADR-018 reserves a distinct Study variant at `examples/study/.claude/skills/research-synthesis/`; as of v2.7 the files are identical and this file is authoritative.)
 
 If you need a thematic cross-cutting review with gap analysis rather than a per-source authority evaluation, prefer literature-review instead.
 

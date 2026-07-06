@@ -14,10 +14,10 @@ Use at the start of Casey's day when a structured intention-setting ritual is ne
 
 ## Triggers
 
-- User says "daily briefing", "morning brief", "what's on my plate today", or names this skill directly.
-- User starts the day or sends the first message in a session.
-- User mentions their calendar, schedule, or asks "what should I focus on today".
-- User shares a list of upcoming events or asks what they should focus on.
+- User says "daily briefing", "morning brief", "what's on my plate today", "what's my day look like", or names this skill directly.
+- User asks "what should I focus on today" or asks for a rundown of their calendar or schedule.
+
+Do NOT fire merely because a message is the first of a session or day — a first message about a specific task belongs to that task's skill. Offer a briefing at session start only when the message itself is an open "good morning"-style check-in with no other intent.
 
 ## Instructions
 
