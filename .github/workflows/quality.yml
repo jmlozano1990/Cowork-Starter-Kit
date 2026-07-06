@@ -1147,8 +1147,19 @@ jobs:
             fi
           done < <(awk '/^```preset$/,/^```$/' selection-presets.md | grep -E '^display_name: ' | sed -E 's/^display_name: //')
 
+          # 5. Personalization placeholders must exist in every preset (audit-v2.7 idea 1:
+          #    WIZARD.md Step 2 replaces these; a preset without them ships unpersonalized).
+          for f in examples/*/global-instructions.md; do
+            for ph in "[YOUR NAME]" "[YOUR ROLE]" "[GOAL]" "[DEADLINES]"; do
+              if ! grep -qF "$ph" "$f"; then
+                echo "::error::${f} missing personalization placeholder ${ph} (WIZARD.md Step 2 becomes a no-op)"
+                FAIL=1
+              fi
+            done
+          done
+
           if [ "$FAIL" -eq 1 ]; then
             echo "::error::wizard-consistency-check FAILED — wizard surfaces have drifted."
             exit 1
           fi
-          echo "wizard-consistency-check PASSED — presets, pool, registry, and setup-wizard skill agree."
+          echo "wizard-consistency-check PASSED — presets, pool, registry, setup-wizard skill, and personalization placeholders agree."

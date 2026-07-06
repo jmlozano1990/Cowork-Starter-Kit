@@ -208,11 +208,14 @@ Create a file called `cowork-profile.md` in the user's workspace with this exact
 
 ### Step 2 — Generate project-instructions.txt
 
-Copy the `global-instructions.md` from the matching preset folder (`examples/<preset-name>/global-instructions.md`) and:
+Copy the `global-instructions.md` from the matching preset folder (`examples/<preset-name>/global-instructions.md`) and fill in the "Who you're working with" block:
 
 1. Replace `[YOUR NAME]` with the user's name
-2. Replace `[YOUR ROLE]` with their Q3 answer
-3. Save the result as `project-instructions.txt` in the user's workspace
+2. Replace `[YOUR ROLE]` with their role/context answer
+3. Replace `[GOAL]` with their verbatim Q1 goal description
+4. Replace `[DEADLINES]` with their collected deadlines (or "none yet")
+5. Save the result as `project-instructions.txt` in the user's workspace
+6. Verify no bracketed placeholder remains in the saved file — if one does, ask for the missing answer and fill it before finishing
 
 For custom/Path C workspaces, use `examples/personal-assistant/global-instructions.md` as the base template and replace `[YOUR ROLE]` with the user's Q3 context description.
 
