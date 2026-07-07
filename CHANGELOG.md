@@ -6,6 +6,13 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ## [Unreleased]
 
+### Added — fourth pass (Step 7 handover: installer-to-workspace transition)
+
+- **WIZARD.md Step 7 — Handover:** setup now ENDS with a transition instead of leaving the user living inside the installer. 7a generates a personalized workspace `CLAUDE.md` from the new `templates/workspace-claude-md-template.md` (replaces the wizard bootstrap, explicit confirmation required, safety rule verbatim, <350 words); 7b archives the entire installer — wizard script, skill pool, presets, templates, vendored agent library (+ THIRD-PARTY-NOTICES, which travels with the content it covers) — into `_setup-kit/` (MOVED, never deleted, one batch confirmation; skipped automatically when the workspace isn't the kit folder); 7c optionally creates the preset's working folders. Final workspace layout documented in the step.
+- **Post-handover path rule:** kit paths (`skills/`, `vendored/agency-agents/`, `WIZARD.md`) resolve under `_setup-kit/` once archived; the F4 pool boundary, Network & Offline Rule, and ADR-024 apply unchanged. setup-wizard SKILL.md locates the script at either path, so `/setup-wizard` keeps working after the tidy-up.
+- Workspace `CLAUDE.md` template bakes in: per-session profile/deadline behavior, canonical writing-profile/output-format references, proactive skill triggers, the skill-swap affordance against the archived pool, offline rule, and the verbatim safety rule.
+- README "clean handover" callout, SETUP-CHECKLIST troubleshooting entry ("Where did all the setup files go?"), and offline smoke-test pass criteria for the handover + post-handover path resolution.
+
 ### Added — third pass (v2.7 roadmap implementation, from the 16-agent test campaign)
 
 - **Two new pool skills (roadmap idea 10):** `skills/citation-formatter` (APA/MLA/Chicago/Harvard with missing-field flagging — closes the Alex persona's J3 gap and honors the audit F-2 re-add condition) and `skills/list-tracker` (guest lists/RSVPs/vendors/applications as local markdown tables — closes the Jordan persona's zero-coverage gap). Wired into study/research/personal-assistant optional tiers; pool is now 23 skills.

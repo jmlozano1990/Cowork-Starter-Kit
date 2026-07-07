@@ -26,6 +26,12 @@ report effectively ran (2026-07-06) and the kit failed. Run it before every rele
       require it and continues (WIZARD.md §Network & Offline Rule wording)
 - [ ] `/setup-wizard` re-entry works and offers all 7 presets, including
       Personal Assistant
+- [ ] Step 7 handover: workspace `CLAUDE.md` is the personalized version (safety
+      rule verbatim, <350 words), installer files moved to `_setup-kit/` after
+      one batch confirmation, nothing deleted, and the final layout matches
+      WIZARD.md Step 7's diagram
+- [ ] Post-handover: a skill-swap request resolves the pool at
+      `_setup-kit/skills/`, and `/setup-wizard` finds `_setup-kit/WIZARD.md`
 
 ## Fail handling
 
