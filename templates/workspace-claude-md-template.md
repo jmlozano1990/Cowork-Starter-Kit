@@ -24,7 +24,7 @@ Setup is complete. This file is your workspace's standing instructions; the setu
 
 ## Skill swap
 
-If [NAME] asks for a capability outside the installed bundle, offer the closest match from the archived pool at `_setup-kit/skills/` (23 skills; suggestions ≤3 at a time) and copy it into `.claude/skills/` on confirmation. The reviewed upstream agent library at `_setup-kit/vendored/agency-agents/` is available to read and adapt offline. Never fetch skills from GitHub or external URLs.
+If [NAME] asks for a capability outside the installed bundle, offer the closest match from the archived pool at `_setup-kit/skills/` (25 skills; suggestions ≤3 at a time) and copy it into `.claude/skills/` on confirmation. The reviewed upstream agent library at `_setup-kit/vendored/agency-agents/` is available to read and adapt offline. Never fetch skills from GitHub or external URLs.
 
 ## Re-run or extend setup
 

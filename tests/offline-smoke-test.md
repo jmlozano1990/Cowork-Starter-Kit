@@ -48,7 +48,7 @@ wall-clock data and a one-line description of your path.
 
 **Run date:** 2026-07-18 (v2.8.0 WS4). **Method:** no human tester was available in this Phase 4
 implementation session, so all 4 sessions were dry-run end-to-end by @dev against the live,
-current-cycle repo state — the actual WIZARD.md script, the actual 23-skill `skills/` pool, the
+current-cycle repo state — the actual WIZARD.md script, the actual 25-skill `skills/` pool, the
 actual `vendored/agency-agents/` tree, and the actual `curated-skills-registry.md` — playing both
 the assistant and a scripted user turn-by-turn (same "play both sides" method this repo's own
 `docs/research/v2.7-usercase-test-and-improvement-research.md` 16-agent swarm test used). Every

@@ -86,7 +86,7 @@ If user picks a direction: proceed to F4 (bundle customization) with the combine
 
 **Path C — novel goal / custom composition (low signal count or user explicitly requests scratch):**
 
-**Matching (WS-COMPOSITION — read `goal_tags` too):** assemble the draft team from `skills/` by keyword overlap against three signals per pool skill — its `name`, its `curated-skills-registry.md` `description`, AND its `goal_tags` column. `goal_tags` carries each skill's preset-domain slugs (study, research, writing, project-management, creative, business-admin, personal-assistant); pull any skill whose `goal_tags` include a domain the goal scored ≥1 on in Q1 tokenization, so a crossover goal (e.g. a homeschool plan → study + personal-assistant) surfaces skills from every domain it touches, not just literal name matches. Rank by combined overlap; take the top 3 (expandable — see below). This changes only WHICH pool skills surface first; the addressable set is still exactly the 23-skill pool (C-v2.4-7, unchanged).
+**Matching (WS-COMPOSITION — read `goal_tags` too):** assemble the draft team from `skills/` by keyword overlap against three signals per pool skill — its `name`, its `curated-skills-registry.md` `description`, AND its `goal_tags` column. `goal_tags` carries each skill's preset-domain slugs (study, research, writing, project-management, creative, business-admin, personal-assistant); pull any skill whose `goal_tags` include a domain the goal scored ≥1 on in Q1 tokenization, so a crossover goal (e.g. a homeschool plan → study + personal-assistant) surfaces skills from every domain it touches, not just literal name matches. Rank by combined overlap; take the top 3 (expandable — see below). This changes only WHICH pool skills surface first; the addressable set is still exactly the 25-skill pool (C-v2.4-7, unchanged).
 
 Present a NAMED draft team with its reasoning, in the same shape Path A/B use:
 
@@ -111,11 +111,11 @@ After routing (Path A, B, or C), the user has a proposed skill bundle. Before in
 Want to add or remove anything?
 - **Add from optional tier** (preset-specific suggestions, not yet selected): [unselected optional_skills, if any remain]
 - **Add from cross-cutting** (useful across workspaces): [up to 3 cross_cutting suggestions that are not already in the bundle]
-- **Add from full pool:** Name a skill type (e.g., 'email', 'meeting notes'). I'll suggest the closest match from the 23-skill pool (≤3 suggestions at a time).
+- **Add from full pool:** Name a skill type (e.g., 'email', 'meeting notes'). I'll suggest the closest match from the 25-skill pool (≤3 suggestions at a time).
 - **Remove:** Name any skill to drop it.
 - **Done / keep all:** confirm to proceed."
 
-**Pool boundary (C-v2.4-7, v2.6 update):** Add-skill suggestions come ONLY from the `skills/` pool (23 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."
+**Pool boundary (C-v2.4-7, v2.6 update):** Add-skill suggestions come ONLY from the `skills/` pool (25 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."
 
 **Role-generation (ADR-030):** For each skill in the final bundle, generate a one-line role description per the §"Phase 1 — Role-Generation Rule" below. Display as: "Installed skills will help you with: [role for skill 1]; [role for skill 2]; [role for skill 3]."
 
