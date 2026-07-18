@@ -22,9 +22,9 @@ What you expected to happen instead.
 
 ## Environment
 
-- Cowork Starter Kit version (`VERSION` file, or the README badge): 
-- Preset in use (Study / Research / Writing / Project Management / Creative / Business-Admin / Personal Assistant / custom): 
-- Model in use: 
+- Cowork Starter Kit version (`VERSION` file, or the README badge):
+- Preset in use (Study / Research / Writing / Project Management / Creative / Business-Admin / Personal Assistant / custom):
+- Model in use:
 
 ## Additional context
 
