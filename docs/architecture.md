@@ -55,6 +55,9 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-016 (amendment v2.6) | CMP byte-mirror + line-scan parser switch from `skill_bundle:` to `core_skills:` (paired with ADR-034) | ACCEPTED |
 | ADR-035 | Version-Consistency CI Gate (v2.7.2) — `version-consistency-check` job asserts `VERSION` == README badge == first `## [...]` CHANGELOG header; fails-closed on `[Unreleased]`-stranded content and on any missing/malformed signal; CI enforcement companion to ADR-033 release-artifact convention | ACCEPTED |
 | ADR-036 | CHANGELOG Dated-Split Convention (v2.7.2) — `[Unreleased]` accumulator is split into dated `## [x.y.z] - YYYY-MM-DD` sections at release time using the authoritative UTC commit date; line-level content preservation; formalizes the release step of ADR-033 | ACCEPTED |
+| ADR-037 | docs/ Information-Architecture Split + Default-Internal `.gitattributes` Convention (v2.8.0) — `docs/internal/{qa,security,compliance,process,planning}/` holds internal artifacts; the per-file DROP allowlist collapses to a single `docs/internal/ export-ignore` directory rule so a *new* `docs/*.md` file defaults to public-unless-placed-internal (closes D-9 latent-leak class); `spec.md`/`retro.md`/`patterns.md` retained at `docs/` root under Council-tooling exemption; `architecture.md`/`research/`/`project-audit-v2.6.1.md` become public | ACCEPTED |
+| ADR-038 | Starter-File Self-Contained Regeneration + CI Drift-Marker Guard (v2.8.0) — the 7 `examples/*/project-instructions-starter.txt` are fully self-contained regenerations of the current v2.7 3-turn interview (NOT thin pointers into `WIZARD.md`), because the paste-only persona has no filesystem access to resolve a pointer; a new additive `quality.yml` step fails the build on any retired-interview marker across all 7 starters (case-insensitive, negative-control-proven) | ACCEPTED |
+| ADR-039 | Canonical Q1 Single-Source Enforcement (v2.8.0) — `WIZARD.md`:44 is the authoritative Q1 opener; `.claude/skills/setup-wizard/SKILL.md` quotes it verbatim and drops its duplicate embedded preset menu (deferring the "not sure" branch to WIZARD.md's Uncertainty Fallback); `CLAUDE.md` retains a compact, meaning-preserving paraphrase (single-source discipline, not budget-forced — 326/400 word headroom confirmed) | ACCEPTED |
 
 ---
 
@@ -8790,3 +8793,378 @@ Final file list (Phase 4 @dev): `VERSION`, `README.md`, `CHANGELOG.md`, `WIZARD.
 - **Risk knowingly accepted:** the split is manual this cycle, so a careless edit could drop or duplicate a bullet; mitigated by AC-1's line-preservation spot-checks but not by an automated content-diff. Accepted for patch scope; revisit-trigger (b) would replace the manual step entirely.
 
 End of v2.7.2 Phase 1 — Truth & Release design.
+
+---
+
+## v2.8.0 Phase 1 — Showcase Design
+
+> **Cycle:** v2.8.0 — Showcase (Phase B of the 4-phase `improvement-plan-2026-07-18.md` roadmap — the LinkedIn gate)
+> **Date:** 2026-07-18T09:30:00Z
+> **Branch:** `release/v2.8.0` (cut in-place from `main` HEAD `e24318c`; NOT a sibling worktree — per the v2.5.3 retro "Branch on main checkout" learning + the v2.7.2 precedent, avoiding v2.5.2 sibling-worktree scope-guard friction)
+> **Mode:** revise (full PM); Phase B of 4
+> **Classification (BINDING):** **STANDARD** — with Phase 2 @security elevated from optional to a mandatory *combined-path* CI-diff spot-review (rationale in §TASK 3). Re-confirmed post-file-discovery in §Classification Re-Run.
+> **Worktree discipline:** SKIPPED (STANDARD classification; in-place branch on main checkout; `COUNCIL_EXPECTED_BASE_SHA` unset at spawn — F6 base-SHA check logged SKIPPED/fail-open).
+> **Inputs:** `docs/spec.md` §"v2.8.0 — Showcase" (26 ACs, WS1–WS7, 4 OQs, 3 gate decisions); `docs/patterns.md` (KEEP-DROP WATCH 2/3 + Check-That-Cannot-Fail WATCH 1/3); prior Phase 1 precedents v2.7.2 (STANDARD) / v2.6.1 (STANDARD-after-REVOKE) / v2.5.3 (SECURITY-SENSITIVE).
+
+> *ISO 15288 — Design Definition Process (this whole Phase 1 record).*
+
+### Phase 1 Design Header — Mandatory Gate Records
+
+**EARS check (per AC-B.2):** HIGH-severity ACs reviewed against EARS syntax. **2 HIGH-severity findings**, both surfaced by production validation and design-resolved (no user decision pending → recorded as Architectural Modifications, not OQs):
+
+- **AC-WS6-2** (`grep -c "^## Phase 1" WIZARD.md` = 0) is an *event-driven* requirement whose verify is satisfiable only if **every** `^## Phase 1` heading is renamed. Production validation found **TWO** such headings (line 343 `## Phase 1 — Uncertainty Fallback` AND line 365 `## Phase 1 — Role-Generation Rule (AC-W2-9)`), but the spec's WS6 prose names only line 343. `[EARS-REVISED]`: *"WHEN WIZARD.md is edited for WS6, the design SHALL rename BOTH `^## Phase 1` headings (343 and 365) so the AC-WS6-2 verify can reach 0."* Bound in §WS6.
+- **AC-WS5-2** (cross-check verify greps `](docs/...` link-form only, across 6 doc surfaces) is a *state-driven* requirement whose literal verify **cannot fail on the references that actually exist** — every real inbound reference to a relocation candidate is in **backtick inline-code form** (CONTRIBUTING.md ×3) or a **functional bash path-read** (quality.yml ×2) or **YAML comment / PR-body heredoc** (sync-agency.yml ×4), none of which the link-only grep matches, and two of the surfaces (both `.github/workflows/*.yml`) are outside the 6-surface scope entirely. `[EARS-REVISED]`: *"BEFORE finalizing the move list, the cross-check SHALL grep BOTH `](docs/...)` link-form AND backtick `` `docs/...` `` form AND bare functional `docs/...` path-reads, across README, CONTRIBUTING, SETUP-CHECKLIST, WIZARD, CLAUDE.md, `.claude/skills/**`, AND `.github/workflows/*.yml`."* Bound in §WS5.
+
+Net: **EARS check: 0 HIGH-severity findings requiring a user-facing OQ — both HIGH findings are design-resolved and recorded as Architectural Modifications.** All other ACs are ubiquitous/event-driven and testable as written.
+
+**SoS Classification (per AC-A.1, EC-1 — explicit even when N/A):** N/A — single-project design (`claude-cowork-config`; `registry.json` `depends_on: []`, not under any SoS umbrella). UAF 4-viewpoint checklist: (1) Strategic — N/A single-project; (2) Operational — N/A single-project; (3) Systems — N/A single-project; (4) Services — N/A single-project.
+
+**Reliability Analysis:** N/A per NEVER-APPLY (no multi-provider request path, no failover mechanism, no SLA/availability claim; this is a docs-IA + README-storytelling + CI-hygiene cycle).
+
+**Heuristics Check (Rechtin, per AC-C.2) — signals for the three minted ADRs:**
+- *"The first line of defense against complexity is simplicity of design."* → FIRES on ADR-037. The `.gitattributes` collapse from ~42 per-file DROP lines to ONE `docs/internal/ export-ignore` directory rule replaces an enumerate-every-file allowlist (which leaks by default) with a place-it-internal convention (which is safe by default). Simpler AND safer — applied, not merely noted.
+- *"Don't confuse the functioning of the parts for the functioning of the system."* → FIRES on ADR-038's CI guard AND on the AC-WS5-2 cross-check. A drift-marker check that passes each starter individually still misses the *system* property (all-7 parity) unless it iterates all 7; and a cross-check that greps each *doc surface* individually still misses the system property (no stale inbound ref anywhere) unless it also greps the *workflow* surface. Both are the exact false-green class production validation caught.
+- *"A system will develop and evolve much more rapidly if there are stable intermediate forms."* → FIRES on ADR-039. WS6 establishes ONE canonical Q1 (`WIZARD.md`:44) as the stable form that `setup-wizard/SKILL.md` (verbatim) and `CLAUDE.md` (paraphrase) both defer to — future edits mutate one source, not three divergent copies.
+- *"Build in and maintain options as long as possible."* → Signal: partially applicable. WS3's demo slot ships decoupled from demo *production* (the `<img>` slot lands this cycle; the SVG asset can land same-PR or fast-follow), preserving the a/b/c method option to the Phase-3 gate. Applied to the demo-slot decoupling.
+
+**Reuse Radar (4-source scan, per Step 2a — present even when empty):**
+- Source 1 (reuse-registry): Council `docs/reuse-registry.md` is a Council-internal artifact (ships v0.32.2); N/A for this external target — skipped.
+- Source 2 (scaffold index): N/A — no new app/service/CLI surface stood up; the synthetic-SVG demo is a single self-contained asset, not a scaffold.
+- Source 3 (CS catalog + ADR tags): N/A — single-project, no constituent-system reuse candidates.
+- Source 4 (SoS interfaces): N/A — not under any SoS umbrella.
+
+**Reuse Scan (per Step 2a — present even when no candidates):**
+
+| Component | Registry hit | OSS candidate (name+license[ESTIMATED]+health) | Scaffold | Decision | Basis |
+|---|---|---|---|---|---|
+| Starter drift-marker CI step (WS1) | none | none — 8-line bash/grep; a third-party "content-lint" Action would ADD supply-chain surface (new SHA to pin) this repo minimizes | none | BUILD | core hygiene invariant, <15 LoC bash, zero dependency; mirrors the v2.7.2 WS2 STANDARD precedent |
+| Synthetic SVG demo (WS3) | none | none — hand-authored inline SVG (SMIL/CSS animation); asciinema/svg-term-cli produce terminal casts, not the chat-style mockup the user chose | none | BUILD | user-decided SYNTHETIC chat-style mockup; no external asset/JS dependency permitted (GitHub-renderable inline SVG); fidelity trade-off accepted at gate |
+| TRUST.md (WS2) | none | none — plain-language threat-model prose; no template ADD justified | none | BUILD | project-specific threat model + mitigations narrative; must name this repo's exact controls (SHA-pinning, vendoring, ADR-024) |
+| Snyk / PromptArmor citations (WS2) | n/a (content, not component) | n/a | n/a | REUSE (cite) | third-party *research evidence* reused as citations, not code; pre-approved names per the improvement-plan exception list; AC-WS2-9 requires a fresh figure spot-check before publish |
+
+**Buy-vs-Build: 4 components scanned — REUSE 1 (citation reuse) / ADOPT 0 / EXTEND 0 / BUILD 3.**
+
+**Production validation (per Step 3b — MANDATORY; this design's logic parses/matches REAL repo artifacts: starter files, WIZARD.md headings, `.gitattributes`, and two live CI workflows).** Every candidate matcher below was run READ-ONLY (grep / `sed -n` only; no `-i`, no redirect onto any artifact) against the LIVE current files of the target repo (single-project cycle → the "every registered project" loop reduces to this one repo). **Production validation: 1/1 target-repo artifact-set PARSED — and REVEALED three false-green / scope-gap findings the spec ACs alone would NOT have caught:**
+
+1. **AC-WS6-2 undercount:** `grep -cE '^## Phase 1' WIZARD.md` = **2**, not the 1 the spec's WS6 prose anticipated (line 343 AND line 365). A fix touching only line 343 would ship with AC-WS6-2 still failing. → both headings bound in §WS6.
+2. **AC-WS5-2 check-that-cannot-fail:** the spec's literal AC-WS5-2 verify (`grep -rn "](docs/\(...\)"` — link-form, 6 doc surfaces) returns **0 on today's UNFIXED tree** — because the 3 real CONTRIBUTING.md references are backtick inline-code, not links. The verify is structurally unable to go red on the defect it exists to catch (the precise Check-That-Cannot-Fail pattern, `docs/patterns.md` WATCH 1/3). → cross-check broadened (form + surface) in §WS5.
+3. **Live-CI functional coupling (HIGH):** `quality.yml` lines 908 & 920 perform a **functional** `grep '^- \`' docs/security/upstream-content-scan-rules.md` — if that file relocates without the path being updated in the same commit, `PATTERN_COUNT=0 → exit 1 → CI FAILS HARD`. This is entirely outside AC-WS5-2's 6-surface scope. Fixture-only validation would NOT have caught it; only running the grep against the real workflow did. This is the binding-precedent pattern (v0.29.3 confidante nested-h3; v2.7.2 CHANGELOG false-green): the real file caught what the spec ACs did not, and it is what would have made WS5 the KEEP-DROP pattern's 3rd instance the hard way. → quality.yml path-update bound as MANDATORY same-commit in §WS5.
+
+**B1 verification:** SKIPPED (STANDARD classification; external-project cycle — `scope_allow_delta` is a no-op per V44-S5 / ADR-115 §Implications; @dev operates against `/home/user/claude-cowork-config`, not `The-Council/dev.md`).
+
+**§Maturation Path self-grep (per Workflow step 5.5 — GATE before Phase 1 DONE).** Baseline (post-v2.7.2, ADR-035/036) = 2 each; +3 new ADRs (037/038/039), each carrying the block → **5 each** across the ADR bodies. Run `for h in 'Future-state options:' 'Concrete revisit triggers:' 'Risk knowingly accepted:'; do grep -cF "[bold]${h}[bold]" docs/architecture.md; done` (bracket-placeholders shown so this illustrative line does not itself match the grep):
+
+```
+Future-state options:      -> 5   (was 2)
+Concrete revisit triggers: -> 5   (was 2)
+Risk knowingly accepted:   -> 5   (was 2)
+```
+
+(Each of the three counts increased by exactly 3 — one per new ADR — confirming the headers are the verbatim template slots, not paraphrases. Any header whose count did not increase would mean a paraphrase; all three moved 2→5.)
+
+---
+
+### TASK 1 — Open-Question Resolutions (BINDING)
+
+> *ISO 15288 — Decision Management Process.*
+
+#### OQ-1 (WS1 mechanism) — BIND: **full self-contained regeneration** (NOT thin pointer). ADR-038.
+
+**Decisive reasoning (persona-logical, no test needed):** the secondary persona WS1 exists to serve is the *paste-only adopter* who — by definition of "paste-only" — did **not** open the repo folder as a Cowork Project. A thin pointer into `WIZARD.md` requires the runtime to read `WIZARD.md` from the local filesystem; a user who never opened the folder has no such file to resolve. A thin pointer is therefore *unreadable for the exact persona it would serve* — the very failure mode the spec's Risk table rates High-severity. Full self-contained regeneration makes no filesystem-access assumption and matches README:112's literal claim that this path is "functionally equivalent to `CLAUDE.md` auto-load."
+
+**Feasibility confirmed against the live CI budget:** the `starter-file-word-count-check` job (`quality.yml`:270–292) fails any starter > 400 words (target ≤350). Current 7 files measure **322–344 words**; the current v2.7 3-turn interview is *structurally simpler* than the retired 4-Phase/6-Step flow they carry, so a faithful compact regeneration fits comfortably under 400. @dev binds each regenerated file ≤ 400 words (target ≤ 350) — a Phase-4 verification item.
+
+#### OQ-2 (TRUST.md location) — BIND: **repo root** (`/TRUST.md`).
+
+Matches the headline-trust-artifact convention already in the repo (`CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` live at root). Consequence for WS5's "curated public docs" set: it is `docs/how-it-works.md` + `docs/faq.md` **only**; `TRUST.md` lives at root and is linked from README (AC-WS2-7), from `docs/how-it-works.md`, and from `docs/faq.md`.
+
+#### OQ-3 (CLAUDE.md canonical-Q1) — BIND: **keep a compact, meaning-preserving paraphrase** (do NOT absorb `WIZARD.md`:44 verbatim). ADR-039.
+
+**Word-budget correction (production-measured):** the spec's premise ("397/400 words") is **stale** (a v2.6.1-audit F-11 figure). The live `claude-md-word-count-check` gate (`quality.yml`:180–198, `wc -w < CLAUDE.md`, limit 400 / target ≤350) measures CLAUDE.md at **326 words today** — **74 words of headroom** (24 under the ≤350 target). So the budget does *not* force the answer: verbatim absorption would physically fit.
+
+**The architectural call is single-source discipline, not budget.** CLAUDE.md's onboarding block is an operational *summary* that explicitly defers to WIZARD.md as the single script source; introducing a second verbatim copy of the canonical Q1 creates a two-places-to-keep-in-sync drift surface (the exact class WS6 is closing). CLAUDE.md keeps its compact paraphrase; WIZARD.md:44 stays the single verbatim canonical, quoted verbatim *only* by `setup-wizard/SKILL.md` (which is a router, not a summary). One inbound-reference fix is still required — see §WS6 binding (7).
+
+#### OQ-4 (docs/architecture.md structure) — BIND: **do NOT split; do NOT add a separate `ADR-INDEX.md` this cycle.**
+
+The file is ~8.8k lines and already carries an in-file `## ADR Index` table (top of file) that this cycle extends with the ADR-037/038/039 rows. Splitting into a separate index + log file is explicitly out-of-scope per spec §Will NOT Do and disproportionate to Phase-B scope discipline. It stays one public file at its current `docs/` root path (consistent with becoming public under WS5). A thin non-splitting index file is captured as a future-state option in ADR-037's §Maturation Path.
+
+---
+
+### TASK 2 — WS5 `docs/` Move Manifest (highest-risk deliverable)
+
+> *ISO 15288 — Configuration Management Process.*
+
+**Inventory reconciled from the live tree:** 43 top-level `docs/*.md` + 2 in `docs/research/` + 1 in `docs/security/` = **46 docs files**. Of these: **7 stay at `docs/` root** (4 public + 3 Council-tooling-exempt export-ignore'd), **2 `docs/research/*` become public in place**, and **39 relocate into `docs/internal/`**. New public files created: `docs/how-it-works.md`, `docs/faq.md`, and `/TRUST.md` (root).
+
+#### 2a — Stay at `docs/` root (NOT moved)
+
+| File | Disposition | Basis |
+|---|---|---|
+| `docs/architecture.md` | PUBLIC (already KEEP; unchanged) | ADR log; becomes a "how we build" credibility asset; OQ-4 keeps it unsplit |
+| `docs/spec.md` | STAY, remain `export-ignore` | Council-tooling path — `.claude/agents/pm.md` "What You Own"; no path-override mechanism exists |
+| `docs/retro.md` | STAY, remain `export-ignore` | Council-tooling path — `CLAUDE.md` §Quality Dashboard "Historical cycles" |
+| `docs/patterns.md` | STAY, remain `export-ignore` | Council-tooling path — `CLAUDE.md` §Quality Dashboard "Recurring patterns" |
+| `docs/project-audit-v2.6.1.md` | **BECOMES PUBLIC** (remove from DROP) | credibility asset ("how we test") per the plan |
+| `docs/research/v2.2-skill-landscape.md` | **BECOMES PUBLIC** (in place) | research credibility asset |
+| `docs/research/v2.7-usercase-test-and-improvement-research.md` | **BECOMES PUBLIC** (in place) | research credibility asset; source for WS2's "What's new" swarm-test story |
+| `docs/how-it-works.md` *(new)* | PUBLIC | WS5 curated public doc |
+| `docs/faq.md` *(new)* | PUBLIC | WS5 curated public doc |
+
+#### 2b — Relocate into `docs/internal/` (39 files, `git mv`)
+
+| Destination | Count | Files |
+|---|---|---|
+| `docs/internal/qa/` | **12** | `qa-report.md`, `qa-report-v2.3.0.md`, `qa-report-v2.3.1.md`, `qa-report-v2.4.md`, `qa-report-v2.5.md`, `qa-report-v2.5.1.md`, `qa-report-v2.5.2.md`, `qa-report-v2.5.3.md`, `qa-report-v2.5.4.md`, `qa-report-v2.6.0.md`, `qa-report-v2.6.1.md`, `qa-report-v2.7.2.md` |
+| `docs/internal/security/` | **16** | `security-review.md`, `security-review-v1.1.md`, `security-review-v2.3.0.md`, `security-review-v2.3.1.md`, `security-review-v2.4.md`, `security-review-v2.5.md`, `security-review-v2.5.3.md`, `security-review-v2.6.0.md`, `security-review-v2.7.2.md`, `security-audit.md`, `security-audit-v1.1.md`, `security-audit-v2.3.1.md`, `security-audit-v2.4.md`, `security-audit-v2.5.md`, `security-audit-v2.5.2.md`, `security/upstream-content-scan-rules.md` |
+| `docs/internal/compliance/` | **3** | `compliance-review.md`, `compliance-review-v2.5.md`, `compliance-review-v2.5.2.md` |
+| `docs/internal/process/` | **5** | `dev-deliberation-v2.3.1.md`, `ux-review.md`, `retro-template.md`, `OUTPUT-STRUCTURE.md`, `skills-roadmap.md` |
+| `docs/internal/planning/` | **3** | `personas.md`, `competitive.md`, `assumptions.md` |
+
+`find docs/internal -type f | wc -l` → **39** (AC-WS5-1 requires ≥30). Note `docs/security/upstream-content-scan-rules.md` moves to `docs/internal/security/upstream-content-scan-rules.md` and the now-empty `docs/security/` directory is removed.
+
+#### 2c — Inbound-reference cross-check (AC-WS5-2, WATCH-2/3 mitigation, BROADENED — MUST run BEFORE finalizing the move)
+
+Production validation broadened the cross-check beyond the spec's link-only/6-surface form (see EARS finding 2). The authoritative pre-move cross-check command @dev MUST run (and re-run to 0 post-move) is:
+
+```bash
+grep -rnE "(\]\(|\`)?docs/(internal/)?(assumptions|competitive|compliance-review|dev-deliberation|personas|qa-report|retro-template|security-audit|security-review|skills-roadmap|OUTPUT-STRUCTURE|ux-review|security/upstream-content-scan-rules)" \
+  README.md CONTRIBUTING.md SETUP-CHECKLIST.md WIZARD.md CLAUDE.md \
+  .claude/skills/ .github/workflows/quality.yml .github/workflows/sync-agency.yml .github/workflows/release-assets.yml
+```
+
+**Enumerated hits found in the live tree (every one must be rewritten in the SAME commit as the move):**
+
+| # | Location | Current ref | Rewrite to | Form | Break class if missed |
+|---|---|---|---|---|---|
+| 1 | `.github/workflows/quality.yml:908` | `docs/security/upstream-content-scan-rules.md` | `docs/internal/security/upstream-content-scan-rules.md` | **functional bash `grep -c`** | **HARD CI FAIL (`exit 1`)** — MANDATORY |
+| 2 | `.github/workflows/quality.yml:920` | `docs/security/upstream-content-scan-rules.md` | `docs/internal/security/upstream-content-scan-rules.md` | **functional bash `grep` (while-read)** | **HARD CI FAIL (`exit 1`)** — MANDATORY |
+| 3 | `CONTRIBUTING.md:41` | `` `docs/retro-template.md` `` | `` `docs/internal/process/retro-template.md` `` | backtick inline-code | stale pointer (not lychee-caught, not AC-WS5-2-link-caught) |
+| 4 | `CONTRIBUTING.md:292` | `` `docs/security/upstream-content-scan-rules.md` `` | `` `docs/internal/security/upstream-content-scan-rules.md` `` | backtick inline-code | stale pointer |
+| 5 | `CONTRIBUTING.md:299` | `` `docs/security-review.md` `` | `` `docs/internal/security/security-review.md` `` | backtick inline-code | stale pointer |
+| 6 | `.github/workflows/sync-agency.yml:8` | `docs/security-review.md` (comment) | `docs/internal/security/security-review.md` | YAML comment | stale comment |
+| 7 | `.github/workflows/sync-agency.yml:141` | `docs/security/upstream-content-scan-rules.md` (comment) | `docs/internal/security/upstream-content-scan-rules.md` | YAML comment | stale comment |
+| 8 | `.github/workflows/sync-agency.yml:404` | `docs/security/upstream-content-scan-rules.md` (PR-body heredoc) | `docs/internal/security/upstream-content-scan-rules.md` | generated PR text | stale link in generated PRs |
+| 9 | `.github/workflows/sync-agency.yml:410` | `docs/security-review.md` (PR-body heredoc) | `docs/internal/security/security-review.md` | generated PR text | stale link in generated PRs |
+
+**Clean surfaces (verified 0 hits to relocation candidates):** `README.md` (its only `](docs/...)` link is `docs/architecture.md`, which stays), `SETUP-CHECKLIST.md`, `WIZARD.md`, `CLAUDE.md`, `.claude/skills/setup-wizard/SKILL.md`, `THIRD-PARTY-NOTICES.md`, `CODE_OF_CONDUCT.md`.
+
+**`CHANGELOG.md` — LEAVE (do NOT rewrite):** 10 references to moving files exist, but (a) `CHANGELOG.md` is append-only history describing the file's location *at that release*, (b) all 10 are backtick/plain-text form (0 `](docs/...)` links → lychee-safe), and (c) rewriting historical entries would falsify the record. Bound: CHANGELOG historical references are intentionally left unchanged.
+
+**Lychee link-integrity (AC-WS5-4):** repo-wide there is exactly ONE `](docs/...)` link-form reference to any `docs/` path (`docs/qa-report.md:759`, a `](docs/...)` ellipsis inside a fenced code block quoting the AC-WS5-2 grep — inert to lychee). Intra-internal cross-links among the 39 moving files are relative `](CHANGELOG.md)` refs that resolve identically (code-block-fenced) regardless of subdir, so the move is **link-neutral** — no new lychee breakage introduced. Edge Case 3 (atomic landing) is bound: the move + all 9 rewrites + `.gitattributes` + both workflow updates land as a SINGLE commit so CI never evaluates a half-moved tree.
+
+#### 2d — `.gitattributes` collapse (AC-WS5-3)
+
+The ~42 individual `docs/*` DROP lines collapse to a single directory rule plus 3 named Council-tooling exceptions:
+
+```gitattributes
+# --- docs/ (default-internal convention — a NEW docs/*.md ships to users ONLY if placed outside docs/internal/) ---
+docs/internal/          export-ignore
+# Council-tooling-exempt (stay at docs/ root, individually dropped — no path-override mechanism exists):
+docs/spec.md            export-ignore
+docs/retro.md           export-ignore
+docs/patterns.md        export-ignore
+```
+
+Removed from DROP (become public): all per-file `docs/qa-report-*`/`security-*`/`compliance-*`/`personas`/`competitive`/`assumptions`/`OUTPUT-STRUCTURE`/`skills-roadmap`/`retro-template`/`dev-deliberation`/`ux-review` lines, plus `docs/research/` and `docs/project-audit-v2.6.1.md`. Result: `grep -c "^docs/" .gitattributes` = **4** (AC-WS5-3 requires ≤6); `grep -c "docs/research/\|docs/project-audit-v2.6.1.md" .gitattributes` = **0**. `docs/architecture.md` needs no line (public by default). The old `docs/security/` line is dropped (folder gone; covered by `docs/internal/`).
+
+#### 2e — `release-assets.yml` archive sanity-check (AC-WS5-5)
+
+The existing "Verify archive contents" step (lines 30–88) is UPDATED, not replaced:
+- **DROP_PATHS** (negative — MUST NOT appear in archive): replace the individual moved-file entries (`docs/personas.md`, `docs/qa-report.md`, `docs/security-review.md`, `docs/security-audit.md`, `docs/competitive.md`, `docs/security/`) with a single `docs/internal/` entry; KEEP `docs/spec.md` and `docs/retro.md`; ADD `docs/patterns.md`; REMOVE `docs/research/` (now public).
+- **KEEP_PATHS** (positive — MUST appear): keep `docs/architecture.md`; ADD `docs/research/`, `docs/project-audit-v2.6.1.md`, `docs/how-it-works.md`, `docs/faq.md`, and `TRUST.md`.
+- `grep -c "docs/internal" .github/workflows/release-assets.yml` → **≥1** (AC-WS5-5). The `git archive` negation caveat (`.gitattributes` does not honor `!pattern`, per the file's own header) is preserved — the collapse uses a directory `export-ignore`, not a negation.
+
+---
+
+### TASK 3 — Classification, ADRs, Bindings
+
+> *ISO 15288 — Decision Management Process + Risk Management Process.*
+
+#### 3.1 Classification (BINDING): **STANDARD** — Phase 2 @security elevated to mandatory combined-path CI-diff spot-review
+
+**One-line decision the orchestrator can act on:** *v2.8.0 is STANDARD — proceed to Phase 2 `/review` as a **combined-path** @security spot-review of three workflow diffs (`quality.yml`, `sync-agency.yml`, `release-assets.yml`) + the WS5 move manifest; NOT a full sequential SECURITY-SENSITIVE Phase 2; **no** Guard Change Summary (no guard/secret/permission/Action change).*
+
+**Rationale (aligned to this repo's v2.7.2 / v2.6.0 reconciliation precedent):**
+- WS1's drift-marker step is *purely additive, read-only bash/grep* — no new Action (no SHA to pin), no `permissions:` block, no secret, no network, modifies no existing control. Identical shape to v2.7.2 WS2, which held STANDARD through Phase 6.
+- WS5 relocates 39 tracked files + collapses `.gitattributes` + updates `release-assets.yml`. Material *blast radius* but **zero** auth/schema/AI-instruction/secret/permission/supply-chain-*control-semantics* change. `git mv` is non-destructive and fully revertible.
+- The two elevations over "pure STANDARD" both stem from the production-validation catch, and neither flips the classification: (1) WS5 must edit `quality.yml`'s functional path-read (a **path string**, not the gate's patterns or logic — semantics byte-identical); (2) WS5 must edit `sync-agency.yml` — but only a **comment and a PR-body heredoc string**, NOT the `SCAN_PATTERNS`, `permissions`, `contents:write`, or any security logic. Per the binding material line ("*modifying an existing security **control*** earns SECURITY-SENSITIVE; *adjusting a path string / comment that touches no secret/permission/logic* is STANDARD"), both are STANDARD-with-spot-check.
+- Because the cycle nonetheless *touches two live workflows* (one of them the supply-chain workflow, even if only its prose), the @pm-recommended "optional Phase 2" is **elevated to a mandatory combined-path spot-review** of those diffs — stronger than skip, lighter than a full SECURITY-SENSITIVE Phase 2. This also honors the KEEP-DROP pattern's stakes (see OI-SEC-2).
+
+**Guard Change Summary: NOT required** — no guard, `.claude/settings.json`, `pipeline-policy`, agent-scope, secret, permission, or Action change. (Decision-surface hygiene still applies: the PR description carries a one-paragraph plain-language "what WS5 moved + the two workflow path-edits + blast radius" note for the non-dev merge call.)
+
+#### 3.2 Classification Re-Run (post-OQ, per `docs/pipeline-policy.md` §PostOQClassificationReRun / ADR-115)
+
+Final file list compiled from §D below. Result: **CONFIRMED STANDARD.** Rationale: OQ resolution + production validation *expanded the file list* within WS5 — adding `.github/workflows/quality.yml` and `.github/workflows/sync-agency.yml` edits that the spec's WS5 prose did not enumerate (it named only `.gitattributes` + `release-assets.yml`). This is an **upward scope expansion in surface count** but **not** in trigger class: no auth/schema/secret/permission/guard/supply-chain-logic surface is added — only a functional path string and two prose references. Classification does not flip. The single consequence recorded: Phase 2 @security spot-review is elevated from *optional* to *mandatory-combined-path* to cover the two newly-in-scope workflow diffs. No upward flip to SECURITY-SENSITIVE; Phase 2 is not skippable at this tier but runs combined-path.
+
+#### 3.3 §D — File-by-File Implementation Plan (Phase 4 @dev work-order)
+
+> *ISO 15288 — Implementation Process (hand-off to @dev at Phase 4).*
+
+| File | Action | WS | Key binding |
+|---|---|---|---|
+| `examples/*/project-instructions-starter.txt` (×7) | REGENERATE | WS1 | Full self-contained v2.7 3-turn interview; must contain `Confirmed bundle` + fast-track "Keep going — 2 minutes to a fully personalized workspace"; retain safety rule verbatim; ≤400 words each (target ≤350); zero retired markers |
+| `.github/workflows/quality.yml` | ADD STEP + PATH-FIX | WS1, WS5 | (a) new additive drift-marker step (see §WS1); (b) lines 908/920 path → `docs/internal/security/upstream-content-scan-rules.md` (MANDATORY same commit as move) |
+| `README.md` | REWRITE | WS2, WS3 | H1+identity; trust story (Snyk+PromptArmor); What's-new swarm story; remove v2.4/v1.2 archaeology; diagram Step-7 handover; fast-path callout; offline reframe; TRUST.md link; demo `<img>` slot |
+| `TRUST.md` *(new, root)* | CREATE | WS2 | plain-language threat model + mitigations (skeleton §WS2) |
+| `README.md` demo asset | CREATE (synthetic SVG) | WS3 | self-contained animated SVG (spec §WS3); `<img>`/`![]()` embed with alt text |
+| `docs/how-it-works.md`, `docs/faq.md` *(new)* | CREATE | WS5 | curated public docs; link TRUST.md |
+| `tests/offline-smoke-test.md` | FILL SCORECARD | WS4 | 4 real timed runs; apply decision rule (§WS4) |
+| `CONTRIBUTING.md` | EDIT | WS4, WS5 | add offline-smoke-test release-checklist item; rewrite 3 backtick refs (cross-check #3/#4/#5) |
+| 39 `docs/*` files | `git mv` → `docs/internal/**` | WS5 | per §2b manifest |
+| `.gitattributes` | COLLAPSE | WS5 | per §2d |
+| `.github/workflows/release-assets.yml` | EDIT | WS5 | DROP/KEEP arrays per §2e |
+| `.github/workflows/sync-agency.yml` | EDIT | WS5 | 4 prose/comment/heredoc path rewrites (cross-check #6/#7/#8/#9) |
+| `WIZARD.md` | EDIT | WS6 | 7 exact-line bindings (§WS6) incl. BOTH `## Phase 1` heading renames |
+| `CLAUDE.md` | EDIT | WS6 | line 25 inbound-ref fix (renamed heading); keep compact Q1 paraphrase (OQ-3) |
+| `.claude/skills/setup-wizard/SKILL.md` | EDIT | WS6 | quote WIZARD.md:44 verbatim; drop duplicate preset menu |
+| `VERSION`, `README.md` badge, `CHANGELOG.md` | BUMP | release | 2.7.2 → 2.8.0 (must agree — `version-consistency-check`); split `[Unreleased]` per ADR-036 |
+
+**scope_allow_delta:**
+```yaml
+scope_allow_delta:
+  add: []
+  rationale: "SKIP — external-project cycle (V44-S5 / ADR-115 §Implications). @dev operates against /home/user/claude-cowork-config, not The-Council/dev.md; no Council guard scope_allow adjustment applies. Consistent with v2.5.3 / v2.5.4 / v2.6.0 / v2.7.2 precedent."
+```
+
+#### 3.4 WS1 — Drift-Marker CI Step Design (AC-WS1-3, with negative control)
+
+A new **step inside the existing** `quality.yml` (no new workflow file, per spec constraint). Design — bash/grep only, case-insensitive, covers both `Step N: Name` and `Phase N —/-` shapes and the em-dash, and generalizes to `Phase [0-9]+` (a superset of the spec's enumerated 1/2/3 — also catches a stray "Phase 4 —"):
+
+```yaml
+  starter-drift-marker-check:
+    name: Starter Drift-Marker Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<pinned-sha>
+      - name: Fail on any retired-interview marker in starter files
+        run: |
+          set -o pipefail
+          RETIRED='Step [0-9]+: Name|Phase [0-9]+ [—-]|Workspace ready\.'
+          HITS=$(grep -riEl "$RETIRED" examples/*/project-instructions-starter.txt || true)
+          if [ -n "$HITS" ]; then
+            echo "::error::Retired-interview marker found — starter files must reflect the current v2.7 WIZARD.md interview:"
+            echo "$HITS"
+            exit 1
+          fi
+          echo "PASS: no retired-interview markers in any starter file."
+```
+
+`Step [0-9]+: Name` requires the `: Name` suffix so a legitimate numbered step never false-positives; the regenerated starters use `Status:`/`Goal preset:`/`Objective:`/`Confirmed bundle:` (no `Step N: Name`), `Q1/F4/Q2/Q3` labels (no `Phase N —`), and the "Basics saved…" fast-track (no "Workspace ready.") — so the step is clean-green post-WS1.
+
+**Negative control (Check-That-Cannot-Fail, `docs/patterns.md` WATCH 1/3 — MANDATORY, per AC-WS1-3):** at Phase 4, BEFORE trusting a green run, @dev injects the exact string `Step 1: Name` into ONE starter, runs the step's script locally under `bash -eo pipefail`, and confirms it exits **non-zero** and prints the `::error::` line naming that file; then reverts. The negative-control run + its observed exit code/message are recorded verbatim in the Phase-4 commit message (mirrors v2.7.2's NC-1/NC-2/NC-3 precedent).
+
+#### 3.5 WS2 — README Content Skeleton (@dev writes prose; skeleton binds structure/order)
+
+Bound top-to-bottom order (first ~3 screens carry the LinkedIn-visitor story): (1) `# ` H1 title + one-line identity block (AC-WS2-1); (2) badges; (3) **demo `<img>` slot** within first ~30 lines (AC-WS3-1); (4) trust story ~60 lines citing **Snyk** (ToxicSkills: 36.8% of ~4,000 public agent skills flawed, 76 confirmed malicious, Feb 2026) + **PromptArmor** (Cowork file-exfiltration-via-prompt-injection) as third-party evidence for the SHA-pinning/vendoring/ADR-024 design (AC-WS2-2) — figures spot-checked fresh before publish per AC-WS2-9/Risk-3; (5) "in a hurry?" fast-path callout (AC-WS2-6); (6) offline reframe "zero runtime fetches / fully reviewable supply chain" alongside existing language (AC-WS2-8); (7) enriched `## What's new in v2.7` naming the 16-agent swarm/persona-simulation methodology + the two FAILs found-and-fixed, sourced from `docs/research/v2.7-usercase-test-and-improvement-research.md` (AC-WS2-3); (8) updated ASCII sequence diagram reflecting the Step-7 handover (personalized `CLAUDE.md` + installer archived to `_setup-kit/`) (AC-WS2-5); (9) TRUST.md link (AC-WS2-7); REMOVE the "v2.4 highlights:" (line 125) and "Earlier highlights (v1.2):" (line 133) archaeology blocks (AC-WS2-4). **Denylist (AC-WS2-9):** no competitor/tool names in new copy beyond Snyk, PromptArmor, `agency-agents`/`msitarzewski`; disposition recorded in the Phase-4 commit message.
+
+#### 3.6 WS3 — Synthetic Demo Asset Spec (user-decided: SYNTHETIC, chat-style animated SVG)
+
+**Format:** a single self-contained inline SVG (`docs/assets/setup-demo.svg` or `assets/setup-demo.svg`), GitHub-renderable, **no external asset, no JS, no host dependency** — animation via **SMIL** (`<animate>`/`<set>` with `begin` chaining) or CSS-in-SVG (`<style>` inside `<svg>`). GitHub sanitizes SVG in markdown when embedded via `![]()`/`<img>` (it does not execute `<script>`), so animation MUST be declarative SMIL/CSS, never JS.
+
+**README embed (bound markup):**
+```markdown
+![Cowork Starter Kit setup demo — describe your goal in plain language, answer three quick turns, and get a working, personalized workspace with installed skills](assets/setup-demo.svg)
+```
+Alt text is load-bearing (accessibility + the no-render fallback narrative). The slot ships this cycle regardless of production timing (AC-WS3-1/2).
+
+**Content beats (chat-style mockup of the real 3-turn flow):** (beat 1) user bubble: a plain-language goal, e.g. *"I'm a biochem student prepping for finals"*; (beat 2) assistant bubble: Q1 routing → proposes a **team** ("Flashcard Generation as your study partner, Note-Taking as your scribe, Research Synthesis as your analyst — sound right?"); (beat 3) user confirms; (beat 4) F4 profile-stub checkpoint + the fast-track offer line; (beat 5) Q2 name/role; (beat 6) closing "workspace ready" state showing the installed skill files at `.claude/skills/<slug>/SKILL.md` + the personalized `CLAUDE.md`. Beats reveal sequentially (staggered `begin` offsets) looping once or gently. Keep it legible at README width (~800px); monospace/chat styling; no real PII; content must match the current WIZARD.md interview (no retired flow, no "Workspace ready." literal — use "Your workspace is ready.").
+
+#### 3.7 WS2 — TRUST.md Skeleton (root; @dev writes prose)
+
+`# Trust & Safety` H1 → sections: **What this kit is (and isn't)** · **What could go wrong with an AI-agent starter kit** (plain-language threat model: malicious/flawed community skills, prompt-injection via pasted content, supply-chain tampering) · **What this kit does about it** (SHA-pinning in `cowork.lock.json`; vendored-inside-repo `vendored/agency-agents/` with `vendored-integrity-check`; ADR-024 attribution injection; ADR-011 CLAUDE.md ≤400-word bootstrap ceiling as an injection-threshold control; ADR-019 data-locality posture; the `/sync-agency` human-review-before-merge gate) · **Third-party evidence** (Snyk ToxicSkills + PromptArmor, same citations as README) · **Trust boundary** (the `cowork.lock.json` anchor; fork/modified-lock caveat) · **How to verify it yourself** (point at `docs/architecture.md`, `docs/project-audit-v2.6.1.md`, `docs/research/`). Linked from README (AC-WS2-7), `docs/how-it-works.md`, `docs/faq.md`. `grep -c "^# " TRUST.md` ≥ 1.
+
+#### 3.8 WS4 — Timing Protocol + Decision Rule (pre-bound BEFORE the runs)
+
+Run `tests/offline-smoke-test.md` for real ×4, one per scorecard row (Path A clear goal / Path C novel goal / fast-track exit at F4 / returning-user add-skill). Fill wall-clock for each (Edge Case 1: an interrupted run is marked `ABORTED — retry`, excluded from the median, and does NOT count toward the 4). **Decision rule (applied after all 4 complete):** median ≤ 15 min → keep "15 minutes"; 15 < median ≤ 20 → soften to "about 15–20 minutes"; median > 20 → replace with actual median rounded up to nearest 5 min AND file a Phase-4 note distinguishing a genuine regression from an atypical environment (Edge Case 5 / P4). The resulting hero wording is presented at gate for confirmation; the *rule* is bound here, not at gate. Wire the smoke test into the permanent release process: a `CONTRIBUTING.md` release-checklist item (AC-WS4-3, `grep -c "offline-smoke-test" CONTRIBUTING.md` ≥ 1) + a reminder comment in `release-assets.yml`.
+
+#### 3.9 WS6 — Exact-Line Bindings (8 total)
+
+| # | File:line | Current | Bind to |
+|---|---|---|---|
+| 1 | `WIZARD.md:227` | "If **CLAUDE.md Phase 3** already generated a personalized one there…" | "If the optional **Q3 voice turn** already generated a personalized one there…" |
+| 2 | `WIZARD.md:343` (heading) | `## Phase 1 — Uncertainty Fallback` | `## Uncertainty Fallback (Q1)` |
+| 3 | `WIZARD.md:345` | "If the user replies to **CLAUDE.md Phase 1** with 'not sure'…" | "If the user replies to **Q1 goal-discovery** with 'not sure'…" |
+| 4 | `WIZARD.md:355` | "Then resume **CLAUDE.md Phase 1** routing…" | "Then resume **Q1 goal-discovery** routing…" |
+| 5 | `WIZARD.md:365` (heading) — **production-validation catch** | `## Phase 1 — Role-Generation Rule (AC-W2-9)` | `## Role-Generation Rule (Q1, AC-W2-9)` |
+| 6 | `WIZARD.md:393` | "…restart from **CLAUDE.md Phase 1**." | "…restart from **Q1 goal-discovery**." |
+| 7 | `CLAUDE.md:25` — **inbound ref to renamed heading (2)** | "see **WIZARD.md Phase 1 Uncertainty Fallback**." | "see **WIZARD.md Uncertainty Fallback (Q1)**." (word-neutral; preserves 326/400 budget) |
+| 8 | `.claude/skills/setup-wizard/SKILL.md:20–34` (Q1 block) | own phrasing + duplicate 7-preset menu | open verbatim: `> "Welcome! What do you need help with? Describe your goal in your own words — or type 'not sure' for suggestions."`; DROP the duplicate preset menu; defer "not sure" to WIZARD.md's Uncertainty Fallback |
+
+Post-edit verifies: `grep -c "CLAUDE.md Phase" WIZARD.md` = 0 (AC-WS6-1); `grep -c "^## Phase 1" WIZARD.md` = 0 (AC-WS6-2 — **now reaches 0 only because BOTH headings 2 & 5 are renamed**); `grep -cF "Welcome! What do you need help with? Describe your goal in your own words" .claude/skills/setup-wizard/SKILL.md` ≥ 1 (AC-WS6-3). **Do NOT touch** the ADR-024 non-overridable attribution rule in WIZARD.md/CLAUDE.md (verbatim-presence CI gate at `quality.yml`:845).
+
+#### 3.10 Anti-Pattern Scan (11-point, per §Anti-Pattern Detection)
+
+Nos. 1–8 (God Class, Circular Deps, Leaky Abstraction, Premature Optimization, Over-Engineering, Tight Coupling, Missing SoC, N+1) — **N/A**: no code modules, business logic, or DB queries this cycle (docs-IA + README + CI-hygiene). No. 9 **Destructive Migration** — **avoided by design**: WS5 uses `git mv` (fully `git revert`-able), no `DROP`/`TRUNCATE`/irreversible operation; the atomic single-commit landing (Edge Case 3) is the safeguard. No. 10 **SoS Interface Discontinuity** — N/A (single-project). No. 11 **Cross-Project Tight Coupling** — N/A. The one *pattern-adjacent* risk is `docs/patterns.md`'s KEEP-DROP Cross-Check Gap (WATCH 2/3): WS5 is its textbook 3rd instance and would have recurred *silently* via the two live-CI functional couplings — neutralized by the §2c broadened cross-check + the MANDATORY same-commit quality.yml path-fix.
+
+#### 3.11 Open Issues for @security (Phase 2 — combined-path spot-review)
+
+| ID | Surface | Ask | Expected verdict |
+|---|---|---|---|
+| **OI-SEC-1** | `quality.yml` diff (WS1 new step + lines 908/920 path-fix) | Confirm the new drift-marker step adds no Action/secret/permission and the `upstream-content-scan-rules.md` path-fix changes ONLY the path (patterns/logic byte-identical); confirm the security-relevant "#28 Fix A" JSONL regression gate still reads a valid path post-move | PASS |
+| **OI-SEC-2** | WS5 move manifest + broadened cross-check | Confirm the 39-file relocation introduces no export-ignore leak (a moved internal file cannot become public) and no KEEP-list omission (a credibility asset cannot silently drop); confirm `docs/internal/` DROP rule + `release-assets.yml` arrays are self-consistent | PASS (exhaustive, not sampled — per spec §Classification point 2) |
+| **OI-SEC-3** | `sync-agency.yml` diff (4 prose/comment/heredoc path rewrites) | Confirm ONLY comments + PR-body heredoc text change; `SCAN_PATTERNS`, `permissions:`, `contents:write`/`pull-requests:write`, and the 24h-soak/human-review gate are byte-unchanged | PASS |
+| **OI-SEC-4** | WS3 synthetic SVG | Confirm the demo SVG is declarative SMIL/CSS only (no `<script>`, no external `href` fetch) so GitHub's SVG sanitizer renders it inertly | PASS |
+
+---
+
+### Architectural Modifications (also mirrored to `docs/spec.md`)
+
+Per Workflow Step 4a — ACs adjusted during design (both from production validation, design-resolved, no user decision pending):
+
+- **AC-WS6-2** → BOTH `^## Phase 1` headings in WIZARD.md are renamed (lines 343 AND 365), not just the one the WS6 prose named — Reason: production validation found a second `## Phase 1 — Role-Generation Rule` heading that the AC-WS6-2 verify (`grep -c "^## Phase 1" = 0`) also gates on.
+- **AC-WS5-2** → cross-check broadened from `](docs/...` link-form/6-doc-surfaces to ALSO cover backtick `` `docs/...` `` form + bare functional path-reads, ACROSS `.github/workflows/{quality,sync-agency,release-assets}.yml` — Reason: every real inbound reference to a relocation candidate is backtick/functional/comment form (invisible to the link-only verify), and `quality.yml`'s functional read of `docs/security/upstream-content-scan-rules.md` hard-fails CI on the move; the as-written verify was a check-that-cannot-fail.
+
+---
+
+### ADR-037: docs/ Information-Architecture Split + Default-Internal `.gitattributes` Convention (v2.8.0)
+
+**Status:** ACCEPTED. **Cycle:** v2.8.0 WS5. **Companion:** ADR-033 (release-artifact convention), the v2.6.1 Release-Archive-Hygiene memo (this closes its D-9 latent-leak class).
+
+**Context:** `docs/` fronted ~40 internal QA/security/compliance artifacts ahead of the credibility assets a visitor needs, and `.gitattributes` used a ~42-line per-file DROP allowlist — meaning any *future* `docs/*.md` file shipped to users **by default** unless someone remembered to add a DROP line (the D-9 leak class). Relocating ~40 tracked files is also the exact failure class that forced the v2.6.1 gate REVOKE (`docs/patterns.md` KEEP-DROP WATCH 2/3).
+
+**Decision:** Create `docs/internal/{qa,security,compliance,process,planning}/` and `git mv` 39 internal artifacts into it (manifest §2b). Collapse the per-file DROP allowlist to a single `docs/internal/ export-ignore` directory rule, so a new `docs/*.md` file defaults to **public-unless-placed-internal** — inverting the leak direction. Retain `docs/spec.md`/`retro.md`/`patterns.md` at `docs/` root, individually `export-ignore`'d, under a Council-tooling exemption (no path-override mechanism exists; relocating them would break every future Council pipeline cycle's file discovery). Flip `docs/architecture.md`, `docs/research/*`, `docs/project-audit-v2.6.1.md` to public. The move + all 9 inbound-reference rewrites (incl. the MANDATORY `quality.yml` functional-path fix) + `.gitattributes` + `release-assets.yml` land as ONE atomic commit.
+
+**Alternatives considered:** (a) literal single-line `docs/internal/` collapse with NO exemptions — rejected: silently breaks Council tooling for spec/retro/patterns. (b) leave the per-file allowlist, just add the new files — rejected: does not close the default-leak direction (D-9 persists). (c) move spec/retro/patterns too and add a path-override shim — rejected: out of Phase-B scope, invents a mechanism to work around a self-inflicted move.
+
+**Consequences:** D-9 leak class closed structurally, not by convention. A future contributor cannot ship a new internal artifact to users by adding it under `docs/` — internal is the default. Cost: one large mechanical move whose safety depends entirely on the broadened inbound-reference cross-check (§2c) running BEFORE finalization; @qa Phase 5 verification of AC-WS5-1..5 is exhaustive, not sampled. The three Council-tooling exceptions are a permanent (small) deviation from a pure single-line rule.
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** (a) a thin non-splitting `docs/ADR-INDEX.md` pointer file fronting `architecture.md` (deferred per OQ-4); (b) a Council-side project-specific path-override mechanism that would let `spec.md`/`retro.md`/`patterns.md` also move under `docs/internal/`, removing the three exemptions; (c) a CI assertion that every `docs/internal/**` file is absent from the release archive (folds the manifest check into an automated gate).
+- **Concrete revisit triggers:** (a) The-Council ships a per-project path-override → collapse the 3 exemptions into the single directory rule; (b) a future cycle adds a new *public* doc category large enough to warrant its own top-level `docs/` subtree; (c) a moved internal file is discovered referenced by an external bookmark/URL (the one Rollback caveat) — would motivate redirect stubs.
+- **Risk knowingly accepted:** the move's link/CI integrity rests on a one-time cross-check rather than a standing guard this cycle; a *new* future workflow that functionally reads a `docs/internal/**` path could regress silently until its own PR's CI runs. Accepted for Phase-B scope; revisit-trigger (c)/future-option (c) would add the standing gate.
+
+### ADR-038: Starter-File Self-Contained Regeneration + CI Drift-Marker Guard (v2.8.0)
+
+**Status:** ACCEPTED. **Cycle:** v2.8.0 WS1. **Resolves:** OQ-1; D-1.
+
+**Context:** All 7 `examples/*/project-instructions-starter.txt` (README:56/58/78/112 "functionally equivalent to CLAUDE.md auto-load") still ran the *retired* pre-v2.7 4-Phase/6-Step interview with the wrong fast-track string and an incompatible profile schema — a materially worse, partially-broken experience for the paste-only persona. The mechanism (regenerate vs thin-pointer) was open (OQ-1).
+
+**Decision:** **Full self-contained regeneration** of all 7 starters to the current v2.7 3-turn interview (Q1 open-ended discovery, F4 profile-stub `Status:`/`Goal preset:`/`Objective:`/`Confirmed bundle:`, correct "Basics saved… Keep going — 2 minutes…" fast-track, Q2, optional Q3), each ≤400 words (target ≤350). A new *additive read-only* `quality.yml` step fails the build on any retired-interview marker across all 7 (case-insensitive; `Step N: Name` / `Phase N —` shapes; generalized `Phase [0-9]+`), proven with a negative control before the green run is trusted.
+
+**Alternatives considered:** thin pointer into `WIZARD.md` — **rejected on persona logic**: the paste-only user has no filesystem access to resolve a pointer (they never opened the folder), so a pointer is unreadable for the exact persona WS1 serves; also fails README:112's "functionally equivalent" claim. A regeneration-without-CI-guard was rejected — the defect would silently reappear on the next interview change (`structural-problems-permanent-fix`: enforcement over prose).
+
+**Consequences:** the paste-only path reaches parity with folder-access onboarding, making no filesystem assumption. The CI guard makes this defect class impossible to reintroduce silently. Cost: 7 files must be kept in sync with `WIZARD.md` on future interview changes — but the CI guard now *fails loudly* when they drift on the retired markers, converting a silent-rot risk into a visible gate. The ≤400-word ceiling constrains how much of the interview each starter can inline (mitigated: the 3-turn flow is compact).
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** (a) generate the 7 starters from `WIZARD.md` via a small build script + a CI freshness assertion (byte-diff generated-vs-committed), removing hand-maintenance while keeping self-containment; (b) widen the drift-marker regex to also assert *positive* presence of current-interview markers (`Confirmed bundle`) as a companion gate.
+- **Concrete revisit triggers:** (a) the WIZARD.md interview changes again and the 7 starters need a coordinated update (script would pay off); (b) a starter approaches the 400-word ceiling as the interview grows; (c) a drift-marker false-positive/negative surfaces in a future edit.
+- **Risk knowingly accepted:** hand-maintained regeneration means the 7 starters can drift from WIZARD.md on a *non-retired-marker* change (e.g., a reworded fast-track) without the current guard catching it — the guard only asserts absence of *retired* markers, not full parity. Accepted this cycle; future-option (a)/(b) would close the parity gap.
+
+### ADR-039: Canonical Q1 Single-Source Enforcement (v2.8.0)
+
+**Status:** ACCEPTED. **Cycle:** v2.8.0 WS6. **Resolves:** OQ-3; D-5/D-6.
+
+**Context:** Three divergent Q1 opener phrasings existed across `WIZARD.md`:44, `CLAUDE.md`:20, and `.claude/skills/setup-wizard/SKILL.md`:22 (the latter also carrying a *duplicate* embedded 7-preset menu that re-did WIZARD.md's Uncertainty Fallback), plus four dead `CLAUDE.md Phase N` cross-references in WIZARD.md pointing at a "Phase" structure CLAUDE.md no longer has (its onboarding is a flat 5-step list).
+
+**Decision:** `WIZARD.md`:44 is the single authoritative Q1 opener (per WIZARD.md's own Single-Source Rule). `setup-wizard/SKILL.md` (a router) quotes it **verbatim** and drops its duplicate preset menu, deferring the "not sure" branch to WIZARD.md's Uncertainty Fallback. `CLAUDE.md` (a summary that defers to WIZARD.md) keeps a compact, meaning-preserving **paraphrase** — NOT a second verbatim copy — because a summary with a duplicate canonical string is itself a drift surface. The four dead `CLAUDE.md Phase` refs are rewritten to name Q1/Q3 directly, and BOTH `## Phase 1` headings are renamed (the second one — Role-Generation Rule — caught by production validation).
+
+**Alternatives considered:** absorb WIZARD.md:44 verbatim into CLAUDE.md — **rejected**: not budget-forced (326/400, 74 words free) but architecturally worse (two verbatim canonicals to keep in sync, contradicting the single-source goal). Leave SKILL.md's own phrasing — rejected: perpetuates the 3-way divergence WS6 exists to close.
+
+**Consequences:** one canonical Q1; the router quotes it exactly, the summary paraphrases it, future edits mutate one source. Cost: an inbound-reference fix in CLAUDE.md:25 (word-neutral) when the WIZARD.md heading it points at is renamed. AC-WS6-2's verify only reaches 0 because BOTH `## Phase 1` headings are renamed — a subtlety the spec prose missed.
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** (a) a CI assertion that `setup-wizard/SKILL.md` contains the WIZARD.md:44 opener verbatim (a `grep -F` gate, turning the one-time WS6 fix into a standing guard); (b) extend the same verbatim-presence gate pattern already used for the ADR-024 attribution rule to the canonical Q1.
+- **Concrete revisit triggers:** (a) the canonical Q1 wording changes → the verbatim copy in SKILL.md and the paraphrase in CLAUDE.md must both be revisited; (b) a fourth surface starts rendering Q1 (e.g., a new onboarding entry point) → bring it under the same single-source rule.
+- **Risk knowingly accepted:** CLAUDE.md's paraphrase can drift in *meaning* from the canonical without a CI gate catching it (only SKILL.md's verbatim copy would be guardable by grep). Accepted this cycle; future-option (a) would add the standing verbatim gate for at least the router surface.
+
+End of v2.8.0 Phase 1 — Showcase design.
