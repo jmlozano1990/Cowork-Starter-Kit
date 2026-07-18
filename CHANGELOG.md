@@ -4,6 +4,31 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.8.0] - 2026-07-18
+
+**"Showcase"** — Phase B of the 4-phase improvement roadmap (Truth & Release → **Showcase** → Distribution & Trust → Upstream refresh). Focused on visibility and provable trust, not interview behavior — WIZARD.md's Q1/F4/Q2/Q3 flow is unchanged this release.
+
+### Added
+
+- **`TRUST.md`** (repo root) — plain-language threat model: what could go wrong with an AI-agent starter kit and exactly what this one does about it, citing independently re-verified third-party research (Snyk's ToxicSkills study: 3,984 skills scanned, 36.82% with a security flaw, 76 confirmed-malicious payloads, Feb 2026; PromptArmor's Claude Cowork file-exfiltration disclosure, Jan 2026).
+- **`assets/setup-demo.svg`** — a self-contained, inert (no `<script>`, no `<foreignObject>`, no external fetch) animated SVG demo of the real 3-turn interview, embedded near the top of README.
+- **`docs/how-it-works.md`, `docs/faq.md`** — new curated public docs answering the questions a first-time evaluator actually asks, replacing internal QA paperwork as the first thing a `docs/` visitor sees.
+- **`docs/internal/{qa,security,compliance,process,planning}/`** — 40 internal QA/security/compliance/process artifacts relocated here (WS5, ADR-037). `.gitattributes` collapsed from ~42 individual per-file DROP lines to a single `docs/internal/ export-ignore` directory rule (plus 3 Council-tooling exemptions for `docs/spec.md`/`docs/retro.md`/`docs/patterns.md`) — a new `docs/*.md` file is now public-unless-placed-internal, not the reverse. `docs/architecture.md`, `docs/research/*`, and `docs/project-audit-v2.6.1.md` are now public credibility assets.
+- **`starter-drift-marker-check`** CI job (`quality.yml`) — fails the build if any of the 7 `examples/*/project-instructions-starter.txt` files contains a retired-interview marker (`Step N: Name`, `Phase N —`, `Workspace ready.`), verified with a negative control before trusting the green run.
+- Real timing data in `tests/offline-smoke-test.md` — 4 dry-run sessions across the interview's main paths; see the file for the decision rule and raw numbers behind the "15 minutes" hero claim.
+- A pre-release checklist in `CONTRIBUTING.md` requiring a current offline-smoke-test scorecard before tagging.
+
+### Changed
+
+- **README.md rewritten**: an actual `#` H1 title + identity block (previously bare prose), a trust story in the first screens citing Snyk and PromptArmor, an enriched "What's new in v2.7" section naming the 16-agent swarm-test methodology and the two failures it found and fixed, an updated sequence diagram reflecting the Step 7 handover, a marketed fast-path callout, and "zero runtime fetches / fully reviewable supply chain" framing alongside the existing offline-first language. The stale "v2.4 highlights" / "Earlier highlights (v1.2)" archaeology sections are removed.
+- **All 7 `examples/*/project-instructions-starter.txt` regenerated** (ADR-038, closes D-1) — full self-contained copies of the current v2.7 3-turn interview (open-ended Q1, the `Confirmed bundle`/F4 profile-stub checkpoint, the correct "Basics saved… Keep going" fast-track text), replacing the retired pre-v2.7 4-Phase/6-Step flow with an incompatible profile schema and a different fast-track string. Each stays under the 400-word CI ceiling (373–396 words).
+- **WIZARD.md dead-reference + canonical-Q1 cleanup** (ADR-039, closes D-5/D-6): 4 dead `CLAUDE.md Phase N` cross-references now name `Q1`/`Q3` directly; both `## Phase 1 —` headings renamed (`Uncertainty Fallback (Q1)`, `Role-Generation Rule (Q1, AC-W2-9)`); `CLAUDE.md`'s matching inbound reference updated (word-neutral, 325/400 words); `.claude/skills/setup-wizard/SKILL.md`'s Q1 block now quotes WIZARD.md's canonical opener verbatim instead of carrying its own duplicate 7-preset menu.
+- `.github/workflows/quality.yml`, `sync-agency.yml`, `release-assets.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `curated-skills-registry.md`, `CONTRIBUTING.md` — all inbound references to the 40 relocated internal docs updated in the same commit as the move (9-item cross-check plus 3 additional surfaces a Phase 2 spot-review found: the PR template, and two `curated-skills-registry.md` disposition annotations).
+
+### Fixed
+
+- The interview logic itself is unchanged this release (out of scope — see the roadmap above); this cycle is presentation, truthfulness-of-story, and information architecture only.
+
 ## [2.7.2] - 2026-07-18
 
 ### Added

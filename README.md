@@ -1,10 +1,31 @@
-Configure your Claude Cowork workspace in 15 minutes — describe your goal, the Dynamic Workspace Architect builds it from vetted, SHA-pinned skills, no code required.
+# Cowork Starter Kit
+
+> Describe your goal in plain language. Claude Cowork builds a personalized, skill-equipped workspace from vetted, SHA-pinned skills — no code, no template hunting, three quick turns, 15 minutes.
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.7.2-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.8.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+---
+
+## See it in action
+
+![Cowork Starter Kit setup demo — describe your goal in plain language, answer three quick turns, and get a working, personalized workspace with installed skills](assets/setup-demo.svg)
+
+A synthetic demo of the real 3-turn interview: describe a goal, confirm a skill bundle, answer one quick turn, and land on a personalized workspace with skills already installed. **In a hurry?** One open-ended question is enough to get a working bundle — everything else is optional customization or can be answered later.
+
+---
+
+## Why trust it
+
+This kit exists because the AI-agent skill ecosystem it plugs into has real, documented problems — and it's built specifically to avoid them, not just to claim it does:
+
+- **Community skills are frequently unsafe.** Snyk's February 2026 ToxicSkills study scanned 3,984 public agent skills and found 36.82% (1,467 skills) had at least one security flaw, with 76 confirmed-malicious payloads built for credential theft, backdoors, or data exfiltration.
+- **Prompt injection via pasted or uploaded content is a live threat, not theory.** PromptArmor disclosed in January 2026 that Claude Cowork itself could be manipulated, via a booby-trapped file, into exfiltrating a user's data through an allowlisted API endpoint.
+
+This kit's answer: every upstream skill is **SHA-pinned** in `cowork.lock.json` (not tracking a branch), **vendored inside this repo** so nothing is fetched at runtime, and **attribution-injected** (ADR-024) before it ever reaches your workspace — with human review and a 24-hour soak before any upstream update ships. Full plain-language threat model and mitigations: **[TRUST.md](TRUST.md)**.
 
 ---
 
@@ -18,7 +39,7 @@ Configure your Claude Cowork workspace in 15 minutes — describe your goal, the
 
 ## How it works
 
-Open this folder as a Cowork Project. Cowork auto-loads `CLAUDE.md` as system context and runs the Dynamic Workspace Architect the moment you start talking — open-ended goal discovery, 3-path skill bundle composition, writing voice calibration, and Q&A customization. Takes about 15 minutes. No terminal required. No paste required.
+Open this folder as a Cowork Project. Cowork auto-loads `CLAUDE.md` as system context and runs the setup wizard the moment you start talking — one open-ended goal question, a bundle confirm, one quick turn for name/role/deadlines, and an optional voice-calibration turn. No terminal required. No paste required. **Zero runtime fetches, fully reviewable supply chain** — everything the wizard installs already ships inside this repo; nothing is downloaded during setup (see "Why trust it" above).
 
 ```
 You                                Cowork
@@ -31,22 +52,23 @@ You                                Cowork
  |                                    |
  |  Start conversation                |
  | ---------------------------------> |
- |                                    |  "What would you like to use
- |                                    |  this workspace for?"
+ |                                    |  "What do you need help with?"
  |  [your goal in your own words]     |
  | ---------------------------------> |
  |                                    |  Routes goal (Path A: preset match,
  |                                    |  Path B: overlap narrowing,
  |                                    |  Path C: from-scratch composition)
- |                                    |  Asks profile + writing questions
+ |                                    |  Confirms bundle, then one quick
+ |                                    |  turn for name/role/deadlines
  |  [your answers]                    |
  | ---------------------------------> |
- |                                    |  Generates your workspace:
+ |                                    |  Generates + hands over:
+ |                                    |    personalized CLAUDE.md
  |                                    |    cowork-profile.md
- |                                    |    writing-profile.md
- |                                    |    context/ folder
- |                                    |    skill files
- |  "Your workspace is ready."        |
+ |                                    |    context/ folder + skill files
+ |                                    |    installer archived to
+ |                                    |    _setup-kit/ (Step 7 handover)
+ |  "Setup complete."                 |
  | <--------------------------------- |
  |                                    |
  |  Type /setup-wizard                |
@@ -55,7 +77,7 @@ You                                Cowork
 
 **Two alternative entry paths** if you can't open the folder directly:
 
-- Paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested onboarding from message one. The wizard will still run dynamic goal discovery — presets are starting suggestions, not fixed selections.
+- Paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions — a fully self-contained copy of the same interview, no folder access needed.
 - Type `/setup-wizard` inside any Cowork project to invoke the wizard explicitly.
 
 ---
@@ -75,7 +97,7 @@ That's it. Cowork reads the project instructions and walks you through personali
 
 **Setup works fully offline.** Everything the wizard installs ships inside the ZIP — skills are copied from the local `skills/` folder, never downloaded. If Claude mentions it can't reach github.com or the internet during setup, that's normal and blocks nothing (see the troubleshooting section in `SETUP-CHECKLIST.md`). Web access is only needed for optional web research features, never for setup.
 
-> **Alternative paths:** Type `/setup-wizard` to run or redo setup explicitly. Or paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested onboarding from message one.
+> **Alternative paths:** Type `/setup-wizard` to run or redo setup explicitly. Or paste `examples/<name>/project-instructions-starter.txt` into Project Settings > Custom Instructions for a fully self-contained onboarding from message one.
 >
 > **No Cowork yet?** Use the manual path: open `SETUP-CHECKLIST.md` and follow every step by hand.
 
@@ -109,7 +131,7 @@ You describe your goal in plain language. The wizard routes to the closest prese
 
 **Each preset includes:**
 
-- `project-instructions-starter.txt` — optional manual entry path: paste into Project Settings > Custom Instructions for example-specific onboarding without opening the repo folder (functionally equivalent to `CLAUDE.md` auto-load)
+- `project-instructions-starter.txt` — self-contained manual entry path: paste into Project Settings > Custom Instructions to run the same interview without opening the repo folder (functionally equivalent to `CLAUDE.md` auto-load)
 - `global-instructions.md` — proactive skill trigger rules (session behavior) with writing profile integration
 - `context/about-me.md` — fill in your name, role, and goals
 - `context/working-rules.md` — safe defaults (includes confirm-before-delete rule)
@@ -122,19 +144,13 @@ You describe your goal in plain language. The wizard routes to the closest prese
 
 ### Highlights
 
-**v2.4 highlights:**
-
-- **Dynamic Workspace Architect** — open-ended goal discovery replaces preset menus. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
-- **Unified skill pool** — 23 skills (`skills/<slug>/SKILL.md`) consolidated from former per-preset folders into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
+- **Open-ended goal discovery** — no preset menu. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
+- **Unified skill pool** — 23 skills (`skills/<slug>/SKILL.md`) consolidated into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
 - **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
 - **Q&A bundle customization** — after proposing a skill bundle, the wizard offers add/remove suggestions (≤3 at a time). You confirm when done. No batch-install surprises.
 - **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
-
-Earlier highlights (v1.2):
-
-- **Writing profile for every workspace** — 3–4 questions calibrate Cowork to your voice. Every workspace ships with a goal-appropriate `writing-profile.md`.
-- **Curated skills registry** — `curated-skills-registry.md` lists vetted skills with descriptions, source URLs, and goal tags. Advanced users can opt into Tier 2 community skill discovery with built-in safety checks.
-- **Paste-and-go setup** — paste `project-instructions-starter.txt` into Project Settings > Custom Instructions for preset-suggested behavior from message one.
+- **Writing profile for every workspace** — an optional voice-calibration turn tunes Cowork to your voice; every workspace ships with a goal-appropriate `writing-profile.md`.
+- **Curated skills registry** — `curated-skills-registry.md` lists vetted skills with descriptions, source URLs, and goal tags.
 - **Proactive skills** — Cowork offers flashcards when you share study material, suggests synthesis when you reference multiple sources, drafts status updates when a deadline is near.
 - **`/setup-wizard`** — explicit command to run or redo setup anytime.
 
@@ -145,7 +161,7 @@ Earlier highlights (v1.2):
 Want to go deeper? Three paths:
 
 - **Add a preset** — copy `templates/preset-template/` and follow the guide in [`CONTRIBUTING.md`](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CONTRIBUTING.md). Your new preset joins the wizard's suggestion pool.
-- **Explore the architecture** — `docs/architecture.md` contains all ADRs and Phase 1 design records from v1.0 to present.
+- **Explore the architecture** — `docs/architecture.md` contains all ADRs and Phase 1 design records from v1.0 to present. See also [How it works, in depth](docs/how-it-works.md).
 - **Author a skill** — start from `templates/skill-template/` for the 9-section format the wizard installs.
 
 ---
@@ -158,13 +174,17 @@ Every preset includes a non-negotiable rule: **Cowork will always ask for your c
 
 ## Supply-Chain Integrity
 
-All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.lock.json` and **ships vendored inside this repo** at `vendored/agency-agents/` — 110 agent files, each fetched at the pinned commit, checksum-verified against the lock, and attribution-injected (ADR-024) before commit. CI re-verifies the vendored tree against the lock on every pull request (`vendored-integrity-check`), fully offline. Nothing is downloaded at runtime — sessions need no GitHub access. The `/sync-agency` CI workflow opens a PR on every upstream SHA bump — no content reaches users without human review.
+All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.lock.json` and **ships vendored inside this repo** at `vendored/agency-agents/` — 110 agent files, each fetched at the pinned commit, checksum-verified against the lock, and attribution-injected (ADR-024) before commit. CI re-verifies the vendored tree against the lock on every pull request (`vendored-integrity-check`), fully offline. Nothing is downloaded at runtime — sessions need no GitHub access. The `/sync-agency` CI workflow opens a PR on every upstream SHA bump — no content reaches users without human review. See **[TRUST.md](TRUST.md)** for the full threat model.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
+## What's new in v2.8
+
+This release is about making the kit visible and provably trustworthy, not changing how setup works. Highlights: a rewritten front page (this one) with a real trust story and a live demo, all 7 paste-only starter files brought back to parity with the current interview (they were quietly running a retired, broken flow), a real measured time-to-workspace claim instead of an unverified guess, and a `docs/` split so a first-time visitor sees credibility assets instead of internal QA paperwork.
+
 ## What's new in v2.7
 
-v2.7.x ships: the setup interview cut from ~10 questions to 3 core turns, a crash-proof profile-stub checkpoint so an interrupted or fast-track session never loses progress, a fixed goal-routing path (F3) so descriptions match the right preset on the first try, two new pool skills (`citation-formatter` and `list-tracker`), and a clean Step 7 handover — setup now ends with a personalized workspace `CLAUDE.md` and the installer tidied out of the way, instead of leaving you living inside the wizard.
+v2.7.x shipped after a **16-agent swarm test** — 7 AI personas each played both sides of a full onboarding session end-to-end, then adversarially self-audited the result against the spec. Two failures the test caught and this release fixed: the fast-track exit used to leave a user with **no files on disk at all** despite claiming "workspace ready," and a session crash before the old Q5 lost every earlier answer with no way to resume. Both are now closed by a crash-proof profile-stub checkpoint written the moment a bundle is confirmed. Also shipped: the setup interview cut from ~10 questions to 3 core turns, a fixed goal-routing path (F3) so descriptions match the right preset on the first try, two new pool skills (`citation-formatter` and `list-tracker`), and a clean Step 7 handover — setup now ends with a personalized workspace `CLAUDE.md` and the installer tidied out of the way, instead of leaving you living inside the wizard.
 
 Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), and MF-1/MF-2 CI hardening.
 
