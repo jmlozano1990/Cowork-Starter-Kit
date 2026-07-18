@@ -2,6 +2,162 @@
 
 ---
 
+## [v2.8.0] - 2026-07-18 — Showcase
+
+**Date:** 2026-07-18
+**Classification:** STANDARD — proposed by @pm at Phase 0, BOUND by @architect at Phase 1, CONFIRMED by @security at Phase 2, held consistent through the combined-path Phase 5+6+7. No auth/schema/secret/permission/guard/supply-chain-control-logic change. WS5's docs/-mass-move was flagged MATERIAL RISK at Phase 0 as a 3rd-instance KEEP-DROP cross-check pattern candidate (see §7/§8), but the risk realized as dangling references and broken links, not as an auth/schema/secret surface — classification never escalated.
+**Mode:** full pipeline, combined-path Phase 5+6+7 (STANDARD eligibility). Phase B of the 4-phase LinkedIn-gate roadmap (A v2.7.2 ✅ → B v2.8.0 HERE → C v2.9.0 Distribution & Trust → D v2.10/v3.0 SECURITY-SENSITIVE).
+**Rework rate:** ~1.2% on raw diff (26 of 2,171 total PR-changed lines, across 2 post-Phase-4 fix commits), **0% on substance/ACs**. Both fixes were pre-merge, non-architectural, and each was caught exactly where the pipeline is designed to catch it — one by @qa's own Phase 7-equivalent REJECT verdict, one by the PR's first real CI Link Check run.
+**Cycle SHAs:** Phase 4 binding SHA `48b2456` (6 commits: WS1 `1c46150`, WS5 `1c48235`, WS6 `575c518`, WS4 `5372f6a`, WS3 `f47a22d`, WS2+release `48b2456`), QA pass 1 (REJECTED) `24e3b42`, dev fix — WS4 disclosure `eab90f3`, QA pass 2 (APPROVED) `5a40683`, dev fix — docs-move broken links `36418cf`, merged (squash) `831c4f0` via PR #60 2026-07-18T11:57:22Z. Release `v2.8.0` published 2026-07-18T11:58:16Z.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 | Revise mode — 26 ACs across 7 workstreams. Flagged WS5's docs/-mass-move as MATERIAL RISK / 3rd-instance KEEP-DROP cross-check pattern candidate *before* any design work started; surfaced 3 gate decisions (demo method, "15 min" claim, social-preview) + 4 @architect OQs, all with defaults. |
+| 1. Design | @architect | 1 | **The cycle's first catch.** The spec's own AC-WS5-2 cross-check was link-form-only; @architect broadened it to include functional/backtick/comment references and found 2 hard-CI-fail functional grep-reads of a moving file in `quality.yml:908/920` (mandatory same-commit fix) plus 3 backtick + 4 comment/heredoc references — 9 inbound refs bound for same-commit rewrite. Independently recomputed the 39-file move manifest from `git ls-files` rather than trusting the spec's count. |
+| 2. Security Review | @security | 9 (5 WARNING + 4 INFO) | 0 CRITICAL. **S1/S2 — security's own wider, unscoped grep found 2 MORE cross-check omissions** (`.github/PULL_REQUEST_TEMPLATE.md:17`, public `curated-skills-registry.md:84/86`) that @architect's already-broadened list still missed. S3 — this review's own file would itself have leaked without joining the move set. S4 — AC-WS5-5's leak-gate verify flagged as a check-that-barely-fails (passes on a comment, not the real `DROP_PATHS[]` array). S5 — SVG inertness spec under-specified against the direct-open threat model. S6 (INFO) — confirmed an ACTIVE pre-existing leak: `qa-report-v2.7.2.md` + `security-review-v2.7.2.md` were shipping in the public release archive since v2.7.2; WS5 closes it. |
+| 3. User Gate | User | 0 | "Approve — build it." Demo=synthetic SVG (prior decision); time-claim + social-preview explicitly deferred to Phase 4/PR, not blocking. |
+| 4. Implementation | @dev | 0 | 6 commits; all 5 security MUST-FIX + 4 MUST-VERIFY applied same-commit as the move. WS4: 4 dry-runs, median 5.25 min, "15 min" kept per the pre-bound decision rule — but not yet disclosed as an estimate (surfaces at Phase 5). 2 disclosed, benign, non-blocking deviations. |
+| 5+6+7 pass 1 | @qa | 1 BLOCKING | **AC-WS4-1 — a check-that-cannot-fail.** The mechanical verify (`grep -c "| [0-9]" ≥ 4`) PASSED on an AI same-session estimate; the README hero line presented "15 minutes" with zero disclosure that it wasn't stopwatch-timed. REJECTED pending disposition — see remediation options in the qa-report. |
+| 5.1 disposition + fix | User + @dev | 0 | User: keep "~15 minutes," disclose it as an estimate with a methodology link (qa's recommended option 1). @dev: 2-file fix (README hero line + `tests/offline-smoke-test.md` honesty framing); proved the corrected check non-tautological by re-running it against the OLD undisclosed phrasing and confirming it still fails. |
+| 5+6+7 pass 2 (re-check) | @qa | 0 | **APPROVED at `eab90f3`.** All other 25 ACs, all 9 Phase-4/6 security MUST-FIX/MUST-VERIFY items, the archive leak check, the repo-wide dangling-reference sweep (0 live stale pointers; 2 INFO historical-prose-only), the WS1 negative control, SVG inertness, and fresh Snyk/PromptArmor figure spot-checks all independently re-confirmed unaffected by the fix. |
+| Post-approval / first PR CI run | @dev | 1 | **CI's Link Check caught 2 broken links that survived every prior layer** — @architect's broadened cross-check, @security's wider grep, AND @qa's own repo-wide sweep: a stale `docs/architecture.md` relative link to the moved `retro-template.md`, plus 2 mis-resolving links inside the moved qa-report itself. @dev wrote a Python link-resolution extractor (strips fenced code/inline-code, resolves every remaining relative link against its source file's directory) and swept all 49 in-scope files — 39 real links, 0 broken after the fix. |
+| 7. Merge | orchestrator | 0 | CI green (48+/0 across both runs), PR #60 squash-merged `831c4f0`; Release v2.8.0 published. |
+
+**Net-new findings: 0 CRITICAL.** One REJECT-then-fix cycle (AC-WS4-1 substance gap) resolved same-day with a documented, non-tautological fix. The KEEP-DROP cross-check class recurred in a *new shape* this cycle — not "files missed entirely" (v2.5.3/v2.6.1) but "reference surfaces missed by successively wider manual/grep passes, until only an automated link-resolution sweep caught what remained" — see §8 for the resulting pattern promotion.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC(s) | Description | Classification |
+|----|-------------|---------------|
+| AC-WS4-1 | Timing-claim substance (real vs. estimated data) | **Hard** — the standout AC, and this repo's 2nd formal check-that-cannot-fail instance. Mechanically passed on AI same-session-estimated data; required a genuine REJECT, a 3-option remediation menu, an explicit user decision, and a re-verified non-tautological fix. |
+| AC-WS5-1..5 | docs/ IA split (40-file move + cross-check + leak backstop) | **Hard** — the highest-blast-radius surface (67 files touched total) and the textbook 3rd-instance KEEP-DROP pattern, but caught in successive LAYERS rather than missed outright: design-stage broadening (9 refs) → security's independent wider grep (+2 surfaces) → CI's Link Check (+2 more, past every manual pass). Move manifest itself exhaustive (0 omissions/phantoms via `git ls-files` diff); export-ignore mechanism verified via `git archive`, not the unreliable `git check-attr`. |
+| AC-WS3-2 | SVG demo inertness | Medium — @security's design-stage review (S5) found the spec's forbidden-element list under-specified against the direct-open threat model (missing `<foreignObject>`, `on*=`, external `href`/`xlink:href`); bound as a Phase 4 MUST-VERIFY before any asset existed. Delivered SVG passed the hardened grep on first try; @qa independently re-ran it. |
+| AC-WS5-5 | Archive leak backstop (`DROP_PATHS[]`) | Medium — @security caught (S4) that the literal spec verify was a check-that-barely-fails (passes on a comment, not the real array); @qa's Phase 5 MUST-VERIFY confirmed the genuine backstop, not the weak literal check. |
+| AC-WS1-1..3 | Starter file regen + CI drift-marker job | Easy — clean first pass; negative control (inject retired marker → exit 1 naming the file → revert byte-identical) independently reproduced by @qa in a scratch copy, not trusted from @dev's commit message. |
+| AC-WS2-1..8 | README storytelling pass (H1, trust story, Snyk/PromptArmor, swarm narrative, archaeology removal, fast-path, offline reframe) | Easy — all passed first pass; Snyk/PromptArmor figures independently fresh-verified against primary sources by both @dev (Phase 4) and @qa (Phase 5), not carried forward from the internal plan's `[ESTIMATED]` figures. |
+| AC-WS2-9 | No-competitor-naming denylist | Easy — 0 hits against a 20+ term denylist, independently re-scanned by @qa. |
+| AC-WS3-1 | Demo slot populated | Easy — populated same-PR, not deferred. |
+| AC-WS6-1..3 | Dead-reference + canonical-Q1 cleanup | Easy — exactly the 6 bound exact-line edits, nothing else touched; byte-for-byte Q1 match confirmed against WIZARD.md. |
+| AC-WS7-1 | Social-preview currency disposition | **Not-Verified this phase** — explicitly deferred to the user/orchestrator at PR-creation time by the spec's own gate-decision design; out of @qa's Phase 5/7 scope by design, not a coverage gap. |
+
+**Hardest AC: AC-WS4-1** — a check-that-cannot-fail instance, not a coverage gap, structurally identical in shape to v2.7.2's AC-4. **Second-hardest: the AC-WS5 cluster** — notable for being caught in successive narrowing layers rather than a single miss, which is exactly why it triggers the KEEP-DROP pattern's promotion to BINDING this cycle (see §8).
+
+---
+
+### 3. Token Cost Actuals
+
+`metrics.json` has no entries for the 2026-07-18 v2.8.0 window (the same instrumentation gap the v2.7.2 retro flagged — the last captured entry predates this cycle) and historical entries carry `model: "unknown"`. Reporting qualitatively, consistent with prior-cycle practice:
+
+| Model Tier | Sessions | Note |
+|-----------|---------|------|
+| opus | ~2 | @architect Phase 1 (design + the central cross-check catch), @security Phase 2 (targeted spot-review of the WS5 manifest + 3 CI-workflow diffs + SVG spec — not a full OWASP sweep) |
+| sonnet | ~6 | @pm Phase 0; @dev Phase 4 (6 commits) + 2 post-approval fix commits (WS4 disclosure, broken-links); @qa Phase 5+6+7 (2 passes: initial REJECT + re-check APPROVED) |
+| haiku | 0 | — |
+
+Larger than v2.7.2's ~6-session shape (opus~2/sonnet~4/haiku~0) — proportionate to the bigger blast radius (67 files vs. ~10) and the one genuine rework loop (REJECT → fix → re-check).
+
+---
+
+### 4. Phase Durations
+
+Computed from verified commit author-dates (`gh api repos/.../pulls/60/commits`), not document-internal "Date:" headers — same practice as the v2.7.2 retro.
+
+| Phase | Start (UTC) | End (UTC) | Duration |
+|-------|------------|-----------|---------|
+| 0. Requirements (@pm) | 08:10:05Z (prior cycle Phase 8 end) | 08:30:00Z | ~20 min |
+| 1. Design (@architect) | 08:30:00Z | 08:54:37Z | ~25 min (includes the 3-gate-decision user pause before Phase 1 could start) |
+| 2. Security Review (@security) | 08:54:37Z | 09:10:10Z | ~16 min |
+| 3. User Gate | 09:10:10Z | 09:15:52Z | ~6 min |
+| 4. Implementation (@dev, 6 commits) | 09:15:52Z | 09:56:56Z | ~41 min |
+| 5+6+7 pass 1 (@qa, REJECT) | 09:56:56Z | 10:14:10Z | ~17 min |
+| WS4 fix + user decision latency (@dev) | 10:14:10Z | 11:41:25Z | ~1h 27min |
+| 5+6+7 pass 2 (@qa, re-check APPROVED) | 11:41:25Z | 11:44:35Z | ~3 min |
+| Push → PR → CI catches 2 broken links → fix | 11:44:35Z | 11:54:10Z | ~10 min |
+| CI green → merge → release | 11:54:10Z | 11:58:16Z | ~4 min |
+
+**Total wall-clock: ~3h 48min**, prior-cycle Phase 8 end to release publish. Average segment ~23 min. **One outlier >2× average: "WS4 fix + user decision latency" (~87 min).** This window is dominated by user deliberation on the 3-option WS4 remediation menu (a real decision, not idle pipeline time) — the @dev fix commit itself is a 2-file, 17-line change once the decision landed. Not a process inefficiency: the gate model deliberately lets decision latency be user-paced rather than agent-paced.
+
+---
+
+### 5. Phases Abbreviated
+
+Full pipeline mode with combined-path Phase 5+6+7 (STANDARD classification, bound at Phase 1, held consistent through Phase 7). Phase 2 (@security) ran as a targeted design-stage spot-review (WS5 manifest + 3 CI-workflow diffs + SVG spec), not a full repo-wide OWASP sweep — appropriate for STANDARD. @ux ran a **light heuristic pass** (README structure + SVG accessibility), not a full run — explicitly scoped that way given no CSS/component surface; no blocking issues found. **G1 public artifact audit:** this is a MINOR bump (2.7.2→2.8.0); this project's own precedent (v2.6.0) logged an explicit SKIPPED-with-advisory line when `github.enabled=false`. `docs/qa-report-v2.8.0.md` does not record an equivalent explicit G1 disposition line for v2.8.0. Given WS2 itself *was* a full README/TRUST.md public-artifact rewrite (the substance a G1 audit checks), the risk is low, but the audit-trail omission is a documentation gap — flagged in §10.
+
+---
+
+### 6. Rework Rate and Causes
+
+**0% on substance/ACs.** Both post-Phase-4 fixes were pre-merge, non-architectural, 2-file-or-fewer changes; no AC was re-scoped or re-designed.
+
+**~1.2% on raw diff (26 of 2,171 total PR-changed lines), 2 fix commits:**
+1. **WS4 disclosure fix** (`eab90f3`, 17 changed lines across README.md + `tests/offline-smoke-test.md`) — caused by @qa's Phase 7-equivalent REJECT on AC-WS4-1 (§2/§7). Caught by @qa's own substance-level verification, before push.
+2. **Docs-move broken-links fix** (`36418cf`, 9 changed lines across `docs/architecture.md` + `qa-report-v2.8.0.md`) — caused by the WS5 move's reference-tracking gap recurring one layer deeper than any manual grep pass caught. Caught by the first real PR CI run's Link Check job, **not** by @qa's local checks — the identical gap shape v2.7.2's retro already flagged (lychee/link-checking not locally replicated pre-push).
+
+**Root cause of the recurring gap:** the same one named in v2.7.2's Process Improvement #1 — local pre-push CI replication (the proven V45-A3 pattern) still does not cover link-resolution checking. @dev closed this gap ad hoc this cycle (wrote and ran a Python link extractor reactively, after the CI failure), but it was not yet a standing Phase 5 step. See §8/§10 for the promotion to a binding pre-push requirement.
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=1, issue=3, info=2**
+
+- **BLOCKER** (Phase 5, pass 1): AC-WS4-1 undisclosed-estimate — the README's "15 minutes" claim was backed by an AI same-session estimate presented with zero disclosure, on the exact trust-focused document this cycle exists to earn a skeptical reader's confidence with. The mechanical AC check passed; a substance-level read caught it. This cycle's check-that-cannot-fail instance.
+- **ISSUE** (Phase 2, ×2): @security's independent, wider grep (broader than @architect's already-broadened design-stage cross-check) found 2 more stale-reference surfaces the design missed entirely — `.github/PULL_REQUEST_TEMPLATE.md:17` and the PUBLIC `curated-skills-registry.md:84/86` — both fixed as Phase 4 MUST-FIX before either could ship as a dangling pointer.
+- **ISSUE** (Phase 2, S6): @security's fresh archive check confirmed an ACTIVE pre-existing leak — `docs/qa-report-v2.7.2.md` + `docs/security-review-v2.7.2.md` had been shipping inside the public release archive since v2.7.2 (missing `.gitattributes` DROP lines). WS5's collapse closed it; without this catch it would have persisted indefinitely.
+- **INFO** (post-approval, ×2): CI's Link Check caught 2 broken links (a stale `docs/architecture.md` relative link + a moved-file mis-resolution inside the qa-report itself) that survived @architect's cross-check, @security's wider grep, AND @qa's repo-wide sweep — the deepest layer of this cycle's KEEP-DROP recurrence, closed same-day by @dev's Python link-resolution sweep.
+
+Without the Phase 2 wider-grep discipline and the Phase 5 substance-over-mechanical reading, 3 of these 6 catches (both S1/S2 stale refs and the AC-WS4-1 undisclosed estimate) would have shipped silently.
+
+---
+
+### 8. Pattern Detection
+
+Review of Phase 6 (or Phase 2, for combined-path cycles) summaries across the 3 most recent APPROVED cycles (v2.6.1, v2.7.2, v2.8.0):
+- **v2.6.1:** Phase 6 SKIPPED (STANDARD fast-track, no findings surface).
+- **v2.7.2:** Phase 2 (combined-path) — 2 WARNING (S1/S2, both resolved in-cycle), 0 CRITICAL.
+- **v2.8.0:** Phase 2 (combined-path) — 5 WARNING (S1-S5) + 4 INFO, 0 CRITICAL.
+
+No 3-consecutive-cycle WARNING+ keyword match crosses the automatic `/self-improve` suggestion threshold: `configuration` appears at WARNING in both v2.7.2 (S1/S2) and v2.8.0 (S1-S4), but v2.6.1's Phase 6 was SKIPPED with no comparable summary, breaking the 3-consecutive-cycle chain — the same structural gap the v2.7.2 retro noted for the v2.7.0/.1 out-of-pipeline window.
+
+**Pattern updates written to `docs/patterns.md`** (see file for full text):
+1. **File-Removal/Relocation KEEP-DROP Cross-Check Gap — PROMOTED WATCH 2/3 → BINDING (3rd instance).** v2.8.0 is the most instructive instance yet: the move manifest itself was exhaustive this time (0 omissions, independently verified), so the gap moved entirely into REFERENCE-tracking and recurred through three successive widenings in one cycle — design cross-check → security's independent grep → CI's mechanical link resolution, which caught what all three manual/grep passes missed. **New binding mitigation:** any cycle that moves/renames tracked files MUST run a repo-wide markdown-link-resolution sweep before push (parse every relative `[text](path)` excluding fenced/inline code, resolve against the source file's directory, assert 0 broken). @dev's Phase-4 Python extractor is the reference implementation — promote it to a standing pre-push script, not a one-off reactive fix. CI's lychee link-check remains the backstop, not the primary catch point.
+2. **Check-That-Cannot-Fail — 2nd instance, WATCH 1/3 → 2/3.** AC-WS4-1's literal verify (`grep -c "| [0-9]" ≥ 4`) mechanically PASSED on an AI same-session estimate — it counts filled table cells, not evidence provenance, so it structurally cannot distinguish a stopwatch-timed run from a same-session guess. @qa caught it by reading the file's own prose, not by trusting the mechanical check. Generalized lesson (2 for 2 now): any AC whose literal verify is a cardinality/presence check standing in for a claim about real-world measurement needs a substance-level read in addition to the mechanical grep, and any AI-estimated figure in public-facing copy must carry explicit "(estimate)" disclosure.
+3. **Active pre-existing leak confirmed and closed (S6) — validates the WS5 docs/ split's premise.** Not a new pattern row: `docs/qa-report-v2.7.2.md` + `docs/security-review-v2.7.2.md` were shipping in the public release archive since v2.7.2 (missing DROP lines); WS5's `docs/internal/` collapse closed it. No further action.
+4. **sync-agency-dry-run `PATTERN_COUNT` bug — CARRY-FORWARD, out of scope this cycle.** Root-caused this cycle (bug itself pre-dates it — introduced v2.0.0, `373a8e5`): `PATTERN_COUNT=$(grep -c '^- \`' FILE || echo 0)` produces a malformed 2-line string on zero matches, which throws a swallowed bash integer-syntax error, so the gate has never actually fired since v2.0.0 — "success" has always been a false-green. @dev confirmed the v2.8.0 diff changes only the file's path (2 lines), not the buggy `grep -c` pattern — genuinely unaffected, correctly out of scope. Not yet a `docs/patterns.md` row (single confirmed instance, pre-dates pattern tracking); recorded here so it isn't lost. Needs its own triage cycle.
+
+---
+
+### 9. Quality Baseline Assessment
+
+Baseline: each agent must demonstrate 80%+ scenario coverage to pass (content-review evaluation).
+
+| Agent | Observed Behavior | Baseline Result |
+|-------|-------------------|----------------|
+| @pm | Flagged WS5 as MATERIAL RISK / 3rd-instance-pattern-candidate at Phase 0, before any design work — correctly set up the cycle's central watch item. Surfaced 3 gate decisions + 4 architect OQs with defaults rather than blocking on them. | PASS |
+| @architect | The cycle's first design-stage catch: broadened the spec's own literal (link-form-only) cross-check to include functional/backtick/comment references, finding 2 hard-CI-fail functional reads in `quality.yml` a narrower check would have missed. Independently recomputed the 39-file move manifest rather than trusting the spec's count. | PASS — standout catch, though its broadened cross-check was itself still not wide enough (see @security below) |
+| @security | Ran an independent, unscoped repo-wide grep on top of @architect's already-broadened one and found 2 MORE omitted surfaces (S1/S2), plus confirmed an ACTIVE pre-existing leak (S6) via fresh `git archive` evidence, not assumption. Flagged its own review file (S3) as a future self-referential leak risk before that file even existed. | PASS — standout; closes gaps @architect's genuinely-good pass still had |
+| @dev | 6 clean commits applying all 5 MUST-FIX + 4 MUST-VERIFY same-commit as the move. Both post-approval fixes were fast, well-scoped, and each included independent proof its own fix's verification could fail (before/after grep for WS4; original-vs-fixed link resolution for the broken-links fix), not just an assertion of "fixed." Built a genuinely reusable link-resolution tool under time pressure rather than a one-off patch. | PASS |
+| @qa (self) | Independently re-ran every command rather than trusting narrative; issued a real REJECT on a real substance gap rather than rubber-stamping a passing mechanical check; ran the WS1 negative control in a scratch copy rather than trusting @dev's commit message. **Gap:** did not locally replicate the PR's Link Check (lychee) job — the identical gap v2.7.2's retro already named as Process Improvement #1 and had not yet been closed by the time this cycle ran. | PASS, with the same coverage gap as last cycle — see §10 |
+
+5/5 agents PASS. The one recurring process-quality finding — @qa's Phase 5 checklist still doesn't locally replicate link-checking — is the *same* finding v2.7.2's retro proposed closing, not yet closed before v2.8.0 ran. Flagged explicitly in §10.
+
+---
+
+### 10. Process Improvements Proposed
+
+1. **Close the lychee/link-check local-replication gap — now a 2-cycle-recurring, previously-proposed-but-not-implemented item.** v2.7.2's retro (Process Improvement #1) proposed adding local lychee replication to @qa's Phase 5 checklist after a stars-badge 404 slipped through to CI. It was not implemented before v2.8.0 ran, and the identical class of gap recurred — this time as 2 broken links from the WS5 move, again caught only by the first PR CI run. @dev's ad hoc Python link-resolution extractor (§8 pattern #1) is a ready-made reference implementation; the concrete ask is to make it (or an installed `lychee` binary) a standing @qa Phase 5 step, not a reactive per-cycle rewrite.
+2. **Generalize "wider grep beats a fixed surface list" from @security's S1/S2 catch.** @architect's Phase 1 cross-check was already a deliberate broadening of the spec's literal AC — and @security *still* found 2 more surfaces by running an unscoped repo-wide grep instead of trusting the design's surface list. Any future KEEP-DROP / reference-tracking cross-check should default to repo-wide (`git ls-files` minus explicit append-only exemptions) from the *first* pass, not be discovered as a Phase-2-vs-Phase-1 gap each cycle.
+3. **G1 public artifact audit disposition should be explicit even when substantively covered.** This was a minor bump (2.7.2→2.8.0) and WS2 substantively performed a full public-artifact rewrite (README/TRUST.md), but `docs/qa-report-v2.8.0.md` records no explicit G1 SKIPPED/PASS/ERROR line the way v2.6.0's did. Low risk this cycle (the substance was covered), but the audit trail should be explicit regardless of whether the work happens to overlap.
+4. **AI-estimated figures need a standing disclosure rule, not a per-cycle catch.** This is the 2nd check-that-cannot-fail instance in this repo (v2.7.2's WS2 gate, v2.8.0's AC-WS4-1) and the 2nd time an AI-generated number needed a live "(estimate)" qualifier caught only by a substance-level @qa read. Proposed: any AC that asks for real-world-measured data (timing, user testing, live metrics) should require BOTH a mechanical presence check AND an explicit provenance/disclosure check (e.g., grep for "estimate"/"measured"/"stopwatch" co-occurring with the claim), bound at Phase 1 design time, not discovered at Phase 5.
+
+---
+
 ## [v2.7.2] - 2026-07-18 — Truth & Release
 
 **Date:** 2026-07-18
