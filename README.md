@@ -2,7 +2,9 @@ Configure your Claude Cowork workspace in 15 minutes — describe your goal, the
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.6.1-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.7.2-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ---
 
@@ -112,7 +114,7 @@ You describe your goal in plain language. The wizard routes to the closest prese
 - `context/about-me.md` — fill in your name, role, and goals
 - `context/working-rules.md` — safe defaults (includes confirm-before-delete rule)
 - `context/output-format.md` — pre-filled for your preset
-- `context/writing-profile.md` — goal-appropriate writing voice defaults (new in v1.2)
+- `context/writing-profile.md` — goal-appropriate writing voice defaults
 - `connector-checklist.md` — which connectors to authorize and why
 - `skills-as-prompts.md` — skill content as copy-paste prompts if skill upload is unavailable
 - `folder-structure.md` — recommended folder layout for your workspace
@@ -160,13 +162,13 @@ All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## What's new in v2.6
+## What's new in v2.7
 
-v2.6.x ships: dynamic preset scaffolds with a 3-tier bundle schema (`core_skills` / `optional_skills` / cross-cutting pool), runtime skill-swap affordances in every preset's `global-instructions.md`, release-archive hygiene with CI verification, and — from the v2.6.1 project audit — the offline-first **Network & Offline Rule** plus the upstream agent library vendored locally at `vendored/agency-agents/` (hash-verified in CI, readable with zero network access).
+v2.7.x ships: the setup interview cut from ~10 questions to 3 core turns, a crash-proof profile-stub checkpoint so an interrupted or fast-track session never loses progress, a fixed goal-routing path (F3) so descriptions match the right preset on the first try, two new pool skills (`citation-formatter` and `list-tracker`), and a clean Step 7 handover — setup now ends with a personalized workspace `CLAUDE.md` and the installer tidied out of the way, instead of leaving you living inside the wizard.
 
 Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), and MF-1/MF-2 CI hardening.
 
-**Next up (v2.7+):** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
+**Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
 ---
 

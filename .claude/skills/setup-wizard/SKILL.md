@@ -1,6 +1,6 @@
 ---
 name: setup-wizard
-description: Run the Cowork workspace onboarding wizard — personalized setup for your goal (study, research, writing, PM, creative, business)
+description: Run the Cowork workspace onboarding wizard — personalized setup for your goal (study, research, writing, PM, creative, business, personal-assistant)
 ---
 
 ## Setup Wizard

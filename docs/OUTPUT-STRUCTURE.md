@@ -2,7 +2,7 @@
 
 This document describes the files the wizard produces and where they should be placed in the user's Cowork workspace.
 
-## Primary Entry Point (v1.2)
+## Primary Entry Point
 
 **`CLAUDE.md`** at the repo root is the primary entry point (Layer 1a per ADR-010). When the user opens the `cowork-starter-kit` folder as a Cowork Project, Cowork auto-loads `CLAUDE.md` as system context — no paste required — and the dynamic wizard runs on the first message.
 

@@ -15,7 +15,7 @@ Each entry includes:
 | `source_url` | GitHub URL (HTTPS only) or `builtin` for Anthropic official |
 | `vetting_date` | ISO 8601 date of last manual vetting review |
 | `tier` | `1` = curated/official, `2` = community |
-| `goal_tags` | Comma-separated preset slugs (study, research, writing, project-management, creative, business-admin) |
+| `goal_tags` | Comma-separated preset slugs (study, research, writing, project-management, creative, business-admin, personal-assistant) |
 
 ---
 
@@ -43,6 +43,8 @@ Each entry includes:
 > `research-synthesis` appears in both the Study and Research sections intentionally (ADR-018): the canonical pool file `skills/research-synthesis/SKILL.md` is the research variant; `examples/study/.claude/skills/research-synthesis/SKILL.md` is a preserved study variant. Wizard installs resolve to the pool file.
 >
 > `citation-formatter` — removed at the v2.6.x audit as a phantom entry (no pool file), re-added 2026-07-06 together with a 9-section `skills/citation-formatter/SKILL.md` per the audit's disposition condition. Source: `docs/project-audit-v2.6.1.md` F-2, roadmap idea 10.
+>
+> The registry therefore has 24 rows across 23 unique skill slugs.
 
 ### Writing
 

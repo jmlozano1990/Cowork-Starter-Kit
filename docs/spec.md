@@ -1557,3 +1557,273 @@ Revert the `.gitattributes` commit. The `release-assets.yml` sanity check is add
 - [ESTIMATED] No user has built a workflow that depends on `docs/` being present in the archive.
 - [UNTESTED] The sanity check approach (extract + grep) will not add meaningful CI time (expected < 10s on ubuntu-latest).
 
+---
+
+### v2.7.2 — Truth & Release
+
+**Mode:** revise. **PM mode:** full — Phase A of a 4-phase improvement roadmap (`improvement-plan-2026-07-18.md` [INTERNAL — names third-party repos/products for research purposes; per `no-competitor-naming-public`, none of that content may appear in public copy]). Full deep-mode market/JTBD/persona research is NOT re-run this cycle — scope is fixed by the audit findings below (D-2, D-3, D-10..D-16, D-15) and by explicit orchestrator direction.
+
+#### Roadmap Context — claude-cowork-config — 2026-07-18T06:00:00Z
+
+✅ **ROADMAP CONTEXT — 1 conflict (pre-resolved by cycle mandate), 0 supersession risks**
+
+| Fact | Status |
+|---|---|
+| Sections rendered | ✅ 8/8 |
+| Conflicts | ⚠️ 1 — README "Next up (v2.7+)" teaser vs. WS3 truth-repair scope; pre-resolved, not escalated (see below) |
+| Freeze gate | ✅ no ACTIVE ecosystem gate affects `claude-cowork-config` — checked `sos-gates.json` (1 entry, `SOFT-FREEZE-CS1`, state=LIFTED, affects `[pillar-os, motif]` only) |
+| Supersession | ✅ 0 — 3 queued/planned items evaluated (Phase B/C/D of this project's own improvement plan), all NO — see §Supersession Check |
+
+##### Already Committed (near-term)
+
+- README.md:169 `## What's new in v2.6` closing line: **"Next up (v2.7+): External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent."** This is the one standing "near-term commitment" surfaced by §3.1. It has already missed its own stated deadline (v2.7.0/v2.7.1 shipped without it — confirmed: `grep -c "external.skill.install" WIZARD.md CLAUDE.md` = 0 outside this teaser line).
+- GitHub release "Next up" sections: none found — `gh release list` shows only 10 releases up to `v2.6.1` (latest, 2026-05-11); no v2.7.0/v2.7.1 releases exist yet to carry a teaser (confirms D-2).
+- CHANGELOG "Next up" teaser: none — the `[Unreleased]` block has no trailing "Next up" bullet list (only "Deferred (with rationale)": Idea 11 and Idea 14, see below).
+
+##### Deferred / Carry-Forwards
+
+- CHANGELOG `[Unreleased]` → `### Deferred (with rationale)`: **Idea 11** (generate instructions/checklists from installed bundle — L-effort/6.7, "revisit in the v2.7 cycle proper") and **Idea 14** (plugin-marketplace manifest + catalog publishing — lowest judge score 4.3, "needs its own lock-style drift controls"). Both are now explicitly re-homed by `improvement-plan-2026-07-18.md`: Idea 11 → Phase D; Idea 14 → Phase C item 1. Neither is in v2.7.2 scope.
+- `pipeline.md` v2.5.3 retro note: "v2.5.x series COMPLETE — next: v2.6 multi-tool" — superseded by actual v2.6.0 scope (dynamic preset scaffolds, not multi-tool) and now superseded again by the 4-phase plan's Phase D ("Upstream refresh → multi-tool"). No collision — just a stale pointer, already twice-superseded before this cycle.
+- `pipeline.md` v2.6.1 retro note: "docs/spec.md + docs/architecture.md Phase 0/1 memos remain uncommitted" — already resolved (PR #51, `6c97d87`, per the same retro entry's own follow-up row).
+- Council memory: no `project_claude-cowork-config*` entries indexed in `MEMORY.md` — this project has no Council-memory-level carry-forwards. (Graceful skip: "No project memory entries — section skipped.")
+
+##### Cross-Repo Dependencies
+
+- None detected. `registry.json`: `claude-cowork-config` has `"depends_on": []` and is not listed under any project's `parents` (not part of the `ecosystem` SoS umbrella). The only standing external relationship is the ongoing MIT-licensed vendoring pipeline from `msitarzewski/agency-agents` (upstream `sync-agency.yml`/`vendored-integrity-check`) — an established, ongoing mechanism, not a new dependency this cycle introduces or touches.
+
+##### JIRA Open Items
+
+- JIRA not configured for this project — `registry.json` `claude-cowork-config.integrations` has no `jira` key at all (unlike `self`/`motif`/`pillar-os`). Source skipped: "JIRA integration not configured for claude-cowork-config — source skipped."
+
+##### GitHub Signals
+
+- **10 open issues** at spec time (`gh issue list --repo jmlozano1990/Cowork-Starter-Kit --state open`): 1 stale roadmap issue (#2, "Roadmap: v1.3.0 — Preset Skills Depth" — v1.3.0 shipped 2026-04-18 per `pipeline.md`, ready to close) + 8 v2.0.1-era issues (#14–#21, created 2026-05-07, mostly superseded by the v2.0.1–v2.0.4 hardening cycles already shipped) + **#23 `[BLOCKER] security`** — "sync-agency.yml — peter-evans/create-pull-request action SHA hallucinated (does not exist)." (Task brief estimated ~11 open; 10 found at audit time — immaterial, WS7's AC is count-agnostic.)
+  - Context for @security (WS7/AC-18): the current `sync-agency.yml:372` SHA (`67ccf781d68cd99b580ae25a5c18a1cc84ffff1f`, tagged `v7.0.6`) has been independently re-verified as "byte-unchanged" across three separate Phase 6 security audits since 2026-05-10 (v2.5.2, v2.5.3, v2.6.0 — see `pipeline.md` v2.5.3 row: "peter-evans SHA byte-unchanged"). This is strong prior evidence issue #23 is already stale/resolved, but per task mandate it must be **freshly confirmed**, not assumed — no blind-close.
+- **Releases:** `gh release list` shows the latest published release is `v2.6.1` (2026-05-11) — 0 releases exist for v2.7.0 or v2.7.1 despite both being shipped to `main` (commits `8369c9f` 2026-07-06, `427dea9` 2026-07-07). Confirms D-2 directly.
+- **Repo community profile:** `code_of_conduct: null`, `issue_template: null`, `hasDiscussionsEnabled: false`, `homepageUrl: ""` — confirms the WS6 gaps exactly.
+- **Repo description/topics:** already reasonably current (Dynamic Workspace Architect framing, 10 topics) — not touched this cycle.
+
+##### Conflicts with Proposed Scope
+
+- **1 conflict, pre-resolved by cycle mandate (not escalated):** the README "Next up (v2.7+)" line (§Already Committed) is a standing near-term commitment, and WS3 of this cycle explicitly rewrites it to version-neutral wording rather than fulfilling it — because it already missed its v2.7 deadline (D-3: it is now a *broken promise*, not a live commitment) and fulfilling it for real is out of scope here (external skill install is Phase C/D-adjacent work, not a Truth & Release patch). This is the explicit, task-directed purpose of WS3, not a silent scope drop: the *substance* of the commitment (external skill install + multi-tool authoring) is preserved in the rewritten line; only the false "(v2.7+)" deadline marker is removed. Documented here per P3 for transparency — the user/orchestrator already directed this exact resolution in the cycle brief, so no further escalation is needed.
+- No other collisions detected against §Already Committed / §Deferred / §Cross-Repo / §GitHub Signals items.
+
+##### Supersession Check
+
+| Queued item | Rebuilds/replaces the surface this spec modifies? | Basis |
+|---|---|---|
+| v2.8.0 "Showcase" (Phase B — `improvement-plan-2026-07-18.md` §4) | **NO** | Phase B is explicitly gated *on* v2.7.2 completing ("pre-showcase gate"); its README storytelling pass builds on the truthful version/promise state WS1/WS3 establish, it does not replace it. Only the living "What's new" prose blurb gets refreshed again next cycle — normal per-cycle content evolution, not an architectural rebuild. CHANGELOG dated headers, git tags, and GitHub Releases (WS1's durable output) are never touched by Phase B's plan. |
+| v2.9.0 "Distribution & Trust" (Phase C) | **NO** | Plugin manifest, per-skill evals, catalog submissions — zero surface overlap with WS1–WS7. |
+| v2.10/v3.0 "Upstream refresh → multi-tool" (Phase D, SECURITY-SENSITIVE) | **NO** | Lock bump + multi-tool infra — zero surface overlap; explicitly gated on Phase C completing first. |
+
+No queued item rebuilds a surface this cycle modifies. No re-order/shrink/proceed-anyway prompt required.
+
+##### Ecosystem-Context-Brief
+
+`.claude/projects/ecosystem/sos-gates.json` contains 1 entry: `SOFT-FREEZE-CS1`, `state: LIFTED` (lifted 2026-07-14), `affects: [pillar-os, motif]`. `claude-cowork-config` is not in `affects[]`, and the gate is not ACTIVE regardless. **Ecosystem-Context-Brief = no constraint on this cycle.**
+
+##### Gate-Cycle Pre-Spec Check (AC-06 / v0.32.3)
+
+- **Check A (queued gate-cycle):** `.claude/projects/claude-cowork-config/stack-profile.json` has no `planning` key and no `planning.queued_cycles[]` — fail-open, Check A skipped.
+- **Check B (security-debt lock):** `awk`-scoped scan of `docs/retro.md`'s most-recent cycle section (`## [v2.6.1] ...`) for a `NEXT-CYCLE-LOCKED` CF-line — **Security-debt lock: none found** (`grep -n "NEXT-CYCLE-LOCKED" docs/retro.md` → 0 matches, full file).
+
+Both checks pass cleanly. No gate-jump or security-debt warning fires.
+
+#### Problem
+
+The engineering in `claude-cowork-config` is ahead of its own storefront. v2.7.0/v2.7.1 (shipped 2026-07-06/07 via an out-of-pipeline cloud audit session, PRs #52–#54) fixed two persona-simulation failures, cut the setup interview from ~10 questions to 3 turns, added a clean Step-7 handover, and vendored the full upstream skill library with hash verification — real, shipped improvements. But a visitor evaluating the repo today (via README, CHANGELOG, or the Releases tab) sees a *different, stale* product: `VERSION` and the README badge both read `2.6.1`; the CHANGELOG buries all of v2.7's actual content under an undated `[Unreleased]` heading; the wizard's own refusal message still says "coming in v2.7+" for a version that has already shipped; and 10 open GitHub issues (one self-labeled `[BLOCKER] security`) sit untouched since May, alongside no Code of Conduct, no issue templates, and Discussions disabled. Evidence: `docs/project-audit-v2.6.1.md`, `docs/research/v2.7-usercase-test-and-improvement-research.md`, and the fresh 3-agent research pass in `improvement-plan-2026-07-18.md` (D-2, D-3, D-10..D-16, D-15 — file:line verified against HEAD `427dea9` during this Phase 0 session). This is a trust problem, not a feature gap: every item below is something a curious visitor finds wrong in under 5 minutes, and the improvement plan explicitly frames this cycle as the **pre-showcase gate** — nothing in Phase B (the LinkedIn-worthy storytelling pass) should ship while the repo's own numbers still contradict each other.
+
+#### Target Users
+
+- **Primary:** a prospective adopter evaluating the repo for the first time (via README, a Release, or a search result) — the audience the "showcase gate" protects. They should find a coherent, truthful version story, not archaeology.
+- **Secondary:** an existing user or contributor opening an issue or PR — currently offered a blank issue box, no Code of Conduct, and a wizard that occasionally mis-describes its own capabilities.
+- Out of scope this cycle: the setup-time end user experience (the wizard interview itself, skill content, preset composition) — none of WS1–WS7 touches runtime wizard *behavior*, only its truthfulness about version/timeline and the repo's presentation surface.
+
+#### Scope Statement — Phase A of 4
+
+This is **v2.7.2 "Truth & Release"**, Phase A of the 4-phase roadmap in `improvement-plan-2026-07-18.md` (A → B "Showcase" v2.8.0 → C "Distribution & Trust" v2.9.0 → D "Upstream refresh → multi-tool" v2.10/v3.0). **PATCH bump only: 2.7.1 → 2.7.2.** Seven workstreams (WS1–WS7), all classed by the plan as "S effort" (small): version truth, a version-consistency CI gate, broken-promise-string purge, a paper-cut batch, one external-domain verification decision, repo-presentation hygiene, and stale-issue triage. See §Will NOT Do for the explicit Phase B/C/D exclusion list.
+
+#### Core Features (MVP) — Workstreams WS1–WS7
+
+##### WS1 — Version Truth (closes D-2)
+
+The CHANGELOG, VERSION file, README badge, and README "What's new" section are brought into agreement with what actually shipped; the three missing releases (v2.7.0, v2.7.1, v2.7.2) get real tags and GitHub Releases with human-readable notes.
+
+**CHANGELOG version-split mapping** (derived from `git log --format='%cd' --date=iso-strict` on the three relevant commits, converted to UTC — the project's ISO-8601-UTC convention; local commit timestamps carry a `+04:00` offset that crosses midnight, so UTC is the authoritative date):
+
+| Commit | Local timestamp | UTC date | Maps to |
+|---|---|---|---|
+| `da62d86` "audit(v2.6.1)" PR #52 | 2026-07-06T20:43:20+04:00 | 2026-07-06 | `## [2.7.0]` (no independent tag was ever cut for this commit; it is same-session prep that shipped as part of the v2.7.0 release) |
+| `8369c9f` "v2.7.0" PR #53 | 2026-07-07T02:47:59+04:00 | 2026-07-06 | `## [2.7.0]` |
+| `427dea9` "v2.7.1" PR #54 | 2026-07-08T00:59:24+04:00 | 2026-07-07 | `## [2.7.1]` |
+
+Content mapping: CHANGELOG `### Added — second pass` + `### Changed — second pass` (da62d86) + `### Added — third pass` + `### Changed — third pass` + `### Deferred (with rationale)` (8369c9f) → all become `## [2.7.0] - 2026-07-06`. CHANGELOG `### Added — fourth pass` (427dea9, Step 7 handover) → becomes `## [2.7.1] - 2026-07-07`. A new `## [2.7.2] - <ship date>` section is added above both for this cycle's own changes (filled in during Phase 4/7 as WS2–WS7 land).
+
+##### WS2 — Version-Consistency CI Gate (new)
+
+A new job/step in `.github/workflows/quality.yml` that mechanically asserts `VERSION` file == README badge version == the first `## [x.y.z]` header in `CHANGELOG.md`, and fails (non-zero exit) if any two disagree. This is a "check that can fail" — its author must run it against a deliberately broken input (negative control) before trusting a green run, not just against the already-correct state.
+
+##### WS3 — Purge Broken-Promise Strings (closes D-3)
+
+WIZARD.md's refusal wording (2 occurrences: line 27 offline-fallback example, line 108 F4 pool-boundary rejection) currently tells the user "External skills are not yet supported in v2.6 — coming in v2.7+" — a promise that has now been broken twice over (v2.6 is two majors behind, and v2.7 shipped without delivering it). Both are rewritten to version-neutral wording. README:169's "Next up (v2.7+)" teaser is rewritten to drop the missed deadline while preserving the substance (see §Conflicts with Proposed Scope above).
+
+##### WS4 — Paper-Cut Batch (closes D-10..D-14, D-16)
+
+Six independent small corrections: two stale "primary entry point" version claims (WIZARD.md:3 "v1.2", SETUP-CHECKLIST.md:10 "v2.6.0"), one stale version reference in README:115 ("new in v1.2"), one stale heading in docs/OUTPUT-STRUCTURE.md:5 ("Primary Entry Point (v1.2)"), a registry vocabulary gap (`personal-assistant` missing from `goal_tags`) plus an unannotated row-count discrepancy (24 registry rows / 23 unique skills), a stale preset count in `.claude/skills/setup-wizard/SKILL.md`'s frontmatter description (6/7 presets listed), a stale "20 files" pool-size comment in `quality.yml:323-324` (pool is now 23), and removal of the legacy `tests/v1.3.3/` directory.
+
+##### WS5 — SkillRisk.org Verification (closes D-15)
+
+**Decision rule** (orchestrator executes the verification; this is the rule, not the verification itself — I cannot browse the live web from Phase 0):
+
+1. Orchestrator verifies `https://skillrisk.org` resolves, is not parked/expired/unrelated-content, and is plausibly a skill/prompt-content-scanning service (matches its two citation contexts: WIZARD.md:240 "scan them first at SkillRisk.org" for externally-sourced skills, CONTRIBUTING.md:77 "scan it at SkillRisk.org" before submitting external skill content).
+2. **If verified reputable and live:** no change to WIZARD.md:240 or CONTRIBUTING.md:77 — both already scope the recommendation narrowly (only fires for non-`builtin` skill sources), which is correct behavior.
+3. **If unverifiable** (does not resolve, appears parked/spam/unrelated, or its purpose cannot be confirmed): replace both references with generic, tool-agnostic guidance — WIZARD.md:240 → "scan skills from external sources for prompt-injection risk and unexpected instructions before installing them"; CONTRIBUTING.md:77 → "scan external skill content for prompt-injection risk and unexpected instructions before submitting."
+4. The disposition (KEEP-named vs. REPLACE-generic) and the verification method used are recorded in the Phase 4 commit message.
+
+##### WS6 — Repo Presentation Surface
+
+**Repo files (@dev):**
+- `CODE_OF_CONDUCT.md` — Contributor Covenant (current stable version), root of repo. No maintainer email is published anywhere in this repo (checked `CONTRIBUTING.md`, `README.md` — 0 hits for a contact email); the reporting/enforcement channel is therefore specified as "open a confidential issue, or contact a repository maintainer directly through GitHub" rather than inventing an email address.
+- `.github/ISSUE_TEMPLATE/` — at least 2 templates: bug report, preset request.
+- README gains 1–2 additional social badges (GitHub stars, "PRs welcome") alongside the existing CI/License/Version badges. No competitor names, no fabricated metrics.
+
+**GitHub settings (orchestrator, post-merge, `gh` CLI with repo-admin scope):**
+- Enable Discussions; seed 2–3 threads (e.g. "Show and tell," "Feature requests," "Help & troubleshooting").
+- Set the `homepage` repo field to a meaningful, non-redundant target (e.g. the latest Release page) — or explicitly document "N/A, no non-redundant target exists" if nothing suitable is found. Currently empty (`homepageUrl: ""`).
+- Verify the social-preview image is current (repo already has one set — `has_social_preview: true` — confirm it isn't referencing stale branding/version).
+
+##### WS7 — Stale-Issue Triage
+
+Every currently-open GitHub issue (10 found at spec time) gets individually triaged by the orchestrator + @security: **verify-then-close** for resolved issues (with a comment citing the concrete evidence), or **keep-open-with-current-relevance-comment** for genuinely still-applicable ones. Issue #23 `[BLOCKER] security` is explicitly **not** blind-closed — see §GitHub Signals above for the prior-evidence context and the required fresh confirmation.
+
+#### Will NOT Do (Out of Scope — Phase B/C/D)
+
+- No README storytelling/hero rewrite, H1/identity-block redesign, or "16-agent swarm-test" narrative (Phase B item 2)
+- No demo GIF or screenshots (Phase B item 3)
+- No offline-smoke-test timing-scorecard run/fill, and no wiring it into the release checklist (Phase B item 4)
+- No `docs/` split into `docs/internal/` + curated public docs, no new `TRUST.md`, no `.gitattributes` collapse (Phase B items 2, 5)
+- No dead-reference cleanup beyond the specific WS4 paper cuts named above (Phase B item 6)
+- No Claude plugin packaging / `.claude-plugin/plugin.json` marketplace manifest (Phase C item 1)
+- No `compatibility`/`metadata` frontmatter hardening or `skills-ref validate` CI (Phase C item 2)
+- No per-skill evals in CI (Phase C item 3)
+- No catalog-wave submissions (claude.com/plugins, awesome-claude-skills, skills.sh) (Phase C item 4)
+- No upstream lock bump, no re-vendoring, no `tools.json`/multi-tool surface work (Phase D)
+- No regeneration of `examples/*/project-instructions-starter.txt` from the current interview (D-1 — this is a **full regeneration** task explicitly owned by Phase B item 1, not a targeted string fix; grep-verified 0 promise-string hits in `examples/` currently, so WS3 has no reason to touch these files this cycle)
+- No changes to WIZARD.md's interview *logic* or *flow* — only the two named refusal-wording sentences (WS3) and the one version-claim sentence (WS4) change; F1–F4 routing, the 3-turn structure, and Step 7 handover behavior are untouched
+- No actual fix to `sync-agency.yml`'s peter-evans SHA unless @security's WS7 confirmation finds it genuinely broken (prior evidence says it is not) — if it IS found broken, that is a scope addition requiring re-classification, not silently absorbed into this patch
+
+#### Technical Constraints
+
+- Stack: Markdown, YAML (GitHub Actions), Bash — no new runtime dependencies.
+- `cowork.lock.json`, `skills/*/SKILL.md` content, and the `examples/*/.claude/skills/*` byte-mirror invariant: UNCHANGED (not in scope; this is a presentation/truth patch, not a content cycle).
+- `.github/workflows/sync-agency.yml` is not edited by this cycle's *implementation* — WS7 only triages the open issue about it. Any actual SHA correction, if @security's confirmation finds one necessary, is a scope addition (see §Will NOT Do).
+- WS2's new CI job must run on `ubuntu-latest` using only bash/grep, consistent with the rest of `quality.yml`'s existing style (no new Actions, no new secrets, no permission-block changes).
+- GitHub-settings-only changes (Discussions, homepage, social-preview) require `gh` CLI with repo-admin-scoped auth and are executed by the orchestrator post-merge, not by @dev.
+- WIZARD.md and README.md changes in WS3/WS4 are targeted line-level edits, not rewrites — the byte-mirror discipline this project applies to product files (per `docs/architecture.md` ADR precedent) extends to "change only the named lines."
+
+#### User Stories
+
+- As a **prospective adopter** browsing the repo for the first time, I can trust that the version badge, the CHANGELOG, and the Releases tab all tell the same story, so that I don't have to reverse-engineer which version I'm actually looking at.
+- As a **prospective adopter** reading the wizard's own in-product copy, I never see a promise about a feature "coming in v2.7+" for a version that has already shipped without it, so that I don't lose trust in the rest of the product's claims.
+- As a **contributor** opening my first issue or PR, I have a Code of Conduct and a structured issue template to work from, so that I know what's expected before I invest time writing a report.
+- As a **maintainer**, I get an automatic CI failure the next time VERSION/badge/CHANGELOG drift out of sync, so that this exact class of defect (D-2) cannot recur silently.
+- As a **security-conscious visitor**, I don't find an unresolved issue self-labeled `[BLOCKER] security` sitting untouched for 2+ months, so that I don't reasonably conclude the maintainers ignore security reports.
+
+#### Acceptance Criteria
+
+**WS1 — Version Truth**
+
+- [ ] **AC-1 (CHANGELOG split):** `CHANGELOG.md` contains dated headers `## [2.7.0] - 2026-07-06` and `## [2.7.1] - 2026-07-07` per the mapping table above, with no `## [Unreleased]` heading carrying content remaining. Verify: `grep -n "^## \[2\.7\.0\] - 2026-07-06$" CHANGELOG.md` and `grep -n "^## \[2\.7\.1\] - 2026-07-07$" CHANGELOG.md` both match exactly once; `grep -c "^## \[Unreleased\]$" CHANGELOG.md` = 0; spot-check content preservation: `grep -c "Two new pool skills\|Profile-stub checkpoint\|Personalization placeholders" CHANGELOG.md` >= 3 (key v2.7.0-era bullets survived); `grep -c "WIZARD.md Step 7" CHANGELOG.md` >= 1 (v2.7.1-era content survived).
+- [ ] **AC-2 (VERSION/badge/What's-new refresh):** `cat VERSION` = `2.7.2`; README badge reads `version-2.7.2-green`; README's "What's new in v2.6" heading and content is replaced with "What's new in v2.7" summarizing the actual shipped v2.7.0/v2.7.1 content (3-turn interview, crash-proof profile-stub, F3 routing fix, 2 new skills, Step 7 clean handover) — no competitor names. Verify: `cat VERSION` prints `2.7.2`; `grep -c "version-2.7.2-green" README.md` >= 1; `grep -c "^## What's new in v2.7" README.md` = 1; `grep -c "What's new in v2.6" README.md` = 0; `grep -icE "coming in v2\.7\+" README.md` = 0.
+- [ ] **AC-3 (post-merge tags + releases — orchestrator-executed):** Git tags `v2.7.0` (→ `8369c9f`), `v2.7.1` (→ `427dea9`), and `v2.7.2` (→ this cycle's merge commit) exist and are pushed; 3 GitHub Releases are published using `templates/public-artifact/release-body.md` as the structural basis, with every `[REPLACE:*]` marker resolved. Verify: `git tag --points-at 8369c9f` includes `v2.7.0`; `git tag --points-at 427dea9` includes `v2.7.1`; `gh release list --repo jmlozano1990/Cowork-Starter-Kit --limit 3 --json tagName` shows `v2.7.0`, `v2.7.1`, `v2.7.2`; `gh release view v2.7.0 --repo jmlozano1990/Cowork-Starter-Kit --json body --jq '.body' | grep -c "\[REPLACE:"` = 0 (repeat for v2.7.1, v2.7.2).
+
+**WS2 — Version-Consistency CI Gate**
+
+- [ ] **AC-4 (CI gate + negative control):** `.github/workflows/quality.yml` has a new job/step (e.g. `version-consistency-check`) that extracts `VERSION`, the README badge version, and the first `## [x.y.z]` CHANGELOG header, and fails non-zero if any two differ. Verify (the logic the step implements): `V=$(cat VERSION); B=$(grep -oP 'version-\K[0-9]+\.[0-9]+\.[0-9]+(?=-green)' README.md | head -1); C=$(grep -m1 -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md); [ "$V" = "$B" ] && [ "$B" = "$C" ]` exits 0 on the shipped state. Negative control (must be run once before trusting the green CI run, per the check-that-can-fail principle): on a scratch copy, change only `VERSION` to a different value and re-run the same command — it must exit non-zero and the CI step's error message must name which of the three values disagreed.
+
+**WS3 — Purge Broken-Promise Strings**
+
+- [ ] **AC-5 (promise strings purged):** Zero occurrences of the literal strings `"coming in v2.7+"` (case-insensitive) in `WIZARD.md`, `README.md`, `SETUP-CHECKLIST.md`, `CLAUDE.md`; README:169's teaser no longer carries a `(v2.7+)` deadline marker while preserving its substance. Verify: `grep -icE "coming in v2\.7\+" WIZARD.md README.md SETUP-CHECKLIST.md CLAUDE.md` = 0 (all four files, combined); `grep -n "Next up" README.md` shows a line with no `(v2.7+)` or other version-deadline marker immediately following it.
+
+**WS4 — Paper-Cut Batch**
+
+- [ ] **AC-6 (stale "primary entry point" version claims):** WIZARD.md:3 no longer says "primary v1.2 entry point"; SETUP-CHECKLIST.md:10 no longer says "primary v2.6.0 path"; both read version-neutral ("the primary entry point" / "the primary path"). Verify: `grep -n "primary v1\.2\|primary v2\.6\.0" WIZARD.md SETUP-CHECKLIST.md` = 0 matches.
+- [ ] **AC-7 (stale version refs — README/OUTPUT-STRUCTURE):** README.md:115's "(new in v1.2)" parenthetical is removed or made version-neutral; docs/OUTPUT-STRUCTURE.md's `## Primary Entry Point (v1.2)` heading drops the version marker. Verify: `sed -n '115p' README.md | grep -c "new in v1\.2"` = 0; `grep -n "Primary Entry Point (v1\.2)" docs/OUTPUT-STRUCTURE.md` = 0 matches.
+- [ ] **AC-8 (registry vocabulary + annotation):** `curated-skills-registry.md`'s `goal_tags` vocabulary line includes `personal-assistant`; an explicit annotation near the research-synthesis dual-row footnote states the reconciled counts (24 registry rows / 23 unique skill slugs). Verify: `grep -n "goal_tags" curated-skills-registry.md | head -1 | grep -c "personal-assistant"` >= 1; `grep -c "24 rows\|23 unique" curated-skills-registry.md` >= 1.
+- [ ] **AC-9 (setup-wizard SKILL.md frontmatter):** `.claude/skills/setup-wizard/SKILL.md`'s `description:` frontmatter field lists all 7 presets (currently lists 6, missing personal-assistant). Verify: `sed -n '3p' .claude/skills/setup-wizard/SKILL.md | grep -ic "personal.assistant\|daily life"` >= 1.
+- [ ] **AC-10 (quality.yml stale pool-size comment):** `.github/workflows/quality.yml`'s "(20 files)" / "All 20 files" pool-size comments (lines ~323-324) are updated to the current pool size (23). Verify: `grep -c "20 files\|All 20 files" .github/workflows/quality.yml` = 0; `grep -c "23 files\|23-skill\|pool of 23" .github/workflows/quality.yml` >= 1.
+- [ ] **AC-11 (legacy test dir removed):** `tests/v1.3.3/` no longer exists; nothing outside CHANGELOG history references it. Verify: `test ! -d tests/v1.3.3` exits 0; `grep -rn "v1.3.3" .github/ *.md docs/*.md 2>/dev/null | grep -v CHANGELOG.md` = 0 matches.
+
+**WS5 — SkillRisk.org Verification**
+
+- [ ] **AC-12 (SkillRisk decision recorded + applied):** The KEEP-named vs. REPLACE-generic decision (per §WS5 decision rule) is recorded in the Phase 4 commit message with the verification method used. If REPLACE: `grep -c "SkillRisk" WIZARD.md CONTRIBUTING.md` (combined) = 0 and the two named replacement sentences (§WS5 step 3) are present verbatim. If KEEP: WIZARD.md:240 and CONTRIBUTING.md:77 are byte-unchanged from HEAD `427dea9`. Verify: `git log --oneline -1 -- WIZARD.md CONTRIBUTING.md | grep -c "SkillRisk decision:"` >= 1 (commit message documents the call).
+
+**WS6 — Repo Presentation Surface**
+
+- [ ] **AC-13 (CODE_OF_CONDUCT.md):** `CODE_OF_CONDUCT.md` exists at repo root, is a Contributor Covenant derivative, and carries no unresolved `[INSERT ...]` template placeholder. Verify: `test -f CODE_OF_CONDUCT.md` exits 0; `grep -c "Contributor Covenant" CODE_OF_CONDUCT.md` >= 1; `grep -c "\[INSERT" CODE_OF_CONDUCT.md` = 0.
+- [ ] **AC-14 (issue templates):** `.github/ISSUE_TEMPLATE/` exists with at least a bug-report and a preset-request template. Verify: `ls .github/ISSUE_TEMPLATE/*.md .github/ISSUE_TEMPLATE/*.yml 2>/dev/null | wc -l` >= 2.
+- [ ] **AC-15 (README badges):** README gains a GitHub-stars badge and a "PRs welcome" badge. Verify: `grep -c "img.shields.io/github/stars" README.md` >= 1; `grep -ic "PRs.[Ww]elcome" README.md` >= 1.
+- [ ] **AC-16 (Discussions enabled, orchestrator post-merge):** GitHub Discussions is enabled on the repo, with >= 2 seed threads. Verify: `gh repo view jmlozano1990/Cowork-Starter-Kit --json hasDiscussionsEnabled --jq '.hasDiscussionsEnabled'` = `true`; discussion count manually confirmed >= 2 by the orchestrator (Discussions GraphQL/API access is not guaranteed in this environment — visual confirmation is an acceptable substitute, documented in the PR).
+- [ ] **AC-17 (homepage field, orchestrator post-merge):** `gh repo view jmlozano1990/Cowork-Starter-Kit --json homepageUrl --jq '.homepageUrl'` is non-empty, OR a documented rationale for leaving it blank is present in the PR description / scratchpad.
+- [ ] **AC-18 (social-preview currency, orchestrator post-merge):** Orchestrator visually confirms the repo's social-preview image (already set — `has_social_preview: true`) does not reference stale branding/version; disposition (current / needs regeneration) documented in the PR description.
+
+**WS7 — Stale-Issue Triage**
+
+- [ ] **AC-19 (issue triage, no blind-close on #23):** Every open GitHub issue at execution time is either closed with a comment citing concrete verification evidence, or kept open with a current-relevance comment. Issue #23 specifically requires @security's independent confirmation (peter-evans SHA validity + green CI on `main`) before closing — a close without that comment fails this AC. Verify: `gh issue list --repo jmlozano1990/Cowork-Starter-Kit --state open --json number` count reflects the triage outcome; `gh issue view 23 --repo jmlozano1990/Cowork-Starter-Kit --json state,comments` shows either `state: OPEN` with an explanatory comment, or `state: CLOSED` with a comment naming the SHA and a CI run URL.
+
+#### Edge Cases
+
+1. **Malformed/missing version signal (WS2):** README badge regex fails to match (badge removed/reformatted) or `VERSION` file has trailing whitespace — the CI gate must fail loudly with a clear "could not extract X" message, not silently pass or silently skip the comparison.
+2. **Mid-cycle state transition (WS1):** if the CHANGELOG split is committed but the new `[2.7.2]` section is left with placeholder/incomplete content when other WS work merges, no intermediate broken state reaches `main` — the version-split and the `[2.7.2]` content population land in the same PR, verified before merge.
+3. **Permission boundary (WS6):** orchestrator's `gh` auth lacks repo-admin scope required to toggle Discussions or set `homepage` — these AC steps must fail with a visible, actionable error (e.g. "403: requires admin") rather than silently no-op and report success.
+4. **Concurrent access / race (WS1):** another Council session or contributor pushes to `main` while tags are being created — tags MUST be pinned to the exact verified SHAs (`8369c9f`, `427dea9`, and the specific v2.7.2 merge SHA), never to `HEAD` at tag-creation time, to avoid a moving-target race.
+5. **Empty/null result set (WS7):** if `gh issue list --state open` returns 0 issues at execution time (all already closed by someone else in the interim), AC-19 degrades gracefully — log "0 open issues found, nothing to triage," not an error.
+
+#### Risks
+
+| Risk | Likelihood | Severity | Mitigation |
+|---|---|---|---|
+| CHANGELOG `[Unreleased]`→dated-split loses or duplicates content during the manual split | Medium | Medium (cosmetic/historical-record only) | AC-1's line-preservation spot-checks before commit |
+| WS2's CI gate has a logic bug that lets it pass on a real mismatch (a check that can't fail) | Low–Medium | High (defeats the whole point of WS2; exact D-2 recurrence) | AC-4 mandates a negative-control test against a deliberately broken input before trusting green |
+| SkillRisk.org turns out unrelated/parked and the wizard is currently pointing users at it | Low | Medium (misdirects users to an unrelated site) | AC-12's explicit verify-or-replace decision rule, orchestrator web-verifies before Phase 4 |
+| Blind-closing issue #23 ships a false all-clear if the SHA really is invalid | Low (strong prior evidence it's already fixed — see §GitHub Signals) | High (a broken Action reference in a `contents:write`+`pull-requests:write` workflow could silently fail) | AC-19's explicit no-blind-close rule; @security confirmation required before closing |
+| WS2's `quality.yml` edit introduces a YAML syntax error that breaks all CI on the repo | Low | High | Local YAML lint + dry-run before push; SECURITY-SENSITIVE classification (below) triggers full Phase 2/6 review |
+
+#### Rollback
+
+Every file-level change (WS1, WS3, WS4, WS5, WS6-repo-files) is a revertible commit — `git revert` the Phase 4 commit(s) restores the prior state. WS2's CI gate addition is additive and safe to leave even if reverted elsewhere. WS1's tags/releases (once published) cannot be cleanly un-published, but can be edited with a correction note if a factual error is found post-merge. WS6's GitHub-settings changes (Discussions, homepage) are trivially reversible via repo settings — no data loss risk. WS7's issue closures include a documented verification comment, so a wrongly-closed issue can be reopened with full context preserved.
+
+#### Success Metrics
+
+- **Primary:** A first-time visitor evaluating the repo (README, CHANGELOG, or a GitHub Release) finds zero version-storefront contradictions or unfulfilled "coming soon" promises within a 5-minute skim — the repo's public story matches what it actually ships.
+- **Secondary:** A contributor opening a new issue is offered a structured template instead of a blank box, and can see a Code of Conduct before engaging — measured by issue-template usage rate and the absence of "what's the CoC here" questions in future issues/PRs.
+- **Tertiary:** The next version bump (v2.7.3 or v2.8.0) cannot silently drift VERSION/badge/CHANGELOG out of sync again — WS2's CI gate catches it automatically, preventing a second instance of the D-2 defect class.
+
+#### Assumptions
+
+- [CONFIRMED] The three commits shipping v2.7.0/v2.7.1 content (`da62d86`, `8369c9f`, `427dea9`) and their UTC dates (2026-07-06, 2026-07-06, 2026-07-07 respectively) — verified via `git log --format='%cd' --date=iso-strict`.
+- [CONFIRMED] Zero promise-string hits in `examples/*/project-instructions-starter.txt` at HEAD `427dea9` — verified via direct grep; WS3 does not need to touch these files.
+- [CONFIRMED] No maintainer contact email is published anywhere in the repo — verified via grep across CONTRIBUTING.md/README.md; CODE_OF_CONDUCT.md's contact channel is specified as GitHub-issue-based rather than email.
+- [ESTIMATED] Issue #23's peter-evans SHA is already fixed/stale, based on 3 independent Phase 6 security-audit confirmations since 2026-05-10 — NOT to be treated as confirmed; AC-19 requires fresh @security verification regardless.
+- [UNTESTED] SkillRisk.org's current reputability/liveness — orchestrator must verify before Phase 4; WS5's decision rule handles either outcome.
+- [UNTESTED] `gh` CLI auth in the execution environment has repo-admin scope sufficient for WS6's GitHub-settings ACs (Discussions, homepage) — if not, Edge Case 3 governs.
+
+#### Classification
+
+**Proposed: SECURITY-SENSITIVE (provisional — Phase 1 @architect / Phase 2 @security to confirm or downgrade).**
+
+**Rationale:** WS2 modifies `.github/workflows/quality.yml` — a CI gate surface. This project's own established precedent treats CI-workflow edits as a SECURITY-SENSITIVE trigger category, independent of whether the specific edit carries elevated permissions: the v2.5.4 cycle's STANDARD classification was explicitly qualified as "no auth/schema/**CI**/guard/compliance surface" (i.e., a CI-touching cycle would not have qualified as STANDARD), and v2.6.0's SECURITY-SENSITIVE classification cited "CI gate edit" as one of three co-equal triggers. Following that precedent, WS2 alone is sufficient to propose SECURITY-SENSITIVE here.
+
+**Countervailing signal for Phase 1/2 to weigh:** WS2's actual risk profile is low — it is a read-only bash/grep comparison of three already-public version strings, adds no new GitHub Action, requests no new permissions, touches no secrets, and does not modify `sync-agency.yml` (the workflow that actually carries `contents:write`/`pull-requests:write`, which is where this project's SECURITY-SENSITIVE classifications have historically had real teeth — see v2.5.3). If @architect's Phase 1 classification re-run judges that a pure version-string-assertion CI addition doesn't warrant full SECURITY-SENSITIVE ceremony (worktree + Guard Change Summary + Phase 6 audit) the way a permission-bearing workflow edit does, a downgrade to STANDARD with a documented rationale is defensible — but the initial proposal here defaults to the stricter classification per this project's own convention, fail-safe.
+
+**Secondary consideration:** WS7 (issue triage) references `sync-agency.yml` but, per §Will NOT Do, does not edit it unless @security's confirmation finds the SHA genuinely broken — in which case that would independently confirm SECURITY-SENSITIVE (matching the v2.5.3 precedent for actual supply-chain-workflow edits) and require a scope-addition note, not a silent absorption.
+
+This is orthogonal to the Phase 0 authoring location: per the session brief, this cycle is treated as STANDARD/in-place for Phase 0 output purposes (this section is committed directly to `docs/spec.md` on `main`, not staged in a worktree scratchpad) — the classification proposal above governs Phase 1 onward (worktree branch, Guard Change Summary requirement, Phase 6 audit scope), which @architect confirms or re-runs at Phase 1 per the standard classification re-run discipline.
+
+## Architectural Modifications (v2.7.2)
+
+Recorded by @architect at Phase 1 (2026-07-18). Both are design-resolved (no user decision pending); see `docs/architecture.md` §"v2.7.2 Phase 1 — Truth & Release Design" §11 for full rationale.
+
+- AC: AC-4 (WS2 CHANGELOG version extraction) — literal `grep -m1 -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md` → **STRENGTHENED** to read the FIRST `## [...]` header of ANY kind (including `[Unreleased]`) and fail non-zero if that header is not a semver. — Reason: production validation against the live CHANGELOG proved the literal regex silently skips `[Unreleased]` and reports false-green (exit 0) on today's incoherent state (VERSION=2.6.1 with v2.7 content stranded under `[Unreleased]`) — a check that cannot fail on the exact D-2 defect WS2 exists to catch. Strict superset: the AC-4 shipped-state verify command still passes on the `[2.7.2]` state.
+- AC: AC-11 (legacy `tests/v1.3.3/` removal) verify `grep -rn "v1.3.3" .github/ *.md docs/*.md | grep -v CHANGELOG.md = 0` → **NARROWED** to the directory path `tests/v1.3.3` (excluding append-only historical records `CHANGELOG.md`, `docs/qa-report.md`, `docs/spec.md`). — Reason: bare `v1.3.3` is a legitimate VERSION string in append-only ADRs/retros/security-reviews (53× in `docs/architecture.md`, 17× in `docs/security-review.md`, 12× in `docs/assumptions.md`) and the `quality.yml:375` preset-evolution comment; the literal verify would force rewriting append-only history (Destructive-Migration anti-pattern) for no truth benefit. The AC's intent is legacy-directory removal, not version-string erasure.
+
