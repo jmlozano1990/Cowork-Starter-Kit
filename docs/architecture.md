@@ -60,6 +60,8 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-039 | Canonical Q1 Single-Source Enforcement (v2.8.0) — `WIZARD.md`:44 is the authoritative Q1 opener; `.claude/skills/setup-wizard/SKILL.md` quotes it verbatim and drops its duplicate embedded preset menu (deferring the "not sure" branch to WIZARD.md's Uncertainty Fallback); `CLAUDE.md` retains a compact, meaning-preserving paraphrase (single-source discipline, not budget-forced — 326/400 word headroom confirmed) | ACCEPTED |
 | ADR-040 | Draft-First Routing Presentation (v2.9.0 Dynamic Reclaim) — supersedes the *presentation* aspects of the undocumented v2.7.0 `e2f622d` change: Path A/B/C are presented as equally-first-class *drafts* the user shapes (draft framing + a one-parenthetical `matched: [fixed-vocab token]` reasoning fragment + a three-way close: run / adjust / set aside and go custom), replacing the binary "That sounds like [Preset] — is that right?" verdict; the retired cost-asymmetry tie-break sentence ("a wrong suggestion costs one 'no', while a false Path C costs the whole scaffold") is removed while the tie-break's *routing purpose* is preserved byte-behaviourally; the `≥2` threshold, 16-token `match_signals`, stemming, and the C-v2.4-6/C-v2.4-7 security notes are byte-unchanged | ACCEPTED |
 | ADR-041 | Path C `goal_tags` Matching (v2.9.0 Dynamic Reclaim) — Path C composition reads a third signal, `curated-skills-registry.md`'s `goal_tags` (dormant since ADR-012 v1.2), in addition to `name`/`description`: pool skills whose `goal_tags` domain-slugs include a preset the goal scored ≥1 on in Q1 are surfaced, giving crossover novel goals a richer first draft team; deterministic set-intersection over a fixed 7-slug domain vocabulary (C-v2.4-6 holds); addressable set stays exactly the 23-skill pool (C-v2.4-7 unchanged) | ACCEPTED |
+| ADR-042 | v2.10.0 Pool Expansion (23→25) + Cross-Domain Registry Subsection — 2 new pool skills (`anti-ai-slop` via `cross_cutting_skills`; `weekly-review` via `optional_skills` on personal-assistant + project-management + `study` goal_tags) + `voice-matching` recalibration extension; a dedicated `### Cross-Domain` registry subsection (GD-2) homes 3+-domain skills instead of forcing an arbitrary preset heading; asymmetric tier placement reflects real JTBD strength; no `core_skills`/schema/CI-logic/auth change (STANDARD) | ACCEPTED |
+| ADR-043 | Adapt-vs-Author Sourcing Policy for the Skills Pool (GD-1 codification) — source-scan preference order (in-repo vendored → in-repo pool → permissive external); ADOPT only on shape+domain+license fit (Cowork "shape" = ADR-015 9-section template, which no external Agent-Skills-standard collection uses); authoring from a cited multi-source evidence base IS the "proper job" when no tested source fits; full ADR-024 ceremony on any future ADOPT | ACCEPTED |
 
 ---
 
@@ -9542,3 +9544,267 @@ scope_allow_delta:
 ---
 
 End of v2.9.0 Phase 1 — Dynamic Reclaim design.
+
+---
+
+## v2.10.0 Phase 1 — Empowerment Skills Design
+
+> *ISO 15288 — Architecture Definition Process (schema/tier placement) + System Requirements Analysis (EARS/AC binding) + Verification Process (negative-control design).*
+
+**Date:** 2026-07-19T20:45:00Z
+**Agent:** @architect (opus)
+**Branch / base:** `release/v2.10.0` cut from `main` HEAD `16e15c8` (Phase 0 spec + research memo). In-place on the release branch (no sibling worktree — v2.5.3/v2.5.4 retro pattern).
+**Classification:** STANDARD (confirmed — see §E Classification Re-Run).
+**Worktree discipline:** SKIPPED (STANDARD classification; `COUNCIL_EXPECTED_BASE_SHA` unset — single-session; first action `git -C /home/user/claude-cowork-config rev-parse HEAD` = `16e15c8…` verified).
+**Binding gate inputs:** 0.5 Slate Gate LOCKED (GD-1 build-all-3 + quality bar; GD-2 Cross-Domain registry subsection; GD-3 all 3 fast-follows). These bind this design.
+
+### Phase 1 Design Header — Mandatory Records
+
+**Buy-vs-Build:** 3 components scanned — REUSE 0 / ADOPT 0 / EXTEND 1 / BUILD 2.
+
+**Reuse Radar (4-source + GD-1 in-repo-first scan):**
+- *Source 1 — cowork reuse surfaces:* Council's `docs/reuse-registry.md` and `examples/scaffolds/INDEX.md` are Council-repo artifacts (ship v0.32.2), **not present in this external project — skipped.** This project's analogous surface is `curated-skills-registry.md` (23 skills), scanned in full (Source 2).
+- *Source 2 — in-repo pool + vendored library (GD-1 FIRST, cheapest trusted source):* `vendored/agency-agents/**` (110 files, SHA-pinned/attribution-injected/CI-integrity-checked) grepped for slop/quality/voice/review/weekly/writing/GTD/retro analogs; `curated-skills-registry.md`'s 23 pool skills scanned for overlap. Result below (§A).
+- *Source 3 — CS catalog + ADR reuse tags:* N/A — `claude-cowork-config` has `depends_on: []`, no `parents`, no ecosystem SoS membership (`registry.json`); not a Council constituent-system context.
+- *Source 4 — SoS interfaces (`ecosystem/sos-interfaces.json`):* N/A — this project is outside the ecosystem SoS spine.
+
+**Reuse Scan (one row per non-trivial NEW/EXTENDED component):**
+
+| Component | In-repo hit (grep pasted) | OSS candidate (name + license[OBSERVED] + health) | Scaffold | Decision | Basis |
+|---|---|---|---|---|---|
+| `anti-ai-slop` (new, ~90–110 LoC, output-altering pass) | vendored `grep -rliE "ai.slop\|hedg\|burstiness" vendored/agency-agents` → 4 files, **all persona-agent shape, dev/marketing audience, 0/23 use the 9-section template** (`grep -rlF "## When to use" vendored/agency-agents` = 0). In-pool: `editing-pass`/`voice-matching` carry partial writing-scoped anti-tic guidance only (confirmed non-redundant, spec §Candidate-Slate overlap check). | `Nutlope/hallmark` (spdx **MIT** [OBSERVED via GitHub API this session], HEAD `aeb42fb354ff`, active) — **visual/design anti-slop, wrong domain**; Agent-Skills-standard shape, not 9-section. `jalaalrd/anti-ai-slop-writing` (license **null** [OBSERVED], HEAD `63255f9bbb75`) — prose-focused but **no license → adopt-blocked**; wrong shape. `anthropics/skills` (HEAD `fa0fa64bdc96`) — 17 skills, **none covers this JTBD**; free-form shape (`## When to use this skill / ## How to use this skill / ## Keywords`). | none | **BUILD** | No shape-compatible tested source: every external collection uses the Agent-Skills standard or persona-agent shape, none uses Cowork's house-invented ADR-015 9-section template with `## Writing-profile integration`. The one MIT candidate is wrong-domain (visual, not prose); the one prose candidate is unlicensed. Research memo Part 2 (5 dated sources) is a deeper, Cowork-fit evidence base than porting a wrong-shape/wrong-domain skill. GD-1 honesty rule: authoring-from-evidence IS "doing a proper job" here. |
+| `weekly-review` (new, ~90–110 LoC, file-reading review) | vendored `grep -rliE "weekly review\|gtd\|collect.*process.*review\|retrospective" vendored/agency-agents` → 8 files, **all persona-agent shape** (product-sprint-prioritizer = RICE/velocity sprint PM, incident-response = incidents — neither is personal GTD). In-pool: `daily-briefing` (same-day/forward-only), `follow-up-tracker` (commitment-specific) — adjacent, non-redundant (spec overlap check). | `anthropics/skills` — none covers periodic personal review. No MIT GTD-weekly-review skill in the 9-section shape found. | none | **BUILD** | Same shape-mismatch conclusion. Canonical GTD Collect→Process→Review→Plan structure (research memo Part 3 source 2) is well-established and cheap to author natively; no tested source in the right shape/domain exists. |
+| `voice-matching` recalibration (EXTEND existing `skills/voice-matching/SKILL.md`) | In-repo target file (own attribution, ADR-013 primary writing-profile implementation). | n/a — extending an in-repo skill. | n/a | **EXTEND** | ADR-013 makes `voice-matching` the single owner of `context/writing-profile.md`; recalibration is the same domain. Cheapest JTBD delivery (0 new file, 0 registry row, 0 pool-cardinality bump). Additive `## Triggers`/`## Instructions` content only. |
+
+*No ADOPT rows → no @security dep-scan flag, no @compliance L1 license gate, no `ATTRIBUTIONS.md`/`THIRD-PARTY-NOTICES.md` row, no AC-D1.9 prompt-injection screen triggered this cycle. The vendored `agency-agents` supply-chain pipeline is untouched (`cowork.lock.json`, `sync-agency.yml` byte-unchanged).*
+
+**Production validation:** 1/1 project (`claude-cowork-config`) PASS — all candidate parsing/count/CMP logic run against the LIVE tree, not spec fixtures. Caught 3 things the spec ACs alone would have stranded: (1) **AC-CI-2 check-that-cannot-fail** — `templates/workspace-claude-md-template.md:27` says `"23 skills"` (space) but AC-CI-2 greps `"23-skill"` (hyphen) → already 0 before any edit; the DROP would strand silently and the AC pass regardless (binding precedent: v0.29.3 / v2.9.0 F-1); (2) **WIZARD.md = exactly 3 occurrences** (lines 89, 114, 118; lines 89/118 carry C-v2.4-7) confirming AC-CI-1's count; (3) **historical AC-COMP-2 trap** — `WIZARD.md:114` is the sole live `"23-skill pool (≤3 suggestions at a time)"`; v2.9.0 bound it byte-unchanged, v2.10 flips it to 25 (the historical verify commands in `docs/architecture.md:9460` / `qa-report-v2.9.0.md:91` / `spec.md:2296` are append-only records that must NOT be re-run against the v2.10 tree — §F EXEMPT). Also production-confirmed: `examples/personal-assistant/.claude/skills/` and `examples/project-management/.claude/skills/` each contain ONLY their 3 core_skills (optional tier NOT byte-mirrored → CMP job does not cover `weekly-review` → STANDARD holds); registry data rows = 24 (`grep -cE '\| (builtin|https?://)'`); both new `goal_tags` values pass MF-2's `[^a-z0-9, -]` gate (0 invalid chars).
+
+**B1 verification:** SKIPPED (STANDARD classification; external-project cycle — `scope_allow_delta` SKIP-apply per V44-S5 / ADR-115 §Implications; `dev.md scope_allow` governs Council-repo self cycles, not this external markdown project).
+
+**EARS check (HIGH-severity ACs):** applied to the 27 v2.10.0 ACs. **2 HIGH-severity check-that-cannot-fail findings (both resolved at design level, no user-facing OQ):**
+- `[EARS-REVISED]` **AC-CI-2** — original: "`grep -c "23-skill" templates/workspace-claude-md-template.md = 0`" is a check-that-cannot-fail (the file's real string is `"23 skills"`, so the grep is pre-GREEN). Revised: *"WHEN the WS-CI edit lands, @qa SHALL verify `grep -c "23 skills" templates/workspace-claude-md-template.md` = 0 AND `grep -c "25 skills" templates/workspace-claude-md-template.md` >= 1 — the actual live string, not the hyphenated variant."* Bound in §B WS-CI and §E Architectural Modifications.
+- `[EARS-REVISED]` **AC-FF-1** — original "replace with a command that demonstrably fails on the pre-change tree" is correct in intent but under-specified. Revised: *"WHEN the F-1 fix lands, @qa SHALL run `grep -cF 'Draft-then-shape bundle building' README.md` against pre-v2.9.0 tree `33fd22c^` (MUST = 0, negative control fires) AND current `README.md` (MUST >= 1)."* Proven this session (§B WS-FASTFOLLOW). All other HIGH ACs already carry sound anchor-scoped verifies (AC-SKILL-4 mandates a @qa manual read; AC-PRESET-5 is a zero-diff inversion). MEDIUM/LOW advisory: AC-REG-2/AC-PRESET-4/AC-STORE10-2 are manual-read ACs by design (column/substance checks a bare grep can't verify) — no revision needed, correctly non-mechanical.
+
+**SoS Classification:** N/A — single-project design. UAF 4-viewpoint (Strategic / Operational / Service / Resource): N/A — single-project design (each viewpoint explicitly N/A per EC-1; `claude-cowork-config` has no cross-project constituent relationships).
+
+**Reliability Analysis:** N/A per NEVER-APPLY (no multiple external API providers in a request path; no failover/fallback mechanism; no SLA or availability claim in spec — this is a static Markdown content/data cycle with no runtime request path).
+
+**Heuristics Check (Rechtin, consulted for ADR-042/043):**
+- *"Simplify, simplify, simplify"* → FIRES on the EXTEND-not-new decision for voice-matching (0 new file/row/tier vs a redundant `voice-calibration` skill) and on the slate discipline (6 considered / 3 built).
+- *"Do the hard part first"* → FIRES on the source scan preceding any authoring (GD-1's own sequencing) and on the CTCF EARS audit at design time (AC-CI-2/AC-FF-1) rather than Phase 5.
+- *"Don't confuse the functioning of the parts for the functioning of the system"* → FIRES on AC-CI-2/AC-FF-1: the mechanical greps (the "parts") pass, but the system property (the DROP actually landed / the negative control actually fires) was broken — fixed at the verification layer, mirroring v2.9.0's own F-1.
+- *"A good solution somehow looks good"* → the Cross-Domain registry subsection (GD-2) is more honest about `anti-ai-slop`'s all-7-domain reach than forcing it under an arbitrary preset heading (as `prompt-gate` currently sits under "Project Management").
+- *"Relationships among elements are what give systems their added value"* (not applicable as a corrective — recorded): the pool↔registry↔preset coupling is the load-bearing invariant (`wizard-consistency-check`); its signal here is the commit-ordering constraint in §D (WS-SKILLS must land before/with WS-PRESETS).
+
+**Maturation Path self-grep (run post-authoring, before Phase 1 DONE):** baseline 7/7/7 → expected 9/9/9 after ADR-042 + ADR-043 (each carries all 3 verbatim headers). Actual output recorded in §H.
+
+### §A. Source Scan (GD-1) — per-skill ADAPT/AUTHOR decisions
+
+The GD-1 quality bar ("research for it, do a proper job **or** pull them from tested repos") was executed as a 4-tier scan, in-repo-first (cheapest trusted source), with the honesty rule applied: an adaptation is only chosen when a tested source **genuinely fits shape + domain + license**; otherwise authoring-from-evidence is the correct "proper job."
+
+**Scan tier 1 — `vendored/agency-agents/**` (in-repo, pre-vetted, SHA-pinned — the cheapest trusted source).** 110 files across 11 category folders. Greps run this session:
+- `grep -rlF "## When to use" vendored/agency-agents` = **0** and `grep -rlF "## Writing-profile integration" vendored/agency-agents` = **0** → **not one vendored file uses Cowork's 9-section SKILL.md template.** They are persona/role *agent* definitions (`name`/`description`/`color`/`emoji`/`vibe` frontmatter; `## Role Definition` / `## Core Capabilities` / `## Decision Framework` / `## Success Metrics` body) with a developer/marketing/product-role audience (RICE frameworks, sprint velocity, editorial calendars, OpenAPI/Docusaurus). This is a fundamentally different artifact shape AND audience from Cowork's non-technical-knowledge-worker content-generation skills.
+- Closest analogs inspected in full: `engineering-technical-writer.md` (developer docs, not prose de-slopping), `product-sprint-prioritizer.md` (agile sprint PM, not personal GTD), `marketing-content-creator.md` (multi-platform campaigns). None maps to any of the 3 slate JTBDs.
+- **Verdict: no vendored file is adaptation-viable for any of the 3 items** — wrong shape + wrong audience. (Recorded honestly per the Reuse-Radar even-when-empty rule; the scan was run, not skipped.)
+
+**Scan tier 2 — in-pool `skills/` (23 skills).** `editing-pass` and `voice-matching` carry partial, writing-preset-scoped anti-tic guidance (em-dash flood / hedged-language overuse / generic transitions) — confirmed NON-redundant with `anti-ai-slop` (which is the universal last-pass for users with NEITHER installed, spec §Candidate-Slate item 1 overlap check). `daily-briefing`/`follow-up-tracker` are adjacent to `weekly-review` but non-redundant (same-day-forward-only / commitment-specific vs periodic Collect→Process→Review→Plan). `voice-matching` is the EXTEND target for item 2.
+
+**Scan tier 3 — external, reputable MIT collections (network scan this session).**
+- `anthropics/skills` (official, HEAD `fa0fa64bdc96`): 17 skills (algorithmic-art, brand-guidelines, doc-coauthoring, internal-comms, docx/pdf/pptx/xlsx, mcp-builder, skill-creator, …). **None covers anti-slop, weekly-review, or voice recalibration.** Shape confirmed via `internal-comms/SKILL.md`: `## When to use this skill / ## How to use this skill / ## Keywords` — the Agent-Skills standard, NOT Cowork's 9-section template.
+- `Nutlope/hallmark` (spdx **MIT** [OBSERVED], HEAD `aeb42fb354ff`): "Anti-AI-slop **design** skill" — visual/frontend design de-slopping, wrong domain for prose knowledge-worker output; Agent-Skills-standard shape.
+- `jalaalrd/anti-ai-slop-writing` (license **null** [OBSERVED], HEAD `63255f9bbb75`): prose anti-slop — closest domain fit — but **no license → all-rights-reserved by default → adopt-blocked**; also wrong shape.
+
+**Per-skill decisions (final):**
+1. **`anti-ai-slop` → AUTHOR** from research memo Part 2 (5 dated sources). Basis: no shape-compatible tested source; the one MIT candidate is wrong-domain, the one prose candidate unlicensed. Authoring is the GD-1 "proper job" path, and the memo's evidence base (named vocabulary denylist + burstiness + hedging + the em-dash-density anti-anti-pattern corrective) is richer and more Cowork-fit than any port.
+2. **`voice-matching` recalibration → EXTEND** the in-repo `skills/voice-matching/SKILL.md`. Basis: ADR-013 single-owner-of-`writing-profile.md` invariant; additive content only; cheapest delivery.
+3. **`weekly-review` → AUTHOR** from research memo Part 3 source 2 (canonical GTD). Basis: same shape-mismatch conclusion; canonical, cheap-to-author-natively structure; no right-shape/right-domain tested source exists.
+
+**Net: 0 external ADOPT, 1 in-repo EXTEND, 2 AUTHOR-from-evidence.** This satisfies GD-1 honestly — the scan was thorough (110 vendored files + 17 official skills + a GitHub search surfacing 2 directly-named anti-slop repos), and the AUTHOR decision has a documented, evidence-backed basis, not a "didn't look" default. Should any of the three later warrant an external adopt (e.g., `Nutlope/hallmark` re-scoped to prose, or `jalaalrd` gaining a license), ADR-043 defines the ceremony — see its §Maturation Path.
+
+### §B. Design bindings for @dev (Phase 4)
+
+All three skills are AUTHORED to the ADR-015 9-section template (`## When to use` → `## Triggers` → `## Instructions` → `## Output format` → `## Quality criteria` → `## Anti-patterns` → `## Example` → `## Writing-profile integration` → `## Example prompts`), ADR-016 60-line floor / 80–120 target / 150 soft cap, ADR-029 MF-3 `tools: [claude-code]` + `trigger_examples` (3–6). Content briefs below are binding *content requirements*, not verbatim prose — @dev authors the final text; @qa reads (not just greps) the substance ACs.
+
+**B1 — `skills/anti-ai-slop/SKILL.md` (NEW, target ~90–110 lines):**
+- `## When to use`: a deliberate, opt-in, evidence-based authenticity pass over ANY drafted content in ANY preset domain; state explicitly it is the pass available when NEITHER `editing-pass` NOR `voice-matching` is installed, OR a final dedicated check after either has run — so it does not read as a third redundant editing skill (spec overlap requirement).
+- `## Instructions` + `## Quality criteria`: the **three independently-checkable categories** from research memo Part 2, each named: (1) **tell-vocabulary denylist** — MUST enumerate the session-sourced items: *delve, tapestry, crucial, pivotal, seamless, robust, leverage, elevate, navigate*-as-metaphor, *"in the realm of," "it's important to note," "In today's fast-paced world"*-class openers, and the *"it's not just X, it's Y"* symmetrical-construction tic (folded here per OQ-2, not a 4th category); (2) **rhythm/burstiness** — describable check: does sentence length vary (human "bursty") or cluster in a narrow 18–22-word band (AI-uniform), per GPTZero source; (3) **hedging-without-commitment** — "might potentially," "generally speaking," "in many cases" as a separately-checkable category, per Hastewire source.
+- `## Anti-patterns` — MUST carry the **anti-anti-pattern** (AC-SKILL-4, the single most important content requirement): *never flag a device — em dash, short-paragraph structure, a hedge — that the sample text or `context/writing-profile.md` establishes as the user's real, intentional style* (the em-dash-density corrective from the Duey source; inherits `voice-matching`'s "match sample density, don't impose AI-default density"). @qa MUST read this sentence, not grep-count it.
+- `## Output format` — the de-slop pass returns the revised text + a specific change list (which tell category each change addressed) + one closing sentence naming ≥1 device *deliberately preserved as the user's real voice* (mirrors `editing-pass` QC-3 and covers Edge Case 1: clean input → say "no notable AI-slop tells found," do not manufacture a change).
+- `## Writing-profile integration` — MUST consult `context/writing-profile.md` when present (same contract as `voice-matching`/`editing-pass`), so the denylist is applied *relative to* the user's established voice, not blind.
+- `## Example` — ONE worked before/after pair (slop → de-slopped), 15–40 lines, shaped like the aicheckr before/after source.
+- Frontmatter `description` ≤160 chars; `trigger_examples` e.g. "De-slop this draft", "Does this read as AI-generated?", "Authenticity pass on this email".
+
+**B2 — `skills/weekly-review/SKILL.md` (NEW, target ~90–110 lines):**
+- `## Instructions`: **four-phase GTD structure** (AC-SKILL-6, `grep -icE "collect|process|review|plan" >= 4`): **Collect** (surface anything new/unprocessed since last review from the local files the user points at — task trackers, `list-tracker` output, notes) → **Process** (triage into done/active/deferred) → **Review** (surface stalled items and approaching deadlines) → **Plan** (name 1–3 priorities for the coming week). Reads whatever local files the user names — file-based, no live-connector-fetch (consistent with product model + Edge Case 4 data-not-instruction convention every file-reading skill follows).
+- **Descriptive/organizational, NOT directive** (house convention, mirror `spend-awareness`'s hard-block boundaries + `daily-briefing`'s "no unsolicited productivity advice" anti-pattern): name what's stalled and due, do NOT prescribe what to prioritize or moralize. Carry an explicit anti-pattern to that effect.
+- Graceful-degradation ladder for absent source folders (mirror `daily-briefing` Instructions step 2: note missing source, do not error, do not fabricate).
+- `## Writing-profile integration`, `## Example` (one worked review over illustrative files), `## Example prompts` per template. Frontmatter `trigger_examples` e.g. "Run my weekly review", "Weekly zoom-out on what's outstanding", "GTD weekly review".
+
+**B3 — `skills/voice-matching/SKILL.md` (EXTEND — additive only, no section removal/reorder):** currently 72 lines (ample headroom under the 150 soft cap; OQ-3 resolved — the addition is ~12–18 lines, well within band).
+- `## Triggers`: add "check if my voice has changed / drifted," "recalibrate my voice," "update my writing profile" (AC-SKILL-7 `grep -icE "recalibrat|voice (has )?(changed|drift)" >= 1`; = 0 before this cycle, confirm via `git show 16e15c8:skills/voice-matching/SKILL.md`).
+- `## Instructions`: add a numbered recalibration path: (1) compare a newly-provided sample against the named patterns already recorded in `context/writing-profile.md`; (2) state plainly whether it is consistent or has drifted, naming the SPECIFIC pattern that changed (not a vague "your voice evolved") — covers Edge Case 3 (partial match → name BOTH consistent and drifted patterns, no binary verdict); (3) update `context/writing-profile.md` in place ONLY on explicit user confirmation — never silently.
+- No change to existing `## Anti-patterns`/`## Quality criteria` content (Technical Constraint). Registry blurb recalibration mention is optional (@dev discretion; not a hard AC).
+
+**B4 — WS-REGISTRY (`curated-skills-registry.md`):** introduce a **new `### Cross-Domain` subsection** (GD-2 / OQ-1 resolution — see §C) after the "Personal Assistant" section (line 96) and before the `---` / "Tier 2" divider, with exactly 2 data rows (each row MUST start `| <slug> |` and contain `| builtin |` so `wizard-consistency-check`'s `^\| ${slug} \|` and `| builtin |` greps both match):
+
+```markdown
+### Cross-Domain
+
+These skills span 3+ preset domains; their `goal_tags` reflect the breadth rather than any single home preset. Offered on-demand (`cross_cutting_skills` F4 / `optional_skills` / Path C `goal_tags`), never in any preset's `core_skills`.
+
+| name | description | source_url | vetting_date | tier | goal_tags |
+|------|-------------|------------|--------------|------|-----------|
+| anti-ai-slop | Remove AI-tell vocabulary, uniform sentence rhythm, and empty hedging from any drafted content — an opt-in authenticity pass that respects the user's own established voice rather than imposing a fixed denylist. | builtin | 2026-07-19 | 1 | study,research,writing,project-management,creative,business-admin,personal-assistant |
+| weekly-review | Run a periodic (weekly-cadence) Collect → Process → Review → Plan pass across the user's own workspace files — a descriptive zoom-out distinct from the daily briefing or a project status update. | builtin | 2026-07-19 | 1 | personal-assistant,project-management,study |
+```
+- Cardinality footnote (line 47): `The registry therefore has 24 rows across 23 unique skill slugs.` → `The registry therefore has 26 rows across 25 unique skill slugs.` (AC-REG-3). All 24 existing rows byte-unchanged (Technical Constraint). `prompt-gate` stays under "Project Management" (byte-unchanged) — the Cross-Domain subsection is ADD-only.
+
+**B5 — WS-PRESETS (`selection-presets.md`):**
+- `cross_cutting_skills:` line 100 — append `, anti-ai-slop` (5 → 6 entries; AC-PRESET-1). Result: `cross_cutting_skills: action-items, meeting-notes, doc-summary, voice-matching, research-synthesis, anti-ai-slop`.
+- Rationale table (after line 109) — add row (AC-PRESET-2, `grep -c "^| anti-ai-slop |" = 1`): `| anti-ai-slop | Universal AI-tell removal pass, usable regardless of preset — writing/creative benefit most directly, but any generated text in any domain benefits |`.
+- `personal-assistant` `optional_skills` (line 88) — append `, weekly-review`. **⚠ SPEC-DRIFT CORRECTION (§E):** spec WS-PRESETS says "each currently 2 entries; both become 3" — this is WRONG for `personal-assistant`, whose `optional_skills` already has **3** (`action-items, doc-summary, list-tracker`, since v2.6.x/v2.7). It becomes **4**. `project-management` `optional_skills` (line 52, `action-items, follow-up-tracker` = 2) becomes **3**. AC-PRESET-3 (`grep -c "^optional_skills:.*weekly-review" = 2`, count of presets) and AC-PRESET-4 (the 2 are personal-assistant + project-management) remain valid; only the "each become 3" descriptor is corrected.
+- **Zero `core_skills` diffs anywhere** (AC-PRESET-5, binding inversion `git diff main -- selection-presets.md | grep -c "^[+-]core_skills:" = 0`).
+
+**B6 — WS-CI (`WIZARD.md`, `SETUP-CHECKLIST.md`, `templates/workspace-claude-md-template.md`, `tests/offline-smoke-test.md`, `.github/workflows/quality.yml`) — prose count 23→25, NO CI logic change:**
+- `WIZARD.md` — exactly 3 occurrences flip 23→25 (AC-CI-1, `grep -cE "23-skill|\(23 slugs\)"` = 0, `"25-skill|(25 slugs)"` = 3): line 89 "the 23-skill pool (C-v2.4-7, unchanged)" → 25; line 114 "the 23-skill pool (≤3 suggestions at a time)" → 25 (**this is the historical-AC-COMP-2 string — §F**); line 118 "the `skills/` pool (23 slugs)" → 25. The C-v2.4-6/C-v2.4-7 note text surrounding lines 89/118 is otherwise **byte-unchanged** — only the digit moves (Technical Constraint; @qa re-verify C-v2.4-6/C-v2.4-7 occurrence counts unchanged).
+- `SETUP-CHECKLIST.md:138` "the 23-skill pool" → "the 25-skill pool".
+- `templates/workspace-claude-md-template.md:27` — actual string is `"(23 skills; suggestions ≤3 at a time)"` (space, NOT hyphen) → `"(25 skills; …)"`. **Verify per revised AC-CI-2 (`"23 skills"`→0, `"25 skills"`→>=1 for this file), NOT `"23-skill"`.**
+- `tests/offline-smoke-test.md:51` "the actual 23-skill `skills/` pool" → "25-skill".
+- `.github/workflows/quality.yml` lines 341–342 — comment-only: `# Iterates over skills/*/SKILL.md (23 files) …` and `# … All 23 files must meet depth standard.` → `(25 files)` / `All 25 files`. **Zero executable-line delta** (AC-CI-3: `git diff main -- .github/workflows/quality.yml | grep -cE "^\+.*(run:|if:|exit |grep -c|-lt |-gt )" = 0`); the `for skill_file in skills/*/SKILL.md` glob and the `-lt 18` floor self-adjust; job count unchanged (AC-CI-4).
+
+**B7 — WS-STOREFRONT (`README.md:148`):** `- **Unified skill pool** — 23 skills …` → `25 skills` + one clause naming the empowerment additions (terse, matching existing bullet style; AC-STORE10-1 `"25 skills">=1` / `"23 skills"`=0; AC-STORE10-2 manual read). Optional "What's new in v2.10" README section — owner discretion, not a hard AC (CHANGELOG `[2.10.0]` carries the substance).
+
+**B8 — WS-FASTFOLLOW (GD-3, all 3 included):**
+- **F-1 (AC-STORE-4 verify-command fix — negative control PROVEN this session):** the v2.9.0-documented command `awk '/^### Highlights/{f=1;next} /^### /{f=0} f' README.md | grep -i draft` is a check-that-cannot-fail — its section boundary `/^### /` **never closes** (`awk '/^### Highlights/{seen=1;next} seen&&/^### /{c++} END{print c+0}' README.md` = **0** second-level headings after Highlights), so `f` stays 1 to EOF and captures the incidental `README.md:154` "drafts status updates" bullet → it does NOT fail pre-change (reproduced: run on `33fd22c^` → `grep -ic draft` = **1**). **Replacement (bind in `docs/internal/security/security-review-v2.9.0.md:117–121`):**
+  ```bash
+  # AC-STORE-4 (F-1 corrected) — direct grep on the net-new v2.9.0 Highlights bullet header.
+  # Robust against the incidental README:154 "drafts status updates" hit; no awk boundary dependency.
+  grep -qF 'Draft-then-shape bundle building' README.md   # exit 0 = PASS
+  ```
+  **Negative control proven this session** (AC-FF-1 / EARS-REVISED): `git show '33fd22c^:README.md' | grep -cF 'Draft-then-shape bundle building'` = **0** (pre-v2.9.0 → FAIL, correct); `grep -cF 'Draft-then-shape bundle building' README.md` = **1** (current → PASS). The anchor is a net-new bullet (unique to line 150), immune to the line-154 incidental. `docs/architecture.md`'s historical v2.9.0 AC-STORE-4 hint (line 9465) is append-only and superseded by this note — see §F.
+- **F-3 (`SETUP-CHECKLIST.md:24` split):** the 549-char line's dense middle sentence ("The wizard leads with your goal description … none lesser than the others.") is split into two sentences, substance byte-preserved (AC-FF-2 manual read). Lands in the SAME commit as WS-CI's `SETUP-CHECKLIST.md:138` edit (OQ-5) — different lines, same file.
+- **Optional "What's new in v2.9" README section** — owner discretion (same disposition as B7's v2.10 equivalent); may ship both retrospective sections together if the owner wants.
+
+**B9 — release artifacts:** `VERSION` `2.9.0` → `2.10.0`; `README.md` badge `version-2.9.0-green` → `version-2.10.0-green`; `CHANGELOG.md` new `## [2.10.0] - <date>` entry (version-consistency-check binds VERSION == badge == CHANGELOG-top); "Next up" teaser reviewed-not-stale. `docs/research/v2.10-empowerment-skills-research.md` already committed at Phase 0 (AC-RESEARCH10-1 = existence check).
+
+### §C. Open-Question resolutions
+
+- **OQ-1 (registry section placement) — RESOLVED: new `### Cross-Domain` subsection** (GD-2 owner-locked; also Gate-Decision-2 recommendation (b)). Production check: `prompt-gate` (the only existing all-7-domain skill) sits arbitrarily under "Project Management" — NOT a clean cross-domain precedent to follow, so OQ-1's fallback ("introduce a small Cross-Domain subsection") is the honest answer. Placement bound in §B4: after "Personal Assistant," before the Tier-2 divider. `prompt-gate` is left in place (byte-unchanged Technical Constraint).
+- **OQ-2 (anti-ai-slop tell-vocabulary — 4th category?) — RESOLVED: no 4th top-level category.** The "it's not just X, it's Y" symmetrical-construction tic folds into the tell-vocabulary/structure category (§B1), keeping `## Quality criteria` at the template's 3–5-bullet guidance (3 categories: vocabulary, rhythm, hedging).
+- **OQ-3 (voice-matching line-count headroom) — RESOLVED: no risk.** Measured pre-count = 72 lines; the additive recalibration content is ~12–18 lines → ~84–90, far under the 150 soft cap. No tightening needed.
+- **OQ-4 (quality.yml comment edit — Tier classification) — RESOLVED: keep the flag (recommended, not required).** A comment-only zero-logic edit to a `.github/workflows/*.yml` does not itself elevate to SECURITY-SENSITIVE (no logic/permission/pass-fail delta — AC-CI-3 binds it), but this project's standing caution around any `.github/workflows/` touch justifies the cheap Phase-2 spot-check (§E OI-SEC-1). Not downgraded.
+- **OQ-5 (WS-FASTFOLLOW sequencing) — RESOLVED: same-file fast-follows land with the workstream touching that file.** F-3 (`SETUP-CHECKLIST.md:24`) commits with WS-CI's `SETUP-CHECKLIST.md:138` edit; F-1 (`security-review-v2.9.0.md`) commits with the docs paperwork. Commit messages cite both the WS and the FF item number.
+
+### §D. File-by-File Implementation Plan (Phase 4)
+
+Ordering constraint (the ONE real coupling, `wizard-consistency-check` — every intermediate commit must stay green): **WS-SKILLS (new pool files) + WS-REGISTRY (rows) must land in the same commit as, or before, WS-PRESETS (references).** Otherwise a preset references a slug with no pool file / no registry row → CI red. Suggested topology: Commit 1 = WS-SKILLS + WS-REGISTRY + WS-PRESETS (atomic pool/registry/preset trio); Commit 2 = WS-CI + WS-STOREFRONT + WS-FASTFOLLOW (prose/count/fast-follow); Commit 3 = release trio (VERSION/README badge/CHANGELOG) + this Phase 1 doc. @dev's call on exact split.
+
+| # | File | Change | Workstream | Key AC |
+|---|------|--------|-----------|--------|
+| 1 | `skills/anti-ai-slop/SKILL.md` | NEW (9-section, ~90–110 ln) | WS-SKILLS | AC-SKILL-1/2/3/4 |
+| 2 | `skills/weekly-review/SKILL.md` | NEW (9-section, ~90–110 ln) | WS-SKILLS | AC-SKILL-5/6 |
+| 3 | `skills/voice-matching/SKILL.md` | MODIFIED (additive) | WS-SKILLS | AC-SKILL-7/8 |
+| 4 | `curated-skills-registry.md` | MODIFIED (+Cross-Domain subsection, 2 rows, footnote) | WS-REGISTRY | AC-REG-1/2/3/4 |
+| 5 | `selection-presets.md` | MODIFIED (cross_cutting +1, +rationale row; PA & PM optional +1) | WS-PRESETS | AC-PRESET-1..6 |
+| 6 | `WIZARD.md` | MODIFIED (3× 23→25; security-note substance byte-unchanged) | WS-CI | AC-CI-1 |
+| 7 | `SETUP-CHECKLIST.md` | MODIFIED (:138 23→25; :24 F-3 split) | WS-CI + WS-FASTFOLLOW | AC-CI-2, AC-FF-2 |
+| 8 | `templates/workspace-claude-md-template.md` | MODIFIED (:27 "23 skills"→"25 skills") | WS-CI | AC-CI-2 (revised) |
+| 9 | `tests/offline-smoke-test.md` | MODIFIED (:51 23→25) | WS-CI | AC-CI-2 |
+| 10 | `.github/workflows/quality.yml` | MODIFIED (comment-only :341–342; zero logic) | WS-CI | AC-CI-3/4 |
+| 11 | `README.md` | MODIFIED (:148 25 skills + clause; badge; optional What's-new) | WS-STOREFRONT + B9 | AC-STORE10-1/2 |
+| 12 | `docs/internal/security/security-review-v2.9.0.md` | MODIFIED (F-1 verify-command replacement) | WS-FASTFOLLOW | AC-FF-1 |
+| 13 | `docs/architecture.md` | MODIFIED (this Phase 1 design + ADR-042/043 + 2 index rows) | design record | — |
+| 14 | `docs/spec.md` | MODIFIED (§Architectural Modifications v2.10.0) | design record | — |
+| 15 | `VERSION` | MODIFIED (2.10.0) | B9 | version-consistency |
+| 16 | `CHANGELOG.md` | MODIFIED ([2.10.0] entry) | B9 | version-consistency |
+
+`docs/research/v2.10-empowerment-skills-research.md` — already committed at Phase 0 (no change).
+
+**`scope_allow_delta`:** SKIP-apply (V44-S5 / ADR-115 §Implications — external-project cycle; `dev.md scope_allow` governs Council self cycles only, not this external markdown repo). Block recorded here for the orchestrator's parse-completeness:
+```yaml
+scope_allow_delta:
+  scope: standard   # external project — SKIP-apply per V44-S5
+  add: []           # empty is valid; no Council-repo scope expansion this cycle
+```
+
+### §E. Classification Re-Run + OI-SEC
+
+**Classification Re-Run (per `docs/pipeline-policy.md §PostOQClassificationReRun` — mandatory even when unchanged):** Re-evaluated against the FINAL 16-file list after OQ resolution. **Result: CONFIRMED STANDARD.** Rationale: WS-SKILLS/REGISTRY/PRESETS/STOREFRONT/FASTFOLLOW/RESEARCH-RECORD are content/data additions (new Markdown, registry rows, preset-list entries, prose) with no new runtime dependency, no schema, no auth surface, no interview-flow mechanic change (same class as v1.3.x preset-depth and v2.3.1 stub cycles — STANDARD precedent). The one `.github/workflows/quality.yml` touch is comment-only, provably zero-logic (AC-CI-3), and the optional_skills addition is production-confirmed NOT CMP-covered. No file-list change from OQ resolution flips the classification upward. Classification does NOT escalate → Phase 2 `/review` is recommended (STANDARD, narrow-scope) but not mandated.
+
+**OI-SEC items for the recommended Phase-2 @security spot-check (narrow, per OQ-4):**
+- **OI-SEC-1 (quality.yml comment-only diff):** independently re-confirm via `git diff main -- .github/workflows/quality.yml` that the ONLY change is the `skill-depth-check` comment lines (341–342); zero executable-line delta; job-name count unchanged. (Mirrors v2.9.0's independent WIZARD.md byte re-verify — don't trust the AC self-report alone.)
+- **OI-SEC-2 (WIZARD.md C-v2.4-6/C-v2.4-7 byte-integrity):** the 3 pool-count digit flips sit adjacent to the goal-text-as-DATA (C-v2.4-6) and pool-boundary (C-v2.4-7) security notes. Confirm the note *substance* is byte-identical pre/post (only the digit moved) — e.g. capture the note bodies at `16e15c8` and `cmp` post-edit, per v2.9.0 S3's byte-identity pattern; presence-grep alone is insufficient.
+- **OI-SEC-3 (Edge Case 5 non-regression):** the pool-count bump must not expand the addressable set — Path C/F4 still resolve only against real `skills/<slug>/SKILL.md` files (C-v2.4-7 unchanged); verify via `wizard-consistency-check` local re-run (AC-PRESET-6). Both new skills have pool files + registry rows → the coupling holds.
+- **OI-SEC-4 (new-skill instruction-surface screen, LLM01):** `anti-ai-slop` and `weekly-review` are new AI-instruction content that reads user-pointed local files. Confirm they carry the standard data-not-instruction convention (Edge Case 4) — no new injection vector, non-regression only. AUTHORED content (no upstream provenance), so no `upstream-content-scan-rules`/AC-D1.9 gate applies, but a read-through for imperative-injection hygiene is cheap insurance.
+
+**Architectural Modifications (spec §, Step 4a) — 3 entries to append to `docs/spec.md`:**
+1. `AC-CI-2 → verify pattern corrected for templates/workspace-claude-md-template.md — Reason: the file's live string is "23 skills" (space), not "23-skill" (hyphen); the original grep is a check-that-cannot-fail (pre-GREEN at 0 before any edit). Revised to grep "23 skills"→0 / "25 skills">=1 for that file.`
+2. `WS-PRESETS "each currently 2 entries; both become 3" → corrected — Reason: personal-assistant optional_skills already has 3 entries (action-items, doc-summary, list-tracker) and becomes 4; project-management has 2 and becomes 3. AC-PRESET-3 (count=2 presets) and AC-PRESET-4 unaffected.`
+3. `AC-FF-1 → verify command specified concretely — Reason: "a command that demonstrably fails on the pre-change tree" under-specified; bound to grep -cF 'Draft-then-shape bundle building' against 33fd22c^ (=0) vs current (>=1), proven this session.`
+
+### §F. KEEP–DROP cross-check inventory (BINDING)
+
+Repo-wide inbound-reference sweep for every count string this cycle changes, so no stale count is stranded and no append-only record is wrongly mutated.
+
+**DROP (must change 23→25 / 24→26 this cycle):**
+| String / location | Action |
+|---|---|
+| `WIZARD.md:89,114,118` — `23-skill`/`(23 slugs)` (×3) | → 25 (B6; line 114 is the historical-AC-COMP-2 string — see EXEMPT note) |
+| `SETUP-CHECKLIST.md:138` — `23-skill pool` | → 25-skill pool |
+| `templates/workspace-claude-md-template.md:27` — `23 skills` (SPACE) | → 25 skills (NOT "23-skill" — the AC-CI-2 trap) |
+| `tests/offline-smoke-test.md:51` — `23-skill` | → 25-skill |
+| `README.md:148` — `23 skills` | → 25 skills + empowerment clause |
+| `.github/workflows/quality.yml:341,342` — `(23 files)` / `All 23 files` (comment) | → 25 (comment-only) |
+| `curated-skills-registry.md:47` — `24 rows across 23 unique skill slugs` | → 26 rows across 25 unique slugs |
+
+**KEEP (live, correct as-is — do NOT touch):**
+| String / location | Why KEEP |
+|---|---|
+| `curated-skills-registry.md` existing 24 rows + `prompt-gate` PM placement | Technical Constraint: byte-unchanged except footnote + 2 new rows |
+| `selection-presets.md` all `core_skills`/`match_signals` | AC-PRESET-5 zero-diff inversion |
+| `docs/research/v2.10-empowerment-skills-research.md:11,15,29` — `23-skill`/`24 rows` | Correct: describes the PRE-cycle state the cycle INHERITED (the memo is the historical record of what was scanned) |
+| `docs/spec.md` v2.10.0 section — `25-skill pool` references | Already correct (describes the post-cycle target) |
+| `README.md:154` "drafts status updates" | Incidental feature copy — the exact line that made the old AC-STORE-4 awk a check-that-cannot-fail; leave byte-intact |
+
+**EXEMPT (append-only historical records — must NOT be re-run against the v2.10 tree, must NOT be "corrected" to 25):**
+| String / location | Why EXEMPT |
+|---|---|
+| `CHANGELOG.md:14,66,74,97` — `23-skill`/`23 files`/`24 rows` | Append-only release notes; accurate for their release |
+| `docs/architecture.md` v2.9.0 design + ADR-041 index (lines 62, 8615–9522) — `23-skill`/`24 rows` | Append-only ADR/design records; accurate at v2.9.0 |
+| `docs/internal/qa/qa-report-v2.9.0.md:91` & `qa-report-v2.7.2.md` — AC-COMP-2 / count greps | Historical QA verification records |
+| `docs/internal/security/security-review-v2.9.0.md:48,65` — `23`/`24-row` (NOT the F-1 awk block) | Historical; only the F-1 awk verify command (lines 117–121) is edited, per B8 |
+| `docs/spec.md:2296` (v2.9.0 AC-COMP-2) — `23-skill pool (≤3 suggestions at a time)` | **Historical AC trap:** v2.9.0 bound this literal byte-unchanged FOR THAT CYCLE; v2.10 legitimately flips WIZARD.md:114 to 25. Do NOT re-run this grep against the v2.10 tree (it will read 0 — correct, not a regression); do NOT mutate the v2.9.0 spec section. |
+| `docs/retro.md:1403` — "All 23 constraints" | False positive — constraint count, not skill count |
+
+### §G. Anti-Pattern Scan (11-pattern, per A1-architect-framework)
+
+0 BLOCKERS. Scanned: God Class/Module (N/A — atomic skill files ~90–110 ln); Circular Dependencies (none — skills are leaf content); Leaky Abstraction (N/A); Premature Optimization (N/A); Over-Engineering (**actively avoided** — voice-matching EXTEND not new skill; 3 built of 6 considered; no 4th anti-slop category per OQ-2); Tight Coupling (the pool↔registry↔preset coupling is inherent to `wizard-consistency-check`, mitigated by §D commit ordering — not a new coupling); Missing Separation of Concerns (N/A); N+1 Query (N/A — no DB); **Destructive Migration (#9): NONE** — all changes are additive (2 new files, additive rows/lines, digit flips); no DROP/TRUNCATE/removal; every workstream `git revert`-able (spec Rollback). SoS Interface Discontinuity (N/A — single project); Cross-Project Tight Coupling (N/A — `depends_on: []`). 1 WATCH: **version-bump completeness** — VERSION + README badge + CHANGELOG-top must move together (version-consistency-check enforces; B9 binds all three + the "Next up" teaser review).
+
+### ADR-042: v2.10.0 Pool Expansion (23→25) + Cross-Domain Registry Subsection
+
+**Date:** 2026-07-19 **Status:** ACCEPTED
+**Context:** The owner directive (2026-07-18) plus the 0.5 Slate Gate (GD-1/GD-2/GD-3) mandate three evidence-backed pool additions (2 new skills + 1 extension) delivered through existing offer surfaces with zero new interview turns and zero `core_skills` change. The registry's by-preset-domain organization has no clean home for a genuinely all-7-domain skill (`prompt-gate` sits arbitrarily under "Project Management").
+**Decision:** Grow the pool 23→25 (`anti-ai-slop` via `cross_cutting_skills`; `weekly-review` via `optional_skills` on personal-assistant + project-management, plus `study` via `goal_tags` only) and `voice-matching` via in-file recalibration extension. Introduce a dedicated `### Cross-Domain` registry subsection (GD-2) for skills whose `goal_tags` span 3+ domains, rather than forcing them under a single arbitrary preset heading. Tier placements are deliberately asymmetric (cross_cutting for the genuinely-universal anti-ai-slop; two-strong-homes-plus-one-weak for weekly-review) to reflect real JTBD strength, not a default.
+**Consequences:** +2 registry rows (26/25), +1 cross_cutting entry, +1 optional entry on two presets, pool-count prose 23→25 at 7 live locations + 1 CI comment. `wizard-consistency-check` is the load-bearing invariant (commit ordering in §D). No CI logic, schema, or auth change → STANDARD. The Cross-Domain subsection is a reusable home for future multi-domain skills.
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** migrate `prompt-gate` into the Cross-Domain subsection in a future registry-hygiene cycle (deferred now to honor the byte-unchanged Technical Constraint); promote `weekly-review` to a third preset's `optional_skills` (study) if post-ship signal shows study-domain demand; add a 4th anti-slop tell-category (symmetrical-construction) as its own `## Quality criteria` bullet if the folded-in treatment proves insufficient.
+- **Concrete revisit triggers:** a 3rd all-7-domain skill is added (then relocate `prompt-gate` for consistency); Phase 5/post-ship evidence of study-domain weekly-review demand; a new pool skill's `goal_tags` would make the Cross-Domain subsection exceed ~5 rows (revisit whether by-domain sub-grouping is still legible).
+- **Risk knowingly accepted:** `prompt-gate` remains inconsistently filed under "Project Management" this cycle (cosmetic registry-organization debt, not a functional defect — `goal_tags` matching is position-independent); `weekly-review`'s study domain is Path-C-only-discoverable (weaker surfacing accepted as a deliberate tier-strength choice, documented in spec §Candidate-Slate item 3).
+
+### ADR-043: Adapt-vs-Author Sourcing Policy for the Skills Pool (GD-1 codification)
+
+**Date:** 2026-07-19 **Status:** ACCEPTED
+**Context:** GD-1's binding quality bar — "research for it, do a proper job **or** pull them from tested repos" — needs a durable, citable policy so future skill cycles don't re-litigate whether to adapt an external skill or author from evidence. This cycle's source scan (§A) is the first application.
+**Decision:** For any new pool skill, run a source scan in this preference order before authoring: (1) in-repo `vendored/agency-agents/**` (cheapest trusted source — SHA-pinned, attribution-injected, CI-integrity-checked); (2) in-repo `skills/` pool for extend-vs-new; (3) reputable permissive-licensed external collections (MIT/Apache/BSD). **ADOPT an external source only when it genuinely fits shape + domain + license** — for Cowork specifically, "shape" means the ADR-015 9-section template with `## Writing-profile integration`, which no external Agent-Skills-standard or persona-agent collection currently uses. When no tested source fits, **authoring from a cited multi-source evidence base IS the "proper job"** (GD-1 honesty rule) — it is not a fallback of last resort. Every ADOPT (if ever chosen) carries the full ceremony: license-compat check, ADR-024 attribution block, `upstream-content-scan-rules` content scan, `THIRD-PARTY-NOTICES.md`/registry `source_url` = real upstream path + fresh `vetting_date`, and a prompt-injection screen — and flags @security Phase 2.
+**Consequences:** This cycle's decision (0 ADOPT, 1 EXTEND, 2 AUTHOR-from-evidence) is a documented, auditable precedent. Future cycles cite ADR-043 rather than re-deriving the adapt-vs-author judgment. Prevents both "reinvent everything" and "force a wrong-shape adaptation to look thrifty."
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** if an external collection adopts (or a fork provides) the 9-section template shape in the right domain — e.g. a re-scoped prose fork of `Nutlope/hallmark` (MIT) or a licensed `jalaalrd/anti-ai-slop-writing` — re-evaluate ADOPT for a future anti-slop refresh; build a lightweight `scaffold_source`-style adapter that maps Agent-Skills-standard bodies into the 9-section template to lower future adoption cost.
+- **Concrete revisit triggers:** a scanned external candidate gains BOTH a permissive license AND right-domain content AND is portable into the 9-section shape with <50% rewrite; the vendored `agency-agents` upstream adds content-generation skills (not persona agents) in the knowledge-worker domain; a 3rd cycle authors-from-evidence where a tested source later turns out to have existed (signal the scan tiers need widening).
+- **Risk knowingly accepted:** authoring-from-evidence carries the maintenance cost of owning the content outright (no upstream bug-fix stream) — accepted deliberately because shape/domain/license fit is absent and the research evidence base is superior; the source scan is a point-in-time snapshot (external repos scanned at the SHAs in §A) and may miss a repo created after this session.
+
+---
+
+End of v2.10.0 Phase 1 — Empowerment Skills design.
