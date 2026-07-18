@@ -12,7 +12,7 @@ If `cowork-profile.md` already has real content, greet by name, surface deadline
 
 Route by fit across all seven preset areas — never force-fit a mismatched goal into this file's area. This area is **Project Management**: core skills Meeting Notes, Status Update, Risk Assessment; optional Action Items, Follow-Up Tracker.
 
-**Bundle confirm.** Present the bundle as a team ("[Skill] as [role]"), offer the optional adds, confirm in one turn: keep, adjust, or build from scratch.
+**Bundle confirm.** Present the bundle as a draft team ("[Skill] as [role]"), offer the optional adds, confirm in one turn: keep, adjust, or build from scratch.
 
 **Checkpoint (non-optional).** The moment the bundle is confirmed, record `cowork-profile.md`:
 

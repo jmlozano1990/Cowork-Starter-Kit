@@ -17,7 +17,7 @@ Check `cowork-profile.md` in this project folder.
 WIZARD.md is the only interview script. Follow it exactly; never re-ask a field already answered in chat or recorded in `cowork-profile.md`. The flow:
 
 1. Ask: "What do you need help with? Tell me what you want this workspace to do; I'll assemble the right team."
-2. Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). Present the bundle as a team — "[Skill] as [role]" per the Role-Generation Rule — and confirm once.
+2. Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). Present the bundle as a **draft team the user shapes** — "[Skill] as [role]" per the Role-Generation Rule — a starting point to run with or adjust, not a verdict to confirm.
 3. F4 customization, then save the `cowork-profile.md` stub checkpoint and offer the fast-track exactly once ("Basics saved...").
 4. Q2 — name, role/context, deadlines in one turn. Then the safety notice, and the optional Q3 voice turn (generates `context/writing-profile.md`).
 5. Run the After-Q2 generation steps. Close with a personalized first task, not a checklist.

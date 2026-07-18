@@ -23,7 +23,7 @@ Run WIZARD.md from Q1. Use AskUserQuestion buttons when available; otherwise num
 
 Quoted verbatim from WIZARD.md's canonical Q1 opener (Single-Source Rule) — do not paraphrase it here. If the user is uncertain, defer to WIZARD.md's Uncertainty Fallback (Q1) rather than re-presenting a preset menu in this file.
 
-Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). The 7 presets are starting suggestions, not fixed selections.
+Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). Every path produces a **draft** the user shapes — the 7 presets are starting suggestions, not fixed selections, and a custom Path C draft is equally first-class.
 
 ### Everything after Q1
 
