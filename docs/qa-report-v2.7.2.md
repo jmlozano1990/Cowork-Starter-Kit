@@ -2,8 +2,8 @@
 
 ## Phase: 5 + 6 + 7 (combined-path, STANDARD classification)
 ## Date: 2026-07-18T09:15:00Z
-## Branch: release/v2.7.2 @ `9a56474` (not pushed)
-## Status: REJECTED — one trivial, scoped, verified fix required before push
+## Branch: release/v2.7.2 @ `73e347c` (not pushed) — see re-check note at end for final verdict
+## Status: APPROVED (flipped from initial REJECTED after MD009 fix — see re-check note below)
 
 > Independently re-run at HEAD `9a56474`. Every command below was executed by @qa this
 > session, not copied from the @dev/@security narratives. Combined-path eligibility
@@ -276,3 +276,24 @@ Markdown Lint job) → present merge confirmation to user for MERGE/REJECT decis
 Everything else in this cycle — WS1 version truth, WS2's negative-control-proven CI gate, WS3
 promise-string purge, WS4 paper cuts, WS5 SkillRisk KEEP decision, WS6 CoC/issue-template/badges
 (save the one lint nit), and the Phase 2→4 security fix loop — is ready to ship as-is.
+
+---
+
+## Re-check — MD009 fix verified, APPROVED at `73e347c`
+
+**2026-07-18T09:32:00Z.** @dev fixed the blocker: commit `73e347c` ("fix MD009 trailing
+whitespace in bug_report.md"), built directly on top of this report's own commit (`a555be5`).
+Delta since my Phase 5+6+7 pass (`git diff a555be5..73e347c --stat`): **exactly 1 file**,
+`.github/ISSUE_TEMPLATE/bug_report.md`, 3 insertions/3 deletions — whitespace-only (verified via
+full `git diff`: each hunk strips a single trailing space from lines 25/26/27, zero content
+change). Re-ran `npx markdownlint-cli2` over all 10 previously-linted changed Markdown files:
+**0 issues in 0 files.** The one blocking finding from the initial pass is resolved and nothing
+else regressed.
+
+**VERDICT: APPROVED at HEAD `73e347c`.** All 15 in-scope ACs still hold (no AC-relevant file
+touched by the fix commit), all 4 WS2 negative/positive controls still hold (gate body
+untouched), S1/S2/S3 still confirmed resolved, deny-list/competitor-naming/escalation checks
+still clean, rework rate still 0% for the substantive change (this one-line whitespace fix is
+the only delta, and it is the QA-mandated correction itself, not scope creep). Ready for the
+orchestrator to push `release/v2.7.2`, open the PR, confirm `gh pr checks` all-green, and present
+the merge decision to the user.
