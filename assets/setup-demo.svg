@@ -52,20 +52,20 @@
     <text class="textUser" x="352" y="197" text-anchor="start">I'm a biochem student prepping for finals</text>
   </g>
 
-  <!-- Beat 3: assistant routes to a preset + proposes bundle (F3 tokenization / Path A + F4 bundle text) -->
+  <!-- Beat 3: assistant routes to a preset + proposes a draft bundle (F3 tokenization / Path A + F4 bundle text) -->
   <g class="beat b3">
     <text class="label labelAssistant" x="30" y="236" text-anchor="start">COWORK</text>
-    <rect class="bubbleAssistant" x="30" y="242" width="500" height="88" rx="10" />
-    <text class="textAssistant" x="52" y="268" text-anchor="start">That sounds like Study — your team:</text>
-    <text class="textAssistant" x="52" y="290" text-anchor="start">Flashcard Generation, Note-Taking,</text>
-    <text class="textAssistant" x="52" y="312" text-anchor="start">Research Synthesis. Sound right?</text>
+    <rect class="bubbleAssistant" x="30" y="242" width="620" height="88" rx="10" />
+    <text class="textAssistant" x="52" y="268" text-anchor="start">Here's a Study draft I built from your goal</text>
+    <text class="textAssistant" x="52" y="290" text-anchor="start">(matched: finals): Flashcard Generation,</text>
+    <text class="textAssistant" x="52" y="312" text-anchor="start">Note-Taking, Research Synthesis. Run or adjust?</text>
   </g>
 
-  <!-- Beat 4: user confirms the bundle, answering beat 3 -->
+  <!-- Beat 4: user runs with the draft, answering beat 3 -->
   <g class="beat b4">
     <text class="label labelUser" x="770" y="352" text-anchor="end">YOU</text>
     <rect class="bubbleUser" x="470" y="358" width="300" height="46" rx="10" />
-    <text class="textUser" x="492" y="387" text-anchor="start">Yes, let's go</text>
+    <text class="textUser" x="492" y="387" text-anchor="start">Run with it</text>
   </g>
 
   <!-- Beat 5: Q2 name / role / deadlines, one turn (WIZARD.md:136-151) -->

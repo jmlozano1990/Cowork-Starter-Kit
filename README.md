@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.8.1-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.9.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -113,11 +113,11 @@ You don't need to know which preset fits your goal — the wizard figures it out
 | "I'm managing a job search and want to track applications" | Career Manager workspace — application tracker, interview prep, resume tailor, professional writing profile |
 | "I want to plan a home renovation and stay organized" | Project workspace — task tracking, stakeholder updates, decision log, direct communication writing profile |
 
-The 7 selection presets are starting suggestions — the wizard uses them as scaffolds when your goal matches closely (Path A), narrows across overlapping presets with a follow-up question (Path B), or composes a custom bundle from the unified skill pool when no preset fits (Path C).
+The 7 selection presets are starting suggestions — the wizard uses them as scaffolds when your goal matches closely (Path A), narrows across overlapping presets with a follow-up question (Path B), or drafts a custom team from the unified skill pool when no preset fits (Path C).
 
 ### Goal presets
 
-You describe your goal in plain language. The wizard routes to the closest preset suggestion, narrows between overlapping presets, or composes a custom bundle if nothing fits. These are the 7 selection presets it can suggest:
+You describe your goal in plain language. The wizard routes to the closest preset suggestion, narrows between overlapping presets, or drafts a custom team if nothing fits. These are the 7 selection presets it can suggest:
 
 | Preset | Best for | What you get |
 |--------|----------|--------------|
@@ -144,10 +144,10 @@ You describe your goal in plain language. The wizard routes to the closest prese
 
 ### Highlights
 
-- **Open-ended goal discovery** — no preset menu. The wizard routes your description through 3 paths: Path A confirms a close preset match, Path B narrows overlapping presets with one follow-up question, Path C builds from scratch using the unified skill pool.
+- **Open-ended goal discovery** — no preset menu. The wizard turns your description into a draft you shape: Path A drafts a close preset match, Path B offers two draft directions for overlapping presets, Path C drafts a custom team from the unified pool — three equally first-class starting drafts, not a fast path and a fallback.
 - **Unified skill pool** — 23 skills (`skills/<slug>/SKILL.md`) consolidated into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
 - **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
-- **Q&A bundle customization** — after proposing a skill bundle, the wizard offers add/remove suggestions (≤3 at a time). You confirm when done. No batch-install surprises.
+- **Draft-then-shape bundle building** — the wizard proposes a skill bundle as a draft you shape, surfacing a few suggestions at a time and adding more whenever you ask. You confirm when it's right. No batch-install surprises.
 - **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
 - **Writing profile for every workspace** — an optional voice-calibration turn tunes Cowork to your voice; every workspace ships with a goal-appropriate `writing-profile.md`.
 - **Curated skills registry** — `curated-skills-registry.md` lists vetted skills with descriptions, source URLs, and goal tags.

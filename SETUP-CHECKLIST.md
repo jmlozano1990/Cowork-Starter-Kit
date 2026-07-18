@@ -7,7 +7,7 @@
 
 ---
 
-This is the **manual fallback path**. The primary path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message. No paste required.
+This is the **manual fallback path**. The primary path is: open the `cowork-starter-kit` folder as a Cowork Project — Cowork auto-loads `CLAUDE.md` and the setup wizard runs on first message. No paste required.
 
 Use this checklist if you cannot open the repo folder directly as a Cowork Project and want preset-suggested onboarding from message one. Complete every step in order — you'll have a working workspace by the end.
 
@@ -21,7 +21,7 @@ First, articulate the goal you want this workspace to support — in your own wo
 
 Pick the preset closest to your goal as a starting suggestion (the wizard will confirm or refine it once you start talking): study, research, writing, project-management, creative, business-admin, or personal-assistant. If none feels close, pick any — the wizard's Path C will compose a custom bundle from your goal description.
 
-This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the Dynamic Workspace Architect automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then confirms the preset you chose, narrows across overlapping presets, or composes a custom bundle from scratch. The preset is a starting suggestion, not a fixed assignment.
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the setup wizard automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then builds a draft workspace with you: a preset draft when your goal clearly fits one, two draft directions when it spans two, or a custom draft team composed from the pool when it fits none — three equally valid starting points, none lesser than the others. Whatever it drafts is a starting point you shape, never a fixed assignment.
 
 **Step 2 — Create your Cowork Project**
 
@@ -58,7 +58,7 @@ Read the permission scope note for each connector before authorizing. Pay attent
 
 **Step 7 — Upload your skill ZIP (usually unnecessary)**
 
-If you opened the kit folder as a Cowork Project, skills installed to `.claude/skills/` are auto-discovered by Cowork — no upload needed, and `skills-as-prompts.md` exists only as a fallback for surfaces without auto-discovery. The Dynamic Workspace Architect installs skills from the unified pool automatically during the wizard Q&A. If you skipped the wizard or work outside a connected folder and want to add skills manually:
+If you opened the kit folder as a Cowork Project, skills installed to `.claude/skills/` are auto-discovered by Cowork — no upload needed, and `skills-as-prompts.md` exists only as a fallback for surfaces without auto-discovery. **The wizard** installs skills from the unified pool automatically during onboarding. If you skipped the wizard or work outside a connected folder and want to add skills manually:
 
 1. Identify the skills you want from `skills/` — each skill lives at `skills/<slug>/SKILL.md`
 2. Zip the skill folders you want: the ZIP must have `skill-name/SKILL.md` at the root — no double-nesting

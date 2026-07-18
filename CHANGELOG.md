@@ -4,6 +4,26 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.9.0] - 2026-07-18
+
+**"Dynamic Reclaim"** — reclaims the wizard's co-creation framing without touching the v2.7 routing fix underneath it: the presentation layer changes, the `≥2`-threshold/vocabulary/stemming mechanics and both C-v2.4-6/C-v2.4-7 security notes stay byte-unchanged.
+
+### Changed
+
+- **Draft-first routing presentation (ADR-040).** `WIZARD.md`'s judgment tie-break paragraph drops the cost-asymmetry sentence ("a wrong suggestion costs one 'no', while a false Path C costs the whole scaffold") — Path A and Path C are now explicitly equally-valid, equally-fast starting points, and Path C is the correct first-class outcome when nothing clearly fits, not a fallback. Path A/B's binary "That sounds like **[Preset]** — is that right?" verdict is replaced with an explicit draft frame — a `(matched: [token])` reasoning fragment naming the specific `match_signals` token(s) that fired, plus a three-way close (run with it / adjust it / set it aside for custom) — and the Matched-reasoning rule now also binds the canonical vocabulary token over the user's surface inflection (e.g. echo `email`, not a plural/typo surface form).
+- **Path C structural parity + `goal_tags` matching (ADR-041).** Path C's opening presentation now matches Path A/B's structure — a named, reasoned "draft team" instead of a flat unlabeled skill list — and its matching reads `curated-skills-registry.md`'s `goal_tags` column (dormant since ADR-012, v1.2) in addition to name/description, so a crossover goal (e.g. a homeschool plan) surfaces skills from every domain it touches. The addressable set stays exactly the 23-skill pool (C-v2.4-7, unchanged) — `goal_tags` widens the matching signal, not the pool boundary. A zero-coverage goal gets a plain, non-apologetic "we build yours from scratch" acknowledgment, and "want more" is the normal next step (identical to F4's existing ≤3-at-a-time batching), not an overflow apology. The Path C goal-derived team name is bound under the same C-v2.4-6 rule as the `matched:` fragment: a short topical label from matched vocabulary only, never a verbatim echo of imperative-shaped goal text.
+- **Storefront alignment.** `assets/setup-demo.svg` beats 3–4 rewritten to mirror the real new dialogue (draft framing + `matched: finals` + a run/adjust close, widened to a 620px bubble to hold the longer text); the 7-beat structure is unchanged. README's Highlights bullets and "What's included" copy reframe the wizard's `(≤3 at a time)` add-skill batching from a headline constraint into a progressive-disclosure default, and drop the "composes a custom bundle when no preset fits" fallback framing in favor of "drafts a custom team from the pool." `CLAUDE.md`'s onboarding pointer and `.claude/skills/setup-wizard/SKILL.md`'s routing line updated to the same draft-team framing (CLAUDE.md stays at 339/400 words, well under the CI ceiling); 6 of 7 starter files align "team" → "draft team" terminology (`personal-assistant` is held at 396/400 words — no non-essential edits, to protect its CI headroom).
+- **Naming retired to plain language (Gate Decision 1 — unnamed).** `SETUP-CHECKLIST.md`'s remaining "Dynamic Workspace Architect" references (the sole live surface still using the term) are replaced with "the setup wizard" / "the wizard," matching README's existing plain-language framing. Step 1's description drops "confirms the preset you chose" for the same three-way, non-hierarchical draft language used everywhere else. `CHANGELOG.md`'s historical entries are untouched (append-only record).
+
+### Added
+
+- **`docs/research/v2.9-dynamic-reclaim-research.md`** — internal drift trace of the unreviewed cost-framing language that rode in on the v2.7.0 routing fix (`e2f622d`), plus 6 dated, URL-cited external UX sources on progressive disclosure, draft-mode framing, and choice-overload thresholds.
+
+### Non-regression
+
+- `WIZARD.md`'s `≥2` match-score threshold, 16-token `match_signals` vocabulary, light-stemming rule, and the C-v2.4-6 (goal text is DATA)/C-v2.4-7 (pool boundary) security notes are byte-unchanged — the edit boundary never reaches either note line.
+- No CI job, schema, auth surface, or dependency change this cycle.
+
 ## [2.8.1] - 2026-07-18
 
 ### Fixed
