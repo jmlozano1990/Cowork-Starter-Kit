@@ -1,0 +1,86 @@
+<svg viewBox="0 0 800 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="demoTitle">
+  <title id="demoTitle">Cowork Starter Kit setup demo — describe your goal in plain language, answer three quick turns, and get a working, personalized workspace with installed skills</title>
+  <style>
+    .card { fill: #14141f; }
+    .header { fill: #1e1e2e; }
+    .headerText { font: 600 13px "SFMono-Regular", Consolas, monospace; fill: #8b8fa3; }
+    .bubbleUser { fill: #2b3a55; }
+    .bubbleAssistant { fill: #23232f; }
+    .textUser { font: 14px "SFMono-Regular", Consolas, monospace; fill: #e6ecff; }
+    .textAssistant { font: 14px "SFMono-Regular", Consolas, monospace; fill: #d7d9e6; }
+    .label { font: 600 11px "SFMono-Regular", Consolas, monospace; letter-spacing: 0.05em; }
+    .labelUser { fill: #7ea6ff; }
+    .labelAssistant { fill: #8fd6a8; }
+    .beat { opacity: 0; animation-duration: 28s; animation-iteration-count: infinite; animation-timing-function: ease-out; }
+    @keyframes b1 { 0% { opacity: 0; } 3% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes b2 { 0% { opacity: 0; } 18% { opacity: 0; } 21% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes b3 { 0% { opacity: 0; } 33% { opacity: 0; } 36% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes b4 { 0% { opacity: 0; } 48% { opacity: 0; } 51% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes b5 { 0% { opacity: 0; } 65% { opacity: 0; } 68% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes b6 { 0% { opacity: 0; } 80% { opacity: 0; } 83% { opacity: 1; } 94% { opacity: 1; } 98% { opacity: 0; } 100% { opacity: 0; } }
+    .b1 { animation-name: b1; }
+    .b2 { animation-name: b2; }
+    .b3 { animation-name: b3; }
+    .b4 { animation-name: b4; }
+    .b5 { animation-name: b5; }
+    .b6 { animation-name: b6; }
+  </style>
+
+  <rect class="card" x="0" y="0" width="800" height="660" rx="12" />
+
+  <rect class="header" x="0" y="0" width="800" height="40" rx="12" />
+  <rect class="header" x="0" y="20" width="800" height="20" />
+  <circle cx="24" cy="20" r="6" fill="#ff5f56" />
+  <circle cx="46" cy="20" r="6" fill="#ffbd2e" />
+  <circle cx="68" cy="20" r="6" fill="#27c93f" />
+  <text class="headerText" x="400" y="24" text-anchor="middle">Cowork — Setup Wizard</text>
+
+  <!-- Beat 1: user goal (Q1) -->
+  <g class="beat b1">
+    <text class="label labelUser" x="770" y="66" text-anchor="end">YOU</text>
+    <rect class="bubbleUser" x="330" y="72" width="440" height="46" rx="10" />
+    <text class="textUser" x="352" y="101" text-anchor="start">I'm a biochem student prepping for finals</text>
+  </g>
+
+  <!-- Beat 2: assistant Q1 routing + team proposal -->
+  <g class="beat b2">
+    <text class="label labelAssistant" x="30" y="140" text-anchor="start">COWORK</text>
+    <rect class="bubbleAssistant" x="30" y="146" width="500" height="88" rx="10" />
+    <text class="textAssistant" x="52" y="172" text-anchor="start">That sounds like Study — your team:</text>
+    <text class="textAssistant" x="52" y="194" text-anchor="start">Flashcard Generation, Note-Taking,</text>
+    <text class="textAssistant" x="52" y="216" text-anchor="start">Research Synthesis. Sound right?</text>
+  </g>
+
+  <!-- Beat 3: user confirms bundle -->
+  <g class="beat b3">
+    <text class="label labelUser" x="770" y="256" text-anchor="end">YOU</text>
+    <rect class="bubbleUser" x="470" y="262" width="300" height="46" rx="10" />
+    <text class="textUser" x="492" y="291" text-anchor="start">Yes, let's go</text>
+  </g>
+
+  <!-- Beat 4: F4 checkpoint + canonical fast-track offer -->
+  <g class="beat b4">
+    <text class="label labelAssistant" x="30" y="330" text-anchor="start">COWORK</text>
+    <rect class="bubbleAssistant" x="30" y="336" width="560" height="88" rx="10" />
+    <text class="textAssistant" x="52" y="362" text-anchor="start">Basics saved.</text>
+    <text class="textAssistant" x="52" y="384" text-anchor="start">1) Keep going — 2 min to a personalized workspace</text>
+    <text class="textAssistant" x="52" y="406" text-anchor="start">2) Start now — run /setup-wizard later to finish</text>
+  </g>
+
+  <!-- Beat 5: Q2 name / role / deadlines, one turn -->
+  <g class="beat b5">
+    <text class="label labelUser" x="770" y="446" text-anchor="end">YOU</text>
+    <rect class="bubbleUser" x="230" y="452" width="540" height="46" rx="10" />
+    <text class="textUser" x="252" y="481" text-anchor="start">Alex — studying for the MCAT, no deadlines yet</text>
+  </g>
+
+  <!-- Beat 6: closing — workspace ready, installed skills + personalized CLAUDE.md -->
+  <g class="beat b6">
+    <text class="label labelAssistant" x="30" y="536" text-anchor="start">COWORK</text>
+    <rect class="bubbleAssistant" x="30" y="542" width="600" height="110" rx="10" />
+    <text class="textAssistant" x="52" y="568" text-anchor="start">Your workspace is ready.</text>
+    <text class="textAssistant" x="52" y="590" text-anchor="start">.claude/skills/flashcard-generation/SKILL.md</text>
+    <text class="textAssistant" x="52" y="612" text-anchor="start">.claude/skills/note-taking/SKILL.md</text>
+    <text class="textAssistant" x="52" y="634" text-anchor="start">+ your personalized CLAUDE.md</text>
+  </g>
+</svg>
