@@ -119,7 +119,7 @@ the literal AC is met.
 **Three remediation paths, any of which resolves this cleanly (cheap, no
 re-architecture needed):**
 1. **Fastest:** add one clause to the README hero line or a footnote near
-   the demo — e.g., *"~15 minutes (methodology: [tests/offline-smoke-test.md](tests/offline-smoke-test.md))"*
+   the demo — e.g., *"~15 minutes (methodology: `tests/offline-smoke-test.md`)"*
    — so the claim is honest about its own evidence quality.
 2. Soften to "about 15 minutes" and add the same disclosure.
 3. User explicitly accepts the estimate-based scorecard as sufficient for
@@ -447,8 +447,9 @@ option 1 from my original finding.
 
 **Fix, read directly:**
 - README.md hero line now reads: *"...three quick turns, about 15 minutes
-  (an estimate — see [methodology](tests/offline-smoke-test.md))."* Link
-  target confirmed present (`tests/offline-smoke-test.md` exists).
+  (an estimate — see `[methodology](tests/offline-smoke-test.md)`)."* Link
+  target confirmed present (`tests/offline-smoke-test.md` exists at repo root,
+  where README.md's own relative link correctly resolves it).
 - `tests/offline-smoke-test.md`'s Timing scorecard heading now reads
   "ESTIMATED, not stopwatch-timed," with an explicit lead sentence: no
   live-timed human run has been recorded, every number is a grounded
