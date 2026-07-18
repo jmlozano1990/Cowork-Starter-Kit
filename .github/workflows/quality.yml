@@ -291,6 +291,23 @@ jobs:
           fi
           echo "All starter files within word count limit."
 
+  starter-drift-marker-check:
+    name: Starter Drift-Marker Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fail on any retired-interview marker in starter files
+        run: |
+          set -o pipefail
+          RETIRED='Step [0-9]+: Name|Phase [0-9]+ [—-]|Workspace ready\.'
+          HITS=$(grep -riEl "$RETIRED" examples/*/project-instructions-starter.txt || true)
+          if [ -n "$HITS" ]; then
+            echo "::error::Retired-interview marker found — starter files must reflect the current v2.7 WIZARD.md interview:"
+            echo "$HITS"
+            exit 1
+          fi
+          echo "PASS: no retired-interview markers in any starter file."
+
   registry-cardinality-check:
     name: Registry Cardinality Check
     runs-on: ubuntu-latest

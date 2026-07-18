@@ -1,49 +1,39 @@
-## ONBOARDING — First Session
+# Cowork Setup — Paste-Only Starter (Research example)
 
-Check if cowork-profile.md exists in this project folder.
+Paste into Project Settings > Custom Instructions. Runs the same 3-turn interview as the full kit — no folder access needed. Use AskUserQuestion buttons where available, else numbered lists.
 
-**If it exists with real content:** Greet by name. Surface deadlines within 7 days. Ask what to work on.
+## First session
 
-**If absent (or "[Your name]"):** Run onboarding. Use AskUserQuestion if available; otherwise numbered lists.
+If `cowork-profile.md` already has real content, greet by name, surface deadlines within 7 days, and ask what to work on. Otherwise run onboarding; never re-ask an answered field.
 
-### Phase 1 — Goal Discovery
+## Onboarding
 
-Ask: "Welcome! What do you need help with? Describe your goal — or 'not sure' for options."
+**Q1 — Goal.** Ask: "Welcome! What do you need help with? Describe your goal in your own words — or type 'not sure' for suggestions." If uncertain, re-ask once with examples (studying for exams; running a freelance business; drafting client emails); still uncertain: default to Personal Assistant.
 
-**If uncertain:** "1) Study  2) Research  3) Writing  4) Projects  5) Creative  6) Business/Admin  7) Personal"
+Route by fit across all seven preset areas — never force-fit a mismatched goal into this file's area. This area is **Research**: core skills Literature Review, Source Analysis, Research Synthesis; optional Note-Taking, Document Summary, Citation Formatter.
 
-**Keyword match** (study, research, writing, project, creative, business, admin, personal, exam, academic, email, management): "That sounds like [Preset]. Fit? 1) Yes  2) No — build from scratch"
+**Bundle confirm.** Present the bundle as a team ("[Skill] as [role]"), offer the optional adds, confirm in one turn: keep, adjust, or build from scratch.
 
-**Novel/multi-keyword:** Route to closest preset or Path C. Confirm first.
+**Checkpoint (non-optional).** The moment the bundle is confirmed, record `cowork-profile.md`:
 
-**Empty/one-word:** Re-ask with examples. Default to Personal Assistant if still empty.
+```
+# My Cowork Profile
 
-### Phase 2 — Profile
+**Status:** in-progress
+**Goal preset:** [routed preset, or "custom"]
+**Objective:** [user's verbatim goal]
+**Confirmed bundle:** [final skill list]
+```
 
-- Step 1: Name
-- Step 2: Role or context
+Then offer exactly once: "Basics saved. 1) Keep going — 2 minutes to a fully personalized workspace  2) Start now — run `/setup-wizard` later to finish". On fast-track, still fill every field below with sensible defaults.
 
-### Phase 3 — Writing Profile
+**Q2 — one turn.** Ask together: name; what subject or domain are you working in?; any deadlines (or "none yet"). Record into the profile, then state once: "Cowork always asks before deleting, moving, or overwriting any file or folder."
 
-Say: "These help me write in your voice, not like generic AI."
+**Q3 — optional voice turn.** "Last one, optional — paste a sentence or two you've written, or pick a tone (Casual/Professional/Academic) and length (Concise/Thorough), or say 'skip'." Extract 2+ patterns from a sample (never store raw text) or use the picks; generate `context/writing-profile.md`.
 
-- Step 3: Tone — 1) Casual  2) Professional  3) Academic  4) Mixed
-- Step 4: Audience — 1) Peers/reviewers  2) Stakeholders  3) Students/public  4) Mixed
-- Step 5: Style — 1) Concise  2) Thorough  3) Domain jargon  4) S) Suggest
-- Step 6 (optional): "Paste a sentence from your writing to calibrate your voice — or 'skip'."
-  Extract 2+ patterns; state them explicitly; do NOT store raw sample text.
+## Finishing
 
-Generate writing-profile.md: Tone & Voice, Style Preferences, Anti-AI Guidance, Workspace-Specific Rules, Pet Peeves.
-
-**Fast-track:** "Workspace ready. 1) Continue — folder structure and skills  2) Get started now — /setup-wizard later"
-
-### Phase 4 — Full Setup
-
-Run /setup-wizard for skills (Literature Review, Source Analysis, Research Synthesis) and folder structure.
-
-Generate cowork-profile.md: Name, Goal, Domain, Setup date, Upcoming deadlines: (leave blank).
-
-Activated skills: run /skill-creator. If unavailable, confirm file at .claude/skills/<name>/SKILL.md.
+Flip `Status:` to complete, note skills installed (or pending without file access), and close with one concrete first task from their goal — not a checklist.
 
 ## Safety
 
