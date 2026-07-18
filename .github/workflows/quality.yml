@@ -320,8 +320,8 @@ jobs:
       - name: POOL — Enforce 9-section structure and 60-line floor on skills/ pool
         run: |
           # ADR-016 v2.4 amendment: POOL loop runs BEFORE ENFORCED_EXAMPLES loop.
-          # Iterates over skills/*/SKILL.md (20 files) — the canonical consolidated pool.
-          # v2.4.0: skills/ pool added (F1 consolidation). All 20 files must meet depth standard.
+          # Iterates over skills/*/SKILL.md (23 files) — the canonical consolidated pool.
+          # v2.4.0: skills/ pool added (F1 consolidation). All 23 files must meet depth standard.
           REQUIRED_SECTIONS=(
             "## When to use"
             "## Triggers"
@@ -1163,3 +1163,64 @@ jobs:
             exit 1
           fi
           echo "wizard-consistency-check PASSED — presets, pool, registry, setup-wizard skill, and personalization placeholders agree."
+
+  version-consistency-check:
+    name: Version Consistency Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # S3 fix — least-privilege; job is read-only, no token-bearing calls
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Assert VERSION == README badge == first CHANGELOG release header
+        run: |
+          set -o pipefail
+          set +e  # S1 fix — GHA's default -eo pipefail would otherwise abort before the
+                  # "could not extract" diagnostics print; this job is a FAIL-accumulator,
+                  # not errexit-based, and still exits 1 explicitly at the end.
+          FAIL=0
+
+          # --- Extract VERSION ---
+          if [ ! -f VERSION ]; then
+            echo "::error::could not extract VERSION — VERSION file not found at repo root"
+            exit 1
+          fi
+          V=$(tr -d '[:space:]' < VERSION)
+          if ! printf '%s' "$V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::could not extract VERSION — file content '$V' is not a x.y.z semver"
+            FAIL=1
+          fi
+
+          # --- Extract README badge version ---
+          B=$(grep -oP 'version-\K[0-9]+\.[0-9]+\.[0-9]+(?=-green)' README.md | head -1)
+          if [ -z "$B" ]; then
+            echo "::error::could not extract README badge version — no 'version-X.Y.Z-green' shields.io badge found in README.md"
+            FAIL=1
+          fi
+
+          # --- Extract FIRST CHANGELOG section header of ANY kind (do NOT skip [Unreleased]) ---
+          CHEADER=$(grep -m1 -oP '^## \[\K[^\]]+' CHANGELOG.md)
+          if [ -z "$CHEADER" ]; then
+            echo "::error::could not extract CHANGELOG header — no '## [...]' section header found in CHANGELOG.md"
+            FAIL=1
+            C=""
+          elif ! printf '%s' "$CHEADER" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::CHANGELOG top section is '[$CHEADER]', not a released x.y.z version — release content is stranded above the newest dated header (this is the D-2 defect class). Split it into a dated '## [x.y.z] - YYYY-MM-DD' section."
+            FAIL=1
+            C=""
+          else
+            C="$CHEADER"
+          fi
+
+          # --- Compare (only if all three extracted cleanly) ---
+          if [ "$FAIL" -eq 0 ]; then
+            if [ "$V" != "$B" ] || [ "$B" != "$C" ]; then
+              echo "::error::version drift — VERSION='$V', README badge='$B', CHANGELOG top='$C'. All three must agree."
+              FAIL=1
+            fi
+          fi
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "version-consistency-check FAILED — see errors above."
+            exit 1
+          fi
+          echo "version-consistency-check PASSED — VERSION == README badge == CHANGELOG top == $V"
