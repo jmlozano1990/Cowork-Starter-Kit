@@ -44,7 +44,7 @@ Each entry includes:
 >
 > `citation-formatter` — removed at the v2.6.x audit as a phantom entry (no pool file), re-added 2026-07-06 together with a 9-section `skills/citation-formatter/SKILL.md` per the audit's disposition condition. Source: `docs/project-audit-v2.6.1.md` F-2, roadmap idea 10.
 >
-> The registry therefore has 24 rows across 23 unique skill slugs.
+> The registry therefore has 26 rows across 25 unique skill slugs.
 
 ### Writing
 
@@ -93,6 +93,15 @@ Each entry includes:
 | follow-up-tracker | Log and surface pending commitments — things you owe others and things others owe you — from conversations, notes, and inbox snippets | builtin | 2026-04-19 | 1 | personal-assistant |
 | spend-awareness | Summarize pasted transaction data by category in plain language to surface spending patterns — descriptive only, does not provide investment advice, budgeting recommendations, or savings plans | builtin | 2026-04-19 | 1 | personal-assistant |
 | list-tracker | Create and maintain structured tracking lists — guest lists, RSVPs, vendors, applications — as local markdown tables with statuses, counts, and follow-up flags | builtin | 2026-07-06 | 1 | personal-assistant,project-management,business-admin |
+
+### Cross-Domain
+
+These skills span 3+ preset domains; their `goal_tags` reflect the breadth rather than any single home preset. Offered on-demand (`cross_cutting_skills` F4 / `optional_skills` / Path C `goal_tags`), never in any preset's `core_skills`.
+
+| name | description | source_url | vetting_date | tier | goal_tags |
+|------|-------------|------------|--------------|------|-----------|
+| anti-ai-slop | Remove AI-tell vocabulary, uniform sentence rhythm, and empty hedging from any drafted content — an opt-in authenticity pass that respects the user's own established voice rather than imposing a fixed denylist. | builtin | 2026-07-19 | 1 | study,research,writing,project-management,creative,business-admin,personal-assistant |
+| weekly-review | Run a periodic (weekly-cadence) Collect → Process → Review → Plan pass across the user's own workspace files — a descriptive zoom-out distinct from the daily briefing or a project status update. | builtin | 2026-07-19 | 1 | personal-assistant,project-management,study |
 
 ---
 

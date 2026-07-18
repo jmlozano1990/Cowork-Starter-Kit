@@ -49,7 +49,7 @@ name: project-management
 display_name: Project Management
 description: Managing projects, teams, tracking tasks and status.
 core_skills: meeting-notes, status-update, risk-assessment
-optional_skills: action-items, follow-up-tracker
+optional_skills: action-items, follow-up-tracker, weekly-review
 scaffold_source: examples/project-management/
 match_signals: project, projects, management, managing, manage, team, tasks, tracking, milestones, status, risk, sprint, sprints, agile, scrum, roadmap
 ```
@@ -85,7 +85,7 @@ name: personal-assistant
 display_name: Personal Assistant
 description: Daily life, calendar, finances, tasks, follow-ups.
 core_skills: daily-briefing, follow-up-tracker, spend-awareness
-optional_skills: action-items, doc-summary, list-tracker
+optional_skills: action-items, doc-summary, list-tracker, weekly-review
 scaffold_source: examples/personal-assistant/
 match_signals: personal, assistant, daily, calendar, finances, budget, family, home, organize, organizing, planning, errands, follow-up, reminders, life
 ```
@@ -97,7 +97,7 @@ match_signals: personal, assistant, daily, calendar, finances, budget, family, h
 These skills are useful across multiple presets. They are NOT installed by default for any preset — the wizard offers them on-demand at runtime via the "Skill swap" affordance in each preset's `global-instructions.md` (per ADR-034 §Decision and D8 — instruction-only swap; no file copy).
 
 ```cross_cutting
-cross_cutting_skills: action-items, meeting-notes, doc-summary, voice-matching, research-synthesis
+cross_cutting_skills: action-items, meeting-notes, doc-summary, voice-matching, research-synthesis, anti-ai-slop
 ```
 
 | Skill | Rationale |
@@ -107,3 +107,4 @@ cross_cutting_skills: action-items, meeting-notes, doc-summary, voice-matching, 
 | doc-summary | Used situationally by research, business-admin, and personal-assistant personas |
 | voice-matching | Used situationally by writing and creative personas; crossover to business-admin for exec emails |
 | research-synthesis | Bridges study, research, and writing domains |
+| anti-ai-slop | Universal AI-tell removal pass, usable regardless of preset — writing/creative benefit most directly, but any generated text in any domain benefits |
