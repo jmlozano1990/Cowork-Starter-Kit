@@ -2,6 +2,163 @@
 
 ---
 
+## [v2.7.2] - 2026-07-18 — Truth & Release
+
+**Date:** 2026-07-18
+**Classification:** STANDARD (bound by @architect at Phase 1 — downgraded from @pm's Phase 0 provisional/fail-safe SECURITY-SENSITIVE. WS2 `quality.yml` edit is additive/read-only: no new Action, no new permissions, no secret, no network call, no mutation of an existing control, no touch of `sync-agency.yml`. Conditional escalation trigger — "issue #23 SHA genuinely broken" — did **not** fire; @security freshly re-verified the SHA is real and tag-consistent.)
+**Mode:** full pipeline, combined-path Phase 5+6+7 (STANDARD eligibility). Phase A of a 4-phase roadmap (v2.7.0/.1 shipped outside the pipeline; this cycle brought the project back in and fixed the resulting stale storefront).
+**Rework rate:** ~0.5% on the diff (8 of ~1,592 changed lines were post-approval fixes), **0% on substance/ACs**. Two post-Phase-4 commits, both @dev, both CI-only, neither touching an AC: (1) `73e347c` — 3-line MD009 trailing-whitespace fix in the new `bug_report.md`, caught by @qa's own Phase 5 markdownlint re-run *before* it ever reached CI; (2) `81e92ba` — 1-line stars-badge link repoint (`/stargazers` 404'd lychee), caught by the first real PR CI run.
+**Cycle SHAs:** Phase 4 binding SHA `9a56474`, CI-fix 1 `73e347c` (MD009), QA re-check `b3ca668` (APPROVED), CI-fix 2 `81e92ba` (stars badge), merged (squash) `795695e` via PR #55 2026-07-18T07:51:13Z. Releases `v2.7.0`, `v2.7.1`, `v2.7.2` all published post-merge with real notes.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 | Revise mode — 19 ACs across 7 workstreams; classification flagged SECURITY-SENSITIVE (explicitly provisional/fail-safe, not asserted); WS7 issue #23 marked "NO blind-close — @security confirms SHA valid + CI green first" |
+| 1. Design | @architect | 2 | **2 design-caught findings, the highest-value catch of the cycle:** (1) FALSE-GREEN HOLE — the spec's literal AC-4 regex extracts the first `## [x.y.z]` header and would have reported PASS on today's actually-broken repo (VERSION=2.6.1, v2.7 content stranded under `[Unreleased]`) — gate hardened to fail on any stranded `[Unreleased]`; (2) CHANGELOG first-pass §Added/Changed/Removed lines were v2.7.0-era prose left unhomed — would have made AC-1 unsatisfiable as written. Classification downgraded SECURITY-SENSITIVE → STANDARD with reconciliation rationale against v2.5.4/v2.6.0 precedent. |
+| 2. Security Review | @security | 3 | 2 WARNING (S1 `set +e` needed after `set -o pipefail` — GHA's default `-e` shell was empirically reproduced suppressing 2 of 3 diagnostic messages; S2 CoC missing required CC BY 4.0 attribution line) both promoted to Phase 4 MUST-FIX; 1 INFO/SHOULD-FIX (S3 explicit `permissions: contents: read`). **OI-SEC-2 (not a finding — a clearance):** issue #23's "hallucinated SHA" premise freshly verified FALSE via live `gh api` calls (HTTP 200, tag-match, runner-download corroboration) — prevented a wrong close-as-invalid or wrong escalation to SECURITY-SENSITIVE. |
+| 3. User Gate | User | 0 | FULL GATE APPROVED — "Approve — build & ship"; post-merge outward actions (tags/Releases/Discussions/homepage/issue-triage) explicitly not held pending merge |
+| 4. Implementation | @dev | 0 | 15/15 in-scope ACs self-PASS; both MUST-FIX (S1, S2) + the SHOULD-FIX (S3) applied; 4/4 WS2 negative controls run under GHA-exact `bash -eo pipefail` before handoff; 2 benign deviations self-caught and transparently flagged for @qa (not hidden) |
+| 5+6+7. Test+Audit+Approval (pass 1) | @qa | 1 | **1 BLOCKING** — markdownlint MD009 (3× trailing whitespace) in the new `bug_report.md`, in-scope of the CI `**/*.md` glob, would fail the Markdown Lint GitHub Action on push. Verdict: REJECTED pending a scoped 1-file fix. |
+| 5.1 CI-fix (dev) | @dev | 0 | 3-line whitespace strip, `73e347c`; re-linted 0 errors across all 10 changed Markdown files |
+| 5+6+7. Test+Audit+Approval (pass 2 — re-check) | @qa | 0 | APPROVED at `73e347c`. All 15 ACs, all 4 WS2 negative/positive controls, S1/S2/S3, deny-list, competitor-naming, and escalation checks re-confirmed unaffected by the fix commit. |
+| Post-approval / first PR CI run | @dev | 1 | Stars-badge `img.shields.io/.../stargazers` link 404'd lychee (repo-relative badge path, not a content link) — repointed to repo root, `81e92ba` |
+| 7. Merge | orchestrator | 0 | CI green (48/0), PR #55 squash-merged `795695e`; Releases v2.7.0/v2.7.1/v2.7.2 published with real notes |
+
+**Net-new findings: 0 CRITICAL.** 2 WARNING at Phase 2 (both resolved in Phase 4, independently re-confirmed at Phase 5/6/7 — not merely claimed). 1 CI-blocking lint defect caught pre-push by @qa's own Phase 5 re-run (not by CI). 1 CI-blocking link defect caught by the first real PR CI run (an @qa Phase 5 gap — markdownlint was run locally, lychee was not). 0 escalations — the one conditional SECURITY-SENSITIVE trigger (issue #23) was evaluated with fresh evidence and did not fire.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC-4 | WS2 version-consistency CI gate logic | **Hard** — the standout AC of the cycle. Caught a design-stage false-green hole (spec's literal regex would false-PASS on the actually-broken live repo), required a Phase 2 MUST-FIX (`set +e`) proven load-bearing by empirical reproduction, and was gated by a hard Phase-5 requirement: 3 negative controls + 1 positive control, each run under GitHub-Actions-exact shell invocation, each asserting the *exact diagnostic message*, not just the exit code. |
+| AC-1 | CHANGELOG dated split (`[2.7.0]`/`[2.7.1]`/`[2.7.2]`) | Medium — design-caught re-home gap (first-pass CHANGELOG prose left orphaned); resolved cleanly in Phase 4, 0 rework at Phase 5 |
+| AC-11 | Legacy `tests/v1.3.3/` removal, no dangling refs | Medium — @architect narrowed the literal spec-prose grep to exclude append-only historical docs (Destructive-Migration anti-pattern avoidance); @qa independently re-ran the broader, non-narrowed grep and hand-classified every hit rather than trusting the narrowing — 0 live dangling references |
+| AC-13 | CODE_OF_CONDUCT.md CC BY 4.0 attribution | Medium — Phase 2 MUST-FIX (S2); the original AC verify (`Contributor Covenant` count ≥1) would have passed a body that dropped the required attribution URL; @security's fix pinned `contributor-covenant.org` presence explicitly |
+| AC-14 | Issue templates | Medium in practice — the only ACTUAL CI-blocking defect of the cycle (MD009) lived here; content itself was Easy |
+| AC-15 | README badges (CI/License/Version + new stars/PRs-welcome) | Medium in practice — passed its own AC verification cleanly but the stars badge's `/stargazers` sub-path was a lychee-only failure mode neither the AC nor local markdownlint would catch |
+| AC-2, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10, AC-12 | Version/badge truth, promise-string purge, stale-claim removal, registry vocab, SkillRisk decision record | Easy — all PASS on first implementation, 0 rework |
+| AC-3, AC-16, AC-17, AC-18, AC-19 | Tags/Releases, Discussions, homepage, social-preview, issue triage | **Not-Verified this phase** — explicitly orchestrator-owned, post-merge; out of @qa's Phase 5/7 verification scope by design, not a coverage gap |
+
+**Hardest AC: AC-4** (WS2 gate logic) — see above. It is also the cycle's best illustration of *check-that-cannot-fail*: the gate was proven able to genuinely fail (4 negative controls, each asserting the literal fail message under the real CI shell) before anyone trusted its "PASS."
+
+---
+
+### 3. Token Cost Actuals
+
+`metrics.json` for this project has no entries for the 2026-07-18 cycle window (last captured entry is `CLAUDE_COWORK_CONFIG-21`, 2026-05-11) and every historical entry carries `model: "unknown"` — token-cost instrumentation has never resolved model attribution for this project, so a numeric cost table would be fabricated. Reporting qualitatively instead, consistent with this doc's prior practice when opus sessions are absent or attribution is unavailable:
+
+| Model Tier | Sessions | Note |
+|-----------|---------|------|
+| opus | ~2 | @architect Phase 1 (design + 2 catches), @security Phase 2 (spot-review, abbreviated per STANDARD combined-path — not a full OWASP sweep) |
+| sonnet | ~4 | @pm Phase 0, @dev Phase 4 + 2 CI-fix commits, @qa Phase 5+6+7 (2 passes: initial REJECT + re-check APPROVED) |
+| haiku | 0 | — |
+
+Right-sized for a STANDARD full-mode patch cycle with a real (not rubber-stamp) security spot-review — comparable in shape to v2.5.3's two-scope bundle, smaller than a deep-PM cycle (v2.6.0).
+
+---
+
+### 4. Phase Durations
+
+Computed from verified git commit timestamps (author dates, converted to UTC), not document-internal "Date:" headers — the qa-report.md's own header timestamps (09:15/09:32 UTC) do not reconcile with its authoring commit's actual timestamp (`a555be5` = 07:06 UTC) and are a doc-authoring artifact, not the real clock. Git commit times and the GitHub PR `mergedAt` (07:51:13Z) agree exactly.
+
+| Phase | Start (UTC) | End (UTC) | Duration |
+|-------|------------|-----------|---------|
+| 0. Requirements (@pm) | 05:31:42Z | 05:47:00Z | ~15 min |
+| 1. Design (@architect) | 05:47:00Z | 06:01:02Z | ~14 min |
+| 2. Security Review (@security) | 06:01:02Z | 06:35:01Z | ~34 min |
+| 3. User Gate | 06:35:01Z | 06:57:02Z | (gate decision instant; window covers Phase 4 start) |
+| 4. Implementation (@dev) | 06:35:01Z | 06:54:40Z | ~20 min |
+| 5+6+7 pass 1 (@qa, REJECT) | 06:54:40Z | 07:06:25Z | ~12 min |
+| 5.1 CI-fix (@dev, MD009) | 07:06:25Z | 07:09:23Z | ~3 min |
+| 5+6+7 pass 2 (@qa, APPROVED) | 07:09:23Z | 07:11:48Z | ~2 min |
+| CI-fix 2 (@dev, stars badge, post-approval) | 07:11:48Z | 07:17:11Z | ~5 min |
+| Push → PR → CI green → merge | 07:17:11Z | 07:51:12Z | ~34 min |
+
+**Total wall-clock: ~2h 19min**, Phase 0 start to merge. No outlier phase (>2× average ~21 min) — Phase 2 (~34 min) is the longest but is proportionate to it being a genuine (if abbreviated) security review that empirically reproduced a defect and independently re-verified a disputed GitHub issue via live API calls, not a rubber-stamp.
+
+---
+
+### 5. Phases Abbreviated
+
+Full pipeline mode with **combined-path Phase 5+6+7** (STANDARD classification, bound at Phase 1, held consistent through Phase 7 — no Guard Change Summary required, no sequential `/audit`). Phase 2 (@security) ran as a **targeted spot-review**, not a full OWASP sweep — appropriate for STANDARD and explicitly scoped to the 4 Open Issues @architect handed off (OI-SEC-1/2/3, OI-COMP-1), not a repo-wide audit. @ux SKIPPED (no UI files — Markdown/YAML/Bash config kit). F2 JIRA/Confluence SKIPPED (not configured for this project). G1 public artifact audit: SKIPPED — `2.7.1` → `2.7.2` is a patch bump; ADR-110 does not auto-trigger G1 on patch bumps. All other phases ran at ceremony appropriate to a STANDARD patch continuing an active 4-phase roadmap.
+
+---
+
+### 6. Rework Rate and Causes
+
+**0% on substance/ACs.** All 15 in-scope ACs passed as designed at Phase 4, with 0 AC-relevant rework at any point in the cycle.
+
+**~0.5% on raw diff (8 of ~1,592 changed lines), both post-approval, both CI-only:**
+1. **MD009 trailing whitespace** (`73e347c`, 3 lines) — 3 lines in the new `bug_report.md` ended with a single trailing space (one character short of Markdown's 2-space hard-break convention), tripping markdownlint's `MD009` rule. **Caught by @qa's own Phase 5 pre-push markdownlint re-run**, before it ever reached CI — the intended catch point.
+2. **Stars-badge link 404** (`81e92ba`, 1 line) — the new `img.shields.io/.../stargazers` README badge linked to a sub-path lychee flagged as broken. **Caught by the first real PR CI run**, not by @qa's local checks — @qa's Phase 5 pass ran markdownlint and YAML validation locally but did not run lychee (the link-check job), which was the actual gap.
+
+**Root cause of the one real gap:** @qa's local pre-push replication (the "V45-A3" pattern, PROVED across 4+ prior cycles for markdownlint/YAML) does not yet cover lychee link-checking. Both fixes were 1-file, zero-content-change, @dev-owned, with no re-review of substance needed.
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=1, issue=1, info=1**
+
+- **BLOCKER** (Phase 1 / design): the FALSE-GREEN HOLE in the WS2 version-consistency gate. The spec's literal AC-4 regex extracts the *first* `## [x.y.z]` header — on the actual pre-cycle repo state (VERSION=2.6.1, v2.7 content stranded under an undated `[Unreleased]` heading), that regex would have extracted `2.6.1`, agreed with the (also stale) badge and VERSION, and reported **PASS on a genuinely broken repo** — the exact D-2 defect class the gate exists to catch. @architect caught this by testing the literal regex against the live CHANGELOG before finalizing the design, not by inspection alone. This is the highest-value catch of the cycle and the textbook instance of *check-that-cannot-fail*: a green gate that had never actually been proven able to go red.
+- **ISSUE** (Phase 5, pass 1): MD009 markdownlint defect in `bug_report.md` — see §6. Caught before push, not by CI.
+- **INFO** (Phase 2): @security's fresh verification that issue #23's "hallucinated peter-evans SHA" claim was **false** (live `gh api` HTTP 200 + tag-match + runner-download corroboration, run this cycle, not assumed from the issue text). Prevented a wrong blind-close-as-confirmed-and-unaddressed *or* a wrong escalation to SECURITY-SENSITIVE — either of which would have been an evidence-free decision on a security-labeled issue.
+
+Without the Phase 1 design-stage negative test, the version-consistency gate would have shipped structurally unable to catch the defect it was built for — a check that cannot fail is not a check.
+
+---
+
+### 8. Pattern Detection
+
+Review of Phase 6 (or Phase 2, for combined-path cycles) summaries across the 3 most recent APPROVED cycles:
+
+- **v2.6.1:** Phase 6 SKIPPED (STANDARD fast-track, no findings surface).
+- **v2.7.0 / v2.7.1:** shipped **outside the Council pipeline** (no Phase 6 summary exists — see the out-of-pipeline watch pattern below).
+- **v2.7.2:** Phase 2 (combined-path) — 2 WARNING (S1, S2), both resolved in-cycle; 0 CRITICAL.
+
+No 3-consecutive-cycle WARNING+ keyword match — the comparison set itself is broken by the v2.7.0/.1 out-of-pipeline gap, which is a finding in its own right (see below) rather than a clean "no pattern" result.
+
+**Pattern updates written to `docs/patterns.md`** (see file for full text):
+1. **Version-Consistency-Gate as the permanent structural fix** for the multi-cycle "Recurring Version Artifact Miss" pattern — promoted from a memory-guard mitigation (v2.3.0, reconfirmed v2.6.1) to a CI-enforced structural gate (v2.7.2), with the false-green hole closed and negative-control-proven.
+2. **Check-that-cannot-fail, applied** — the WS2 false-green hole is recorded as a concrete instance of the check-that-cannot-fail discipline, alongside the negative controls both @dev and @qa independently ran.
+3. **Out-of-pipeline-ship → back-in-pipeline (NEW, WATCH 1/3)** — v2.7.0/v2.7.1 shipped outside Council governance, producing exactly the D-2 stale-storefront defect this cycle exists to fix. First instance.
+4. **Subagent worktree Council-state stranding (NEW, WATCH 1/3)** — @pm's Phase 0 ran in an ephemeral worktree this cycle and its `pipeline.md`/`scratchpad.md` writes were lost on cleanup; the orchestrator re-recorded the row directly. Going forward, orchestrator owns all Council-local state writes for external-project cycles; subagents write only product files in the target repo.
+
+---
+
+### 9. Quality Baseline Assessment
+
+Baseline: each agent must demonstrate 80%+ scenario coverage to pass (content-review evaluation).
+
+| Agent | Observed Behavior | Baseline Result |
+|-------|-------------------|----------------|
+| @pm | Correctly flagged classification as provisional/fail-safe rather than asserting it (let downstream evidence decide); WILL-NOT-do list enforced (excluded all Phase B/C/D scope); refused to blind-close the security-labeled issue #23 without downstream confirmation. | PASS |
+| @architect | Design-stage negative test caught the false-green hole before it shipped — tested the literal AC-4 regex against the live, actually-broken CHANGELOG rather than trusting the spec's description of intended behavior. Reconciled the classification downgrade against 2 prior-cycle precedents with explicit rationale, not a bare assertion. | PASS — standout cycle |
+| @security | Empirically reproduced the S1 defect under `bash -eo pipefail` rather than reasoning about it abstractly; freshly re-verified a disputed GitHub issue's technical claim via live API calls instead of trusting the issue text. Spot-review scope matched to STANDARD classification, not over- or under-scoped. | PASS |
+| @dev | 15/15 ACs self-PASS; both MUST-FIX + SHOULD-FIX applied; ran all 4 WS2 negative controls under GHA-exact shell *before* handoff (didn't wait for @qa to find the gap); 2 benign deviations self-caught and disclosed rather than hidden. | PASS |
+| @qa (self) | Independently re-ran every command rather than trusting narrative (verify-artifact-not-agent-narrative); ran the WS2 hard negative-control gate personally under GHA-exact shell instead of accepting @dev/@security's claim it worked; issued a real REJECT on a real, verified CI-breaking defect rather than defaulting to APPROVED. Gap: did not locally replicate the lychee link-check job, missing the stars-badge 404 that the first PR CI run caught instead. | PASS, with one process gap noted for §10 |
+
+5/5 agents PASS. No baseline failure this cycle. The @qa self-assessment gap (lychee not locally replicated) is the cycle's one process-quality finding and is carried into §10 rather than into a demerit — it did not affect the final outcome (CI caught it before merge, as designed) but it is a coverage gap worth closing.
+
+---
+
+### 10. Process Improvements Proposed
+
+1. **Extend local CI replication (V45-A3) to lychee link-checking.** The proven pre-push local-CI-smoke pattern (4 consecutive PROVED cycles for markdownlint/YAML) does not yet run the link-check job locally. This cycle's one CI-run-only catch (stars-badge `/stargazers` 404) is exactly the gap a local `lychee` pass would close. Proposed: add a local lychee invocation to @qa's Phase 5 checklist for any cycle touching README badges or other dynamic-path links.
+
+2. **Out-of-pipeline shipping needs a formal return-to-pipeline reconciliation step.** v2.7.0/v2.7.1 shipped outside Council governance (a cloud-audit-driven session, PRs #52-54) and produced the exact stale-storefront defect (D-2) that this cycle spent its whole first workstream fixing. Proposed: any cycle's Phase 0 should include an explicit check — "has this project shipped commits since the last Council-governed cycle that this spec doesn't account for?" — and if yes, bind a version/changelog/storefront-truth reconciliation workstream before or alongside the new feature work, as v2.7.2 did organically but not by formal requirement.
+
+3. **Subagent Council-state writes in worktrees are unreliable — orchestrator-owns-state is now the standing rule for this project.** @pm's Phase 0 this cycle ran in an ephemeral worktree and its `pipeline.md`/`scratchpad.md` writes were stranded and lost on cleanup (the harness-worktree-divergence pattern). The orchestrator already self-corrected within this cycle (re-recorded the row directly) and documented the going-forward rule inline in the pipeline.md Phase 0 note. This retro formalizes it: for `claude-cowork-config`, subagents write only cowork-repo product files; the orchestrator owns all `.claude/projects/claude-cowork-config/` writes.
+
+4. **The WS2 gate's negative-control discipline is worth generalizing.** AC-4's 4-outcome negative-control gate (3 failure modes + 1 success mode, each asserting the literal message under GHA-exact shell, not just the exit code) caught a defect (S1) that exit-code-only testing would have missed entirely. Proposed: any future CI-gate AC in this project should default to message-level negative-control assertions, not exit-code-only, following this cycle's pattern.
+
+---
+
 ## [v2.6.1] - 2026-05-11 — Release Archive Hygiene
 
 **Date:** 2026-05-11
