@@ -269,6 +269,13 @@ This rule codifies the P3 pattern from the v2.0 retrospective: "SHA-pinning adde
 
 Do not modify the `VERSION` file or `CHANGELOG.md`. Maintainers handle versioning at release time. Your PR should contain only files in `examples/<your-preset-name>/`.
 
+### Pre-release checklist (maintainers)
+
+- [ ] `VERSION`, the README version badge, and the top `CHANGELOG.md` entry agree (`version-consistency-check` CI gate)
+- [ ] `vendored-integrity-check` is green — vendored tree matches `cowork.lock.json`
+- [ ] **Run the offline smoke test** (`tests/offline-smoke-test.md`) — all 4 scorecard rows filled with real timed-run data, and the "15 minutes" hero claim's disposition matches the pre-bound decision rule applied to that data. A release tagged with a stale or empty smoke-test scorecard is shipping the timing claim on zero evidence.
+- [ ] `docs/architecture.md` ADR index updated for any new ADRs this cycle
+
 ---
 
 ## Agency-Sync PR Review (v2.0+)
