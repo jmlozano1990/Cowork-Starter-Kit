@@ -39,7 +39,12 @@ Any download attempt, stall, or "I can't access GitHub" dead-end during setup is
 release blocker — file it against WIZARD.md §Network & Offline Rule and
 `docs/project-audit-v2.6.1.md` F-1.
 
-## Timing scorecard (fill in per run — validates the "15 minutes" hero claim)
+## Timing scorecard — ESTIMATED, not stopwatch-timed (fill in per run — validates the "15 minutes" hero claim)
+
+**No live-timed human run has been recorded yet.** Every number below is a grounded estimate, not
+a stopwatch measurement. **Community stopwatch timings are welcome** — if you run this protocol
+for real with a timer, please open a PR replacing a row (or adding a 5th) with your actual
+wall-clock data and a one-line description of your path.
 
 **Run date:** 2026-07-18 (v2.8.0 WS4). **Method:** no human tester was available in this Phase 4
 implementation session, so all 4 sessions were dry-run end-to-end by @dev against the live,
@@ -64,9 +69,13 @@ fast-follow once a live tester is available.
 
 **Decision rule applied (per `docs/architecture.md` §3.8, pre-bound before these runs):** median wall-clock
 = sorted [3, 3.5, 7, 10] → (3.5 + 7) / 2 = **5.25 min**. Well within the ≤15 min branch →
-**"15 minutes" KEPT verbatim in the hero line, unchanged** — the redesigned 3-turn interview (vs.
+**"15 minutes" KEPT in the hero line** — the redesigned 3-turn interview (vs.
 the pre-v2.6.2 ~10-question flow) runs well under the claimed ceiling; "15 minutes" is a safe upper
 bound, not a stretched one. No softening or replacement triggered; Edge Case 5 (median ≥2× the claim)
-does not apply since every run finished well under, not over.
+does not apply since every run finished well under, not over. **Because these are estimates, not
+stopwatch data, the hero line carries an explicit "(an estimate — see methodology)" qualifier
+pointing back to this file** rather than presenting the figure as measured — the number is kept
+because it's well-supported, but it is not asserted as more certain than it is (QA finding
+AC-WS4-1, v2.8.0 Phase 5).
 
 A release claiming "15 minutes" with an empty scorecard is making the claim on zero evidence — fill this in before tagging. The v2.7 interview budget is 3 core turns + optional voice turn; a run needing more turns is a regression against WIZARD.md's single-source rule (Run 2's 5th turn is the one documented, expected exception for genuinely novel goals, not a regression).

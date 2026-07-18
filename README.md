@@ -1,6 +1,6 @@
 # Cowork Starter Kit
 
-> Describe your goal in plain language. Claude Cowork builds a personalized, skill-equipped workspace from vetted, SHA-pinned skills — no code, no template hunting, three quick turns, 15 minutes.
+> Describe your goal in plain language. Claude Cowork builds a personalized, skill-equipped workspace from vetted, SHA-pinned skills — no code, no template hunting, three quick turns, about 15 minutes (an estimate — see [methodology](tests/offline-smoke-test.md)).
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
