@@ -53,6 +53,8 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-016 (amendment v2.5) | `skill-depth-check` job adds `tools:` vocabulary gate + `upstream-contribution/` directory excluded from depth-check; MF-1/MF-2 hardening (`set -o pipefail` + awk header-name lookup replacing positional `$7`) | ACCEPTED |
 | ADR-034 | Tiered Preset Schema with Hard-Break Migration (v2.6.0) — `core_skills` / `optional_skills` / `cross_cutting_skills` replace `skill_bundle:` field; clone-once template means no live-state migration; instruction-only runtime swap | ACCEPTED |
 | ADR-016 (amendment v2.6) | CMP byte-mirror + line-scan parser switch from `skill_bundle:` to `core_skills:` (paired with ADR-034) | ACCEPTED |
+| ADR-035 | Version-Consistency CI Gate (v2.7.2) — `version-consistency-check` job asserts `VERSION` == README badge == first `## [...]` CHANGELOG header; fails-closed on `[Unreleased]`-stranded content and on any missing/malformed signal; CI enforcement companion to ADR-033 release-artifact convention | ACCEPTED |
+| ADR-036 | CHANGELOG Dated-Split Convention (v2.7.2) — `[Unreleased]` accumulator is split into dated `## [x.y.z] - YYYY-MM-DD` sections at release time using the authoritative UTC commit date; line-level content preservation; formalizes the release step of ADR-033 | ACCEPTED |
 
 ---
 
@@ -8367,3 +8369,424 @@ Revision-1 R1–R3 still apply. Adds:
 STANDARD. Packaging hygiene only. No security boundary, no schema, no AI-instruction surface. Phase 2 `/review` remains OPTIONAL.
 
 End of v2.6.1 Phase 1 design — REVISION 2.
+
+---
+
+## v2.7.2 Phase 1 — Truth & Release Design
+
+> **Cycle:** v2.7.2 — Truth & Release (Phase A of the 4-phase `improvement-plan-2026-07-18.md` roadmap)
+> **Date:** 2026-07-18T07:10:00Z
+> **Branch:** `release/v2.7.2` (cut in-place from `main` HEAD `427dea9`; NOT a sibling worktree — per v2.5.3 retro NEW-WATCH "Branch on main checkout" learning, retro.md:547, which avoids the v2.5.2 sibling-worktree scope-guard friction)
+> **Mode:** full (revise; Phase A of 4)
+> **Classification (BINDING):** **STANDARD** — downgraded from @pm's provisional SECURITY-SENSITIVE. Rationale + reconciliation in §TASK 1 below; re-confirmed post-file-discovery in §Classification Re-Run.
+> **Worktree discipline:** SKIPPED (STANDARD classification; in-place branch on main checkout, no sibling worktree; `COUNCIL_EXPECTED_BASE_SHA` unset at spawn).
+> **Inputs:** `docs/spec.md` §"v2.7.2 — Truth & Release" (19 ACs, WS1–WS7); `improvement-plan-2026-07-18.md` (INTERNAL — no competitor names may reach product copy); prior classification precedents v2.5.3 (SECURITY-SENSITIVE) / v2.5.4 (STANDARD) / v2.6.0 (SECURITY-SENSITIVE).
+
+> *ISO 15288 — Design Definition Process (this whole Phase 1 record).*
+
+### Phase 1 Design Header — Mandatory Gate Records
+
+**EARS check (per AC-B.2):** HIGH-severity ACs reviewed against EARS syntax. **1 HIGH-severity finding** surfaced by production validation (below), handled as an Architectural Modification rather than an OQ (the design binds the resolution, so no user decision is pending):
+- AC-4 (version-consistency gate) is a "state-driven" requirement whose literal verify regex under-specifies the `[Unreleased]` edge — see §WS2 and §Architectural Modifications. `[EARS-REVISED]` form: *"WHILE the CHANGELOG's first `## [...]` section header is not a `x.y.z` semver, the version-consistency-check job SHALL fail non-zero and name the offending header."* All other ACs (AC-1..AC-19) are ubiquitous/event-driven and testable as written. Net: **EARS check: 0 HIGH-severity findings requiring a user-facing OQ — the single HIGH finding is design-resolved and recorded as an Architectural Modification.**
+
+**SoS Classification (per AC-A.1, EC-1 — explicit even when N/A):** N/A — single-project design (`claude-cowork-config`; `registry.json` `depends_on: []`, not under any SoS umbrella). UAF 4-viewpoint checklist: (1) Strategic — N/A single-project; (2) Operational — N/A single-project; (3) Systems — N/A single-project; (4) Services — N/A single-project.
+
+**Reliability Analysis:** N/A per NEVER-APPLY (no multi-provider request path, no failover mechanism, no SLA/availability claim; this is a docs/CI-hygiene patch).
+
+**Heuristics Check (Rechtin, per AC-C.2) — signals for the two minted ADRs:**
+- *"A system will develop and evolve much more rapidly if there are stable intermediate forms."* → Signal: FIRES. WS1's CHANGELOG dated-split (ADR-036) creates the stable intermediate form (dated release sections) that WS2's gate (ADR-035) then guards; the two are sequenced so the gate is only armed once the stable form exists.
+- *"Don't confuse the functioning of the parts for the functioning of the system."* → Signal: FIRES on WS2. A gate that passes on each field individually can still miss the system property (coherence) if it silently skips `[Unreleased]` — this is exactly the false-green hole found in production validation. Resolved by reading the FIRST header of any kind.
+- *"The first line of defense against complexity is simplicity of design."* → Signal: FIRES. WS2 is bash/grep only, no new Action/secret/permission — the simplest mechanism that can fail correctly. Applied, not merely noted.
+- *"Build in and maintain options as long as possible in the design."* → Signal: not applicable — v2.7.2 is a closing/truth cycle, not an option-preserving one; rationale: scope is fixed by audit findings, options are intentionally being CLOSED (broken promises purged), which is the point.
+
+**Reuse Radar (4-source scan, per Step 2a — present even when empty):**
+- Source 1 (reuse-registry): registry not yet present in this repo (Council `docs/reuse-registry.md` ships v0.32.2; N/A for external target) — skipped.
+- Source 2 (scaffold index): N/A — no new app/service/CLI surface stood up this cycle.
+- Source 3 (CS catalog + ADR tags): N/A — single-project, no constituent-system reuse candidates.
+- Source 4 (SoS interfaces): N/A — not under any SoS umbrella.
+
+**Reuse Scan (per Step 2a — present even when no candidates):**
+
+| Component | Registry hit | OSS candidate (name+license[ESTIMATED]+health) | Scaffold | Decision | Basis |
+|---|---|---|---|---|---|
+| `version-consistency-check` CI job | none | none — 12-line bash/grep, no third-party lint gains over stdlib | none | BUILD | core hygiene invariant, <25 LoC bash, zero dependency; adopting an external "version-sync" Action would ADD supply-chain surface this cycle exists to reduce |
+| `CODE_OF_CONDUCT.md` (WS6) | none | **Contributor Covenant v2.1** (CC BY 4.0 [ESTIMATED — @compliance to confirm at license gate]; industry-standard, healthy) | none | ADOPT | permissive standard text; ADOPT (not BUILD) per binding preference order. Triggers: @compliance L1 license/attribution check on the Covenant text; no `ATTRIBUTIONS.md` code row needed (prose, CC-attribution-in-file). AC-D1.9 prompt-injection screen: N/A (CoC is human-facing governance prose, not AI-instruction content). |
+| Issue templates (WS6) | none | GitHub built-in template forms (no license — first-party format) | none | BUILD | trivial YAML/MD, project-specific fields |
+
+**Buy-vs-Build: 3 components scanned — REUSE 0 / ADOPT 1 / EXTEND 0 / BUILD 2.**
+
+**Production validation (per Step 3b — MANDATORY, this design parses real repo artifacts VERSION/README/CHANGELOG):** The WS2 gate's core extraction regexes were run against the LIVE current files of the target project (single-project cycle → the "every registered project" loop reduces to the one target repo). **Production validation: 1/1 target-repo artifact-set PARSED — and REVEALED a false-green hole** in the literal AC-4 CHANGELOG regex: `grep -m1 -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md` **skips** the `## [Unreleased]` header and returns the first *dated* header (`2.6.1`), so on today's incoherent repo (VERSION=2.6.1 while v2.7 content sits stranded under `[Unreleased]`) the gate reports **MATCH / exit 0 / GREEN** — a check that cannot fail on the exact D-2 defect it exists to catch. Fixture-only validation would NOT have caught this; only running against the real CHANGELOG did. Gate design hardened accordingly (§WS2). This is the binding-precedent pattern (v0.29.3 confidante nested-h3): the real file caught what the spec ACs did not.
+
+**B1 verification:** SKIPPED (STANDARD classification; external-project cycle — `scope_allow_delta` is a no-op per V44-S5 / ADR-115 §Implications, @dev operates against `/home/user/claude-cowork-config`, not `The-Council/dev.md`).
+
+---
+
+### TASK 1 — Classification (BINDING)
+
+> *ISO 15288 — Decision Management Process.*
+
+**BINDING VERDICT: STANDARD.** (Downgraded from @pm's provisional, fail-safe SECURITY-SENSITIVE.)
+
+**One-line decision the orchestrator can act on:** *v2.7.2 is STANDARD — proceed to Phase 2 `/review` as a combined-path @security spot-review of the `quality.yml` diff (not a full sequential Phase 2), no Guard Change Summary required; the single conditional escalation trigger is the WS7 issue-#23 SHA finding (see below).*
+
+**Rationale — why the WS2 CI edit does NOT earn SECURITY-SENSITIVE here:**
+1. WS2 is a **purely additive, read-only, defensive lint**: a new `version-consistency-check` job that bash/greps three already-public version strings. It adds **no new GitHub Action** (no SHA to pin/verify), **no `permissions:` block**, **no secret**, **no network call**, and **modifies no existing gate or control**.
+2. It **does not touch `sync-agency.yml`** — the supply-chain workflow carrying `contents: write` + `pull-requests: write` that is where *this repo's* SECURITY-SENSITIVE classifications have historically had real teeth (v2.5.3, §"v2.5.3 Phase 1" §10). The classic trigger surface (auth / RLS / schema / secrets / permissions / supply-chain / guard) is **entirely absent**.
+
+**Reconciliation of the two cited precedents (the pivotal reasoning):**
+- **v2.5.4 was STANDARD, qualified "no auth/schema/CI/compliance surface."** That qualifier *characterizes why that copy-only cycle was clean*; it is not a standalone rule that any byte in `.github/workflows/` is automatically SECURITY-SENSITIVE regardless of content. A read of it as an absolute rule would make every CHANGELOG-badge cycle a security cycle, which the repo has never actually done.
+- **v2.6.0 was SECURITY-SENSITIVE and cited "CI gate edit."** But that CI edit was a **behavioral change to an existing security-relevant control** — the `quality.yml` CMP byte-mirror parser + MF-1 vocabulary gate — moving **in lock-step with a schema hard-break** (removing `skill_bundle:`), alongside **two other co-equal triggers** (schema change; security-relevant AI-instruction prose in WIZARD.md/global-instructions.md). See §"v2.6.0 Phase 1" Decision-Trigger Walk: 5 of 7 triggers fired. The CI edit there could have broken the byte-mirror integrity gate (a real supply-chain control). WS2 here **changes no existing control** — it *adds a new, independent documentation-consistency assertion*.
+- **The material line:** *modifying an existing security control* (v2.6.0 parser; v2.5.3 supply-chain workflow) earns SECURITY-SENSITIVE; *adding a new, additive, read-only string-consistency check that touches no secret/permission/Action/existing-control* is STANDARD with a targeted security spot-check. WS2 is unambiguously the latter.
+
+**Does a Guard Change Summary apply? NO.** In this repo's own precedent (v2.5.3 §10, and the Council `feedback_guard_pr_rule` analog) the GCS is reserved for **supply-chain / permission-bearing workflow edits**. A GCS for a read-only version-string lint would be near-vacuous. (Good release hygiene still applies: the PR description carries a one-paragraph plain-language "what the WS2 gate does + blast radius" note so a non-dev user can make the merge call — that is decision-surface hygiene, not a formal GCS.)
+
+**What STANDARD does NOT waive — the safety carve-outs (binding):**
+1. **The WS2 `quality.yml` diff still gets a mandatory @security look**, folded into the combined Phase 5+6 audit (OI-SEC-1 below), NOT a full separate sequential Phase 2 `/review`.
+2. **AC-4 negative control is a HARD Phase-5 gate** (@qa must run the gate against deliberately-broken inputs and show it fails — three failure paths, §WS2). A check that cannot fail is not a check.
+3. **Conditional escalation trigger (the one that keeps the supply-chain surface protected):** if @security's WS7 confirmation finds issue #23's `peter-evans/create-pull-request` SHA in `sync-agency.yml` **genuinely broken**, that flips scope to a supply-chain-workflow *edit* → **re-classify to SECURITY-SENSITIVE**, full Phase 2/6 + GCS, per spec §Will NOT Do. Prior evidence (3 audits since 2026-05-10, all "byte-unchanged") says this will not fire, but it is not assumed — fresh confirmation is required (AC-19).
+
+---
+
+### 1. WS1 — CHANGELOG Dated-Split + Version Truth (ADR-036)
+
+> *ISO 15288 — Configuration Management Process.*
+
+See **ADR-036** below for the convention. The **binding, zero-discretion section→version mapping** (git-verified — every commit's UTC date confirmed via `TZ=UTC git show -s --format='%cd'`, not spec-echoed):
+
+**Everything currently between `## [Unreleased]` (line 7) and `## [2.6.1]` (line 73) is re-homed. No `[Unreleased]` header with content may remain (AC-1).** Split as follows, preserving every content line byte-for-byte — only the grouping headers change:
+
+| CHANGELOG block (current) | Source commit | UTC date | Re-homed under |
+|---|---|---|---|
+| `### Added — fourth pass (Step 7 handover…)` | `427dea9` | 2026-07-07 | **`## [2.7.1] - 2026-07-07`** |
+| `### Added — third pass (v2.7 roadmap…)` | `8369c9f` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| `### Changed — third pass` | `8369c9f` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| `### Deferred (with rationale)` | `8369c9f` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| `### Added — second pass (audit recommendations…)` | `da62d86` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| `### Changed — second pass` | `da62d86` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| **`### Added` (first pass — Network & Offline Rule)** | `da62d86` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| **`### Changed` (first pass — setup-wizard realign)** | `da62d86` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+| **`### Removed` (first pass — citation-formatter)** | `da62d86` | 2026-07-06 | `## [2.7.0] - 2026-07-06` |
+
+> **@dev CRITICAL NOTE (gap the spec prose omitted, caught by git verification):** the spec §WS1 content-mapping paragraph lists only "second pass / third pass / fourth pass / Deferred." It does **not** name the plain **first-pass** `### Added` / `### Changed` / `### Removed` blocks (CHANGELOG lines 53–69). Those are `da62d86` (v2.7.0) content and MUST also land under `## [2.7.0]` — otherwise AC-1's `grep -c "^## \[Unreleased\]$" = 0` cannot be satisfied without deleting real history. Verified: `git log -1 -L 53,53:CHANGELOG.md` → `da62d86`.
+
+**Resulting top-of-file order** (newest first): `## [2.7.2] - <ship date>` (this cycle's WS1–WS7 changes, populated in Phase 4) → `## [2.7.1] - 2026-07-07` → `## [2.7.0] - 2026-07-06` → `## [2.6.1] - 2026-05-11` (unchanged).
+
+**VERSION / badge / What's-new (AC-2) — exact-line bindings:**
+
+| # | File:line | Current (verbatim) | Replace with |
+|---|---|---|---|
+| WS1-a | `VERSION` (whole file) | `2.6.1` | `2.7.2` |
+| WS1-b | `README.md:5` | `[![Version](https://img.shields.io/badge/version-2.6.1-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)` | `[![Version](https://img.shields.io/badge/version-2.7.2-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)` |
+| WS1-c | `README.md:163` | `## What's new in v2.6` | `## What's new in v2.7` |
+| WS1-d | `README.md:165` | (v2.6.x ships … paragraph) | Rewrite to summarize actual shipped v2.7.0/v2.7.1: **3-turn interview, crash-proof profile-stub checkpoint, F3 routing fix, 2 new pool skills (`citation-formatter`, `list-tracker`), Step 7 clean handover.** No competitor names. Preserve line 167 "Earlier (v2.5)" and the trust-boundary framing. |
+
+**AC-2 verify (@dev self-check before commit):**
+```bash
+cat VERSION                                                   # 2.7.2
+grep -c "version-2.7.2-green" README.md                       # >=1
+grep -c "^## What's new in v2.7" README.md                    # 1
+grep -c "What's new in v2.6" README.md                        # 0
+grep -icE "coming in v2\.7\+" README.md                       # 0
+```
+
+**AC-3 (tags + GitHub Releases) — ORCHESTRATOR post-merge, not @dev.** Pin tags to exact SHAs (edge case 4 — never `HEAD`): `v2.7.0`→`8369c9f`, `v2.7.1`→`427dea9`, `v2.7.2`→ the v2.7.2 merge commit. Release bodies use `templates/public-artifact/release-body.md`, every `[REPLACE:*]` resolved, "Classification: STANDARD" circled, "Phase 6 audit: PASS" reflecting the combined audit. (Confirmed: existing tags stop at `v2.6.1`; the three are genuinely missing.)
+
+---
+
+### 2. WS2 — Version-Consistency CI Gate (ADR-035) — FULL DESIGN
+
+> *ISO 15288 — Verification Process (this gate IS a verification mechanism; its own correctness is verified by the negative control).*
+
+**New job, appended after the last job in `.github/workflows/quality.yml` (`wizard-consistency-check` ends at line 1165).** Style matches the repo's existing jobs (pinned `actions/checkout` SHA, single named `run:` bash step, `echo`-then-`exit 1` failure idiom). Binding job body for @dev:
+
+```yaml
+  version-consistency-check:
+    name: Version Consistency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Assert VERSION == README badge == first CHANGELOG release header
+        run: |
+          set -o pipefail
+          FAIL=0
+
+          # --- Extract VERSION ---
+          if [ ! -f VERSION ]; then
+            echo "::error::could not extract VERSION — VERSION file not found at repo root"
+            exit 1
+          fi
+          V=$(tr -d '[:space:]' < VERSION)
+          if ! printf '%s' "$V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::could not extract VERSION — file content '$V' is not a x.y.z semver"
+            FAIL=1
+          fi
+
+          # --- Extract README badge version ---
+          B=$(grep -oP 'version-\K[0-9]+\.[0-9]+\.[0-9]+(?=-green)' README.md | head -1)
+          if [ -z "$B" ]; then
+            echo "::error::could not extract README badge version — no 'version-X.Y.Z-green' shields.io badge found in README.md"
+            FAIL=1
+          fi
+
+          # --- Extract FIRST CHANGELOG section header of ANY kind (do NOT skip [Unreleased]) ---
+          CHEADER=$(grep -m1 -oP '^## \[\K[^\]]+' CHANGELOG.md)
+          if [ -z "$CHEADER" ]; then
+            echo "::error::could not extract CHANGELOG header — no '## [...]' section header found in CHANGELOG.md"
+            FAIL=1
+            C=""
+          elif ! printf '%s' "$CHEADER" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::CHANGELOG top section is '[$CHEADER]', not a released x.y.z version — release content is stranded above the newest dated header (this is the D-2 defect class). Split it into a dated '## [x.y.z] - YYYY-MM-DD' section."
+            FAIL=1
+            C=""
+          else
+            C="$CHEADER"
+          fi
+
+          # --- Compare (only if all three extracted cleanly) ---
+          if [ "$FAIL" -eq 0 ]; then
+            if [ "$V" != "$B" ] || [ "$B" != "$C" ]; then
+              echo "::error::version drift — VERSION='$V', README badge='$B', CHANGELOG top='$C'. All three must agree."
+              FAIL=1
+            fi
+          fi
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "version-consistency-check FAILED — see errors above."
+            exit 1
+          fi
+          echo "version-consistency-check PASSED — VERSION == README badge == CHANGELOG top == $V"
+```
+
+**Design decisions bound (and WHY they differ from the literal AC-4 regex — the false-green fix):**
+1. **CHANGELOG extraction reads the FIRST `## [...]` header of ANY kind** (`^## \[\K[^\]]+`), then validates it is a semver. The literal AC-4 regex (`^## \[\K[0-9]+\.[0-9]+\.[0-9]+`) *silently skips* `[Unreleased]` and grabs the first dated header — which is exactly why it reports false-green on today's stranded-content state (production validation above). Reading the first-of-any-kind header makes a stranded `[Unreleased]` a **hard failure**, closing the D-2 recurrence hole. This is a strict superset of AC-4: the spec's AC-4 verify command still passes on the shipped `[2.7.2]` state (my extraction returns `2.7.2`, matches).
+2. **Per-field "could not extract X" messages** (edge case 1 — malformed/missing signal): each of VERSION/badge/CHANGELOG fails LOUDLY and names the missing field, never silently skips the comparison.
+3. **The mismatch message names all three values** so the maintainer sees which disagrees.
+
+**Negative-control method (AC-4 — MANDATORY, run once before trusting green; @qa Phase-5 hard gate).** Three deliberately-broken scratch-copy runs, each proving a DISTINCT failure path fires (a check that can't fail is not a check):
+- **NC-1 (value mismatch):** on a scratch copy, change ONLY `VERSION` to `9.9.9`, run the job body → must `exit 1` with `version drift — VERSION='9.9.9', README badge='2.7.2', CHANGELOG top='2.7.2'`.
+- **NC-2 (stranded `[Unreleased]`, the D-2 recurrence):** on a scratch copy, insert `## [Unreleased]` + a bullet above `## [2.7.2]` → must `exit 1` with `CHANGELOG top section is '[Unreleased]', not a released x.y.z version`.
+- **NC-3 (malformed signal):** on a scratch copy, delete the README version badge line → must `exit 1` with `could not extract README badge version`.
+- **Positive control:** unmodified shipped state → `exit 0`, `version-consistency-check PASSED`.
+
+@qa records all four outcomes in the Phase-5 report; a green CI run is NOT trusted until NC-1..NC-3 have each been shown to fail.
+
+---
+
+### 3. WS3 — Purge Broken-Promise Strings (exact-line bindings for @dev)
+
+> *ISO 15288 — Implementation Process (bindings only; @dev executes at Phase 4).*
+
+Version-neutral rewrite fixes BOTH defects in the refusal wording: the stale "in v2.6" AND the broken "coming in v2.7+" promise. **Binding replacement sentence (use verbatim at both sites):**
+> `Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool.`
+
+| # | File:line | Current fragment (verbatim) | Replace with |
+|---|---|---|---|
+| WS3-a | `WIZARD.md:27` | `everything installs from the local skills folder. External skills are not yet supported in v2.6 — coming in v2.7+."` | `everything installs from the local skills folder. Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."` |
+| WS3-b | `WIZARD.md:108` | `respond: "External skills are not yet supported in v2.6 — coming in v2.7+."` | `respond: "Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."` |
+| WS3-c | `README.md:169` | `**Next up (v2.7+):** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.` | `**Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.` (drops the `(v2.7+)` deadline marker; substance byte-preserved) |
+
+**Advisory (NOT in AC-5 scope, @dev MAY skip):** `WIZARD.md:26` says "installing vendored agents as workspace skills remains **v2.7+ scope** per the F4 pool boundary." This is a *deferral statement*, not a "coming in v2.7+" broken promise, and the spec §WS3 names only lines 27/108 ("2 occurrences"). Per the byte-mirror "change only named lines" discipline, leave line 26 unless a trivial version-neutralization is obviously safe. Not required for AC-5.
+
+**AC-5 verify:**
+```bash
+grep -icE "coming in v2\.7\+" WIZARD.md README.md SETUP-CHECKLIST.md CLAUDE.md   # 0 (combined)
+grep -n "Next up" README.md                                                      # line present, no "(v2.7+)" after
+```
+(Pre-verified: CLAUDE.md and SETUP-CHECKLIST.md already have 0 hits — only WIZARD.md 27/108 and README 169 carry the strings.)
+
+---
+
+### 4. WS4 — Paper-Cut Batch (exact-line bindings for @dev)
+
+> *ISO 15288 — Implementation Process.*
+
+| # | File:line | Current (verbatim) | Replace with | AC |
+|---|---|---|---|---|
+| WS4-a | `WIZARD.md:3` | `The primary v1.2 entry point is \`CLAUDE.md\`` | `The primary entry point is \`CLAUDE.md\`` | AC-6 |
+| WS4-b | `SETUP-CHECKLIST.md:10` | `The primary v2.6.0 path is: open the \`cowork-starter-kit\` folder` | `The primary path is: open the \`cowork-starter-kit\` folder` | AC-6 |
+| WS4-c | `README.md:115` | `- \`context/writing-profile.md\` — goal-appropriate writing voice defaults (new in v1.2)` | `- \`context/writing-profile.md\` — goal-appropriate writing voice defaults` | AC-7 |
+| WS4-d | `docs/OUTPUT-STRUCTURE.md:5` | `## Primary Entry Point (v1.2)` | `## Primary Entry Point` | AC-7 |
+| WS4-e | `curated-skills-registry.md:18` | `\| \`goal_tags\` \| Comma-separated preset slugs (study, research, writing, project-management, creative, business-admin) \|` | append `, personal-assistant` inside the parenthesis → `(study, research, writing, project-management, creative, business-admin, personal-assistant)` | AC-8 |
+| WS4-f | `curated-skills-registry.md:~43` (ADR-018 dual-row footnote) | (footnote explains why research-synthesis appears twice) | append one sentence stating the reconciled counts, e.g. `The registry therefore has 24 rows across 23 unique skill slugs.` | AC-8 |
+| WS4-g | `.claude/skills/setup-wizard/SKILL.md:3` | `…for your goal (study, research, writing, PM, creative, business)` | `…for your goal (study, research, writing, PM, creative, business, personal-assistant)` | AC-9 |
+| WS4-h | `.github/workflows/quality.yml:323–324` | `(20 files)` and `All 20 files must meet depth standard.` | `(23 files)` and `All 23 files must meet depth standard.` | AC-10 |
+| WS4-i | `tests/v1.3.3/` (directory) | exists (`test-checklist.md`, 6474 B) | `git rm -r tests/v1.3.3/` | AC-11 (see Architectural Modification) |
+
+**Verified counts (grounding WS4-f):** `grep -cE '\| (builtin\|https?://)' curated-skills-registry.md` = **24** data rows; unique slugs (col 1, sorted-unique) = **23** (`research-synthesis` doubled per ADR-018 study/research variants). Bind exactly "24 rows / 23 unique" so the annotation is factual, not guessed.
+
+**AC-4/AC-10 note on quality.yml:323–324:** these are the ONLY "20 files" / "All 20 files" occurrences (grep-confirmed lines 323, 324). No `23 files`/`pool of 23` string currently exists in quality.yml (the two `23` hits at lines 756/778 are SHA/hash examples), so WS4-h is what satisfies `grep -c "23 files\|23-skill\|pool of 23" >= 1`.
+
+**AC-4/AC-6/AC-7/AC-8/AC-9/AC-10/AC-11 verify (@dev self-check):**
+```bash
+grep -n "primary v1\.2\|primary v2\.6\.0" WIZARD.md SETUP-CHECKLIST.md          # 0
+sed -n '115p' README.md | grep -c "new in v1\.2"                                 # 0
+grep -n "Primary Entry Point (v1\.2)" docs/OUTPUT-STRUCTURE.md                   # 0
+grep -n "goal_tags" curated-skills-registry.md | head -1 | grep -c "personal-assistant"  # >=1
+grep -c "24 rows\|23 unique" curated-skills-registry.md                          # >=1
+sed -n '3p' .claude/skills/setup-wizard/SKILL.md | grep -ic "personal.assistant\|daily life"  # >=1
+grep -c "20 files\|All 20 files" .github/workflows/quality.yml                   # 0
+grep -c "23 files\|23-skill\|pool of 23" .github/workflows/quality.yml           # >=1
+test ! -d tests/v1.3.3 && echo OK                                                # OK
+grep -rn "tests/v1\.3\.3" .github/ *.md docs/*.md 2>/dev/null | grep -vE "CHANGELOG.md|qa-report.md|spec.md"  # 0 (narrowed — see Arch Mod)
+```
+
+---
+
+### 5. WS5 — SkillRisk.org Verify-or-Replace (bindings ready for either branch)
+
+> *ISO 15288 — Decision Management Process (orchestrator web-verifies; @dev applies the resolved branch).*
+
+The orchestrator's web-verify (per spec §WS5 decision rule) returns KEEP-named or REPLACE-generic. **@dev applies only what the orchestrator's disposition says**, and records the disposition + method in the Phase-4 commit message (`SkillRisk decision: KEEP|REPLACE — <method>`), per AC-12.
+
+**If REPLACE-generic — binding replacement sentences (verbatim, ready now):**
+
+| File:line | Current fragment | Replace with |
+|---|---|---|
+| `WIZARD.md:240` | `If you ever install skills from other sources later, scan them first at SkillRisk.org.` | `If you ever install skills from other sources later, scan skills from external sources for prompt-injection risk and unexpected instructions before installing them.` |
+| `CONTRIBUTING.md:77` | `Before submitting any skill content from external sources, scan it at [SkillRisk.org](https://skillrisk.org).` | `Before submitting any skill content from external sources, scan external skill content for prompt-injection risk and unexpected instructions before submitting.` |
+
+**If KEEP-named:** both lines are byte-unchanged from HEAD `427dea9`; the commit message still records `SkillRisk decision: KEEP — <method>` on a no-op-to-those-files commit (AC-12 requires the decision be recorded regardless).
+
+**AC-12 verify:** `git log --oneline -1 -- WIZARD.md CONTRIBUTING.md | grep -c "SkillRisk decision:"` >= 1; if REPLACE: `grep -c "SkillRisk" WIZARD.md CONTRIBUTING.md` (combined) = 0.
+
+---
+
+### 6. WS6 — Repo Presentation Surface (bindings for @dev; GitHub-settings for orchestrator)
+
+> *ISO 15288 — Implementation Process (repo files) + Operation Process (GitHub settings, orchestrator post-merge).*
+
+**@dev repo files:**
+- **`CODE_OF_CONDUCT.md`** (repo root) — ADOPT Contributor Covenant current stable (v2.1) verbatim structure. Reporting channel (no maintainer email exists in the repo — grep-confirmed 0 hits): specify **"open a confidential issue, or contact a repository maintainer directly through GitHub"** — do NOT invent an email. No unresolved `[INSERT …]` placeholders. AC-13 verify: `test -f CODE_OF_CONDUCT.md`; `grep -c "Contributor Covenant" CODE_OF_CONDUCT.md` >= 1; `grep -c "\[INSERT" CODE_OF_CONDUCT.md` = 0. (Compliance L1 note: Contributor Covenant is CC BY 4.0 — @compliance confirms attribution requirement at the license gate; OI-COMP-1.)
+- **`.github/ISSUE_TEMPLATE/`** — ≥2 templates: `bug_report.md` (or `.yml`) and `preset_request.md`. AC-14 verify: `ls .github/ISSUE_TEMPLATE/*.md .github/ISSUE_TEMPLATE/*.yml 2>/dev/null | wc -l` >= 2.
+- **README badges** — add a GitHub-stars badge and a "PRs welcome" badge alongside the existing CI/License/Version badges (README lines 3–5). No competitor names, no fabricated metrics. AC-15 verify: `grep -c "img.shields.io/github/stars" README.md` >= 1; `grep -ic "PRs.[Ww]elcome" README.md` >= 1. Suggested (stars, dynamic): `[![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit/stargazers)` and `[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)`.
+
+**Orchestrator post-merge (`gh` CLI, repo-admin scope — NOT @dev), edge case 3 governs on 403:** enable Discussions + seed ≥2 threads (AC-16); set `homepage` field or document N/A rationale (AC-17); visually confirm social-preview currency (AC-18). All three fail LOUDLY on missing admin scope, never silent no-op.
+
+---
+
+### 7. WS7 — Stale-Issue Triage (orchestrator + @security; no repo-file edits)
+
+> *ISO 15288 — Operation Process.*
+
+No @dev file changes. Orchestrator + @security triage every open issue: verify-then-close (with evidence comment) or keep-open-with-relevance-comment. **Issue #23 (`[BLOCKER] security`, peter-evans SHA) is NOT blind-closed** — @security freshly confirms the `sync-agency.yml:372` SHA `67ccf781d68cd99b580ae25a5c18a1cc84ffff1f` (tag v7.0.6) validity + green CI on the merge commit before closing (AC-19). Empty result set (0 open issues) degrades gracefully (edge case 5). **This is the conditional SECURITY-SENSITIVE escalation trigger (§TASK 1): a genuine SHA-broken finding flips classification.**
+
+---
+
+### 8. Anti-Pattern Scan (11 patterns, per framework)
+
+> *ISO 15288 — Design Definition Process (quality gate).*
+
+| # | Pattern | Status | Note |
+|---|---|---|---|
+| 1 | God Class/Module | CLEAN | No module touched; WS2 job is single-purpose (<25 LoC). |
+| 2 | Circular Dependencies | CLEAN | Additive CI job; no dependency graph change. |
+| 3 | Leaky Abstraction | CLEAN | Gate reads public files only; no internal detail exposed. |
+| 4 | Premature Optimization | CLEAN | bash/grep, simplest mechanism that can fail correctly (Rechtin signal 3). |
+| 5 | Over-Engineering | CLEAN | No new Action/dependency; rejected external "version-sync" Actions to avoid added supply-chain surface. |
+| 6 | Tight Coupling | CLEAN | WS2 gate is independent of existing gates; changes no existing control. |
+| 7 | Missing Separation of Concerns | CLEAN | Truth (WS1) / enforcement (WS2) / copy (WS3-6) cleanly separated. |
+| 8 | N+1 Query | N/A | No DB. |
+| 9 | **Destructive Migration** | **WATCHED → RESOLVED** | AC-11 literal grep would force rewriting append-only historical ADRs/retros/security-reviews (53× `v1.3.3` in architecture.md alone). Resolved by narrowing to the *directory path* `tests/v1.3.3` — see §Architectural Modifications. `git rm -r tests/v1.3.3/` is revertible; no history rewrite. |
+| 10 | SoS Interface Discontinuity | N/A | Single-project. |
+| 11 | Cross-Project Tight Coupling | N/A | Single-project; upstream `agency-agents` vendoring untouched this cycle. |
+
+**version-bump-completeness (dedicated dual-verify — memory-bound recurring miss):** the recurring @dev miss is bumping VERSION+badge but forgetting CHANGELOG and "What's new". WS2's gate is the *permanent* structural fix (it fails CI on VERSION/badge/CHANGELOG drift). Belt-and-suspenders dual-verify for THIS cycle's Phase 4:
+```bash
+# All four must agree on 2.7.2 before Phase 4 commit is trusted:
+cat VERSION                                        # 2.7.2
+grep -c "version-2.7.2-green" README.md            # >=1
+grep -c "^## \[2\.7\.2\]" CHANGELOG.md             # 1  (dated section exists)
+grep -c "^## What's new in v2.7" README.md         # 1  ("What's new" refreshed)
+```
+
+---
+
+### 9. Open Issues for @security (Phase 2 combined-path review)
+
+> *ISO 15288 — Verification Process.*
+
+- **OI-SEC-1 (the WS2 `quality.yml` diff — mandatory look):** confirm the new `version-consistency-check` job (a) adds no `permissions:` block / secret / Action, (b) is YAML-valid (no syntax error that breaks all CI — spec Risk R5), (c) the hardened `[Unreleased]`-guard logic is sound and the three "could not extract" paths each fail closed. Read-only assertion; no supply-chain surface.
+- **OI-SEC-2 (issue #23 fresh confirmation — AC-19, the escalation gate):** independently re-verify `sync-agency.yml:372` peter-evans SHA `67ccf781…` validity (against the published action tags) + green CI on the merge commit. If GENUINELY broken → flip to SECURITY-SENSITIVE + scope-addition note (do NOT absorb silently).
+- **OI-SEC-3 (no-competitor-naming spot-check):** scan all new/edited product copy (README What's-new, CODE_OF_CONDUCT, issue templates, badges, WS3/WS5 rewrites) for competitor/third-party product names leaking from the INTERNAL `improvement-plan-2026-07-18.md`. Only MIT-required `agency-agents` attribution is permitted.
+- **OI-COMP-1 (for @compliance if /legal runs):** Contributor Covenant (CC BY 4.0) attribution requirement satisfied in `CODE_OF_CONDUCT.md`.
+
+---
+
+### 10. Will NOT Do (boundary — binding)
+
+> *ISO 15288 — Configuration Management Process (scope fence).*
+
+- No ADR mutations beyond append-only additions (ADR-035, ADR-036 are new; the ADR index gains two rows; no existing ADR body edited).
+- No touching `.github/workflows/sync-agency.yml`, `cowork.lock.json`, `skills/*/SKILL.md` content, or the `examples/*/.claude/skills/*` byte-mirror (per spec §Technical Constraints).
+- No Phase B/C/D scope (README storytelling, demo GIF, starter-file regeneration, plugin manifest, upstream lock bump) — see spec §Will NOT Do.
+- No rewrite of append-only historical docs to erase `v1.3.3` version strings (§Architectural Modifications).
+- WIZARD.md / README.md edits are targeted line-level, not rewrites — change only the named lines.
+
+---
+
+### 11. Architectural Modifications (Step 4a — appended to `docs/spec.md`)
+
+Two ACs are modified during design; both recorded in `docs/spec.md` § Architectural Modifications:
+
+1. **AC-4 (WS2 CHANGELOG extraction) — STRENGTHENED.** Literal regex `^## \[\K[0-9]+\.[0-9]+\.[0-9]+` skips `[Unreleased]` and false-greens on stranded release content (the exact D-2 defect). Design reads the FIRST `## [...]` header of ANY kind and fails if it is not a semver. — Reason: production validation proved the literal regex is a check-that-cannot-fail on today's real CHANGELOG. Strict superset — AC-4's shipped-state verify still passes.
+2. **AC-11 (legacy `tests/v1.3.3/` removal) — NARROWED.** Verify narrowed from bare `grep -rn "v1.3.3"` to the *directory path* `tests/v1.3.3`, excluding append-only historical records (`CHANGELOG.md`, `docs/qa-report.md`, `docs/spec.md`). — Reason: bare `v1.3.3` is a legitimate VERSION string in append-only ADRs/retros/security-reviews (53× in `architecture.md`, 17× in `security-review.md`) and the `quality.yml:375` preset-evolution comment; erasing it would rewrite history (Destructive-Migration anti-pattern) with no truth benefit. The AC's intent is legacy-dir removal, not version-string erasure.
+
+---
+
+### 12. scope_allow_delta
+
+```yaml
+scope_allow_delta:
+  add: []
+  rationale: "SKIP — external project cycle (V44-S5 / ADR-115 §Implications). @dev operates against /home/user/claude-cowork-config, not The-Council/dev.md; no Council guard scope_allow adjustment applies. Consistent with v2.5.3 / v2.5.4 / v2.6.0 precedent."
+```
+
+---
+
+### 13. Classification Re-Run (post-file-discovery, per pipeline-policy §PostOQClassificationReRun)
+
+**Result: CONFIRMED STANDARD (downgraded from provisional SECURITY-SENSITIVE at Phase 1 open; no upward flip).**
+
+Final file list (Phase 4 @dev): `VERSION`, `README.md`, `CHANGELOG.md`, `WIZARD.md`, `SETUP-CHECKLIST.md`, `docs/OUTPUT-STRUCTURE.md`, `curated-skills-registry.md`, `.claude/skills/setup-wizard/SKILL.md`, `.github/workflows/quality.yml` (additive job + comment), `CONTRIBUTING.md` (WS5 conditional), `CODE_OF_CONDUCT.md` (new), `.github/ISSUE_TEMPLATE/*` (new), `tests/v1.3.3/` (removed). Re-evaluated against SECURITY-SENSITIVE triggers: the only `.github/workflows/` edit is a **purely additive, read-only, permission-less, secret-less, Action-less** version-string lint that modifies **no existing control** and does **not** touch `sync-agency.yml`. No auth/RLS/schema/secret/guard/supply-chain surface. **CONFIRMED STANDARD.** Conditional upward trigger retained: a genuine issue-#23 SHA-broken finding at WS7 flips to SECURITY-SENSITIVE (halt + notify orchestrator; Phase 6 cannot be combined at the higher tier).
+
+---
+
+### ADR-035: Version-Consistency CI Gate (v2.7.2)
+
+**Date:** 2026-07-18
+**Status:** ACCEPTED (v2.7.2)
+**Companion:** ADR-033 (release-artifact convention — this is its CI enforcement arm); ADR-036 (CHANGELOG dated-split — provides the stable form this gate guards).
+
+**Context:** The D-2 defect (VERSION/badge/tags/CHANGELOG drifting out of sync) recurred silently across v2.6.1→v2.7.1 because nothing mechanically asserts version coherence. `version-bump-completeness` is a recurring human miss. A CI gate that *can fail* on drift retires the defect class structurally.
+
+**Decision:** Add a `version-consistency-check` job to `quality.yml` asserting `VERSION` == README badge == the first `## [...]` CHANGELOG section header. **Critically, it reads the first header of ANY kind (including `[Unreleased]`) and fails if that header is not a semver** — so stranded pre-release content (the exact D-2 pattern) is a hard failure, not a silently-skipped one. Per-field "could not extract" failures cover malformed/missing signals. bash/grep only; no new Action, secret, or permission (keeps the gate STANDARD and adds zero supply-chain surface).
+
+**Options considered:** (A) literal spec regex skipping `[Unreleased]` — REJECTED, false-greens on the target defect; (B) an external "version-sync" GitHub Action — REJECTED, adds supply-chain surface the kit exists to reduce; (C) hardened first-header-of-any-kind bash — CHOSEN.
+
+**Consequences:** The next VERSION bump cannot silently drift (success-metric tertiary). Cost: one CI job (~seconds). The gate depends on the ADR-036 dated-split convention being followed; if a future cycle re-introduces a content-bearing `[Unreleased]` above the newest dated header at release time, CI fails — which is the intended behavior.
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** extend the gate to also assert the newest git tag == VERSION == CHANGELOG top (closes the tag-drift half of D-2, currently orchestrator-manual at AC-3); optionally assert the CHANGELOG top section carries a `- YYYY-MM-DD` date.
+- **Concrete revisit triggers:** (a) a release ships where tag ≠ VERSION despite green CI; (b) a third distinct version-coherence surface appears (e.g., a `package.json`-equivalent); (c) Phase C plugin manifest adds a `version` field needing the same coherence guarantee.
+- **Risk knowingly accepted:** the gate does not (this cycle) verify git tags or Release bodies — those remain orchestrator-manual at AC-3; a maintainer could tag inconsistently without CI catching it until the next commit-time run. Accepted for v2.7.2 patch scope; revisit-trigger (a) promotes it.
+
+### ADR-036: CHANGELOG Dated-Split Convention (v2.7.2)
+
+**Date:** 2026-07-18
+**Status:** ACCEPTED (v2.7.2)
+**Formalizes:** the release step of ADR-033 (release-artifact convention) — previously the `[Unreleased]`→dated-section split was ad-hoc.
+
+**Context:** v2.7.0/v2.7.1 content shipped to `main` but stayed buried under an undated `## [Unreleased]` heading (D-2). There was no documented convention for WHEN and HOW the accumulator is split into dated release sections, so it was skipped twice.
+
+**Decision:** At release time, `## [Unreleased]` content is split into `## [x.y.z] - YYYY-MM-DD` sections where the date is the **authoritative UTC commit date** of the shipping commit(s) (`TZ=UTC git show -s --format='%cd'`) — because local commit timestamps in this repo carry a `+04:00` offset that can cross midnight, so UTC is canonical (matches the project's ISO-8601-UTC convention). Content is preserved **line-level** (only grouping headers change; every bullet survives byte-for-byte). A commit maps to exactly one dated section by its UTC date. ADR-035's gate enforces that no content-bearing `[Unreleased]` survives above the newest dated header.
+
+**Options considered:** (A) date by local commit time — REJECTED, `+04:00` crossing-midnight ambiguity; (B) date by merge/PR date — REJECTED, less precise than commit date; (C) UTC commit date, line-level preservation — CHOSEN.
+
+**Consequences:** The CHANGELOG becomes a truthful, dated release history that the ADR-035 gate can anchor on. Cost: the split is a manual, careful, content-preserving edit (AC-1 spot-checks guard against loss). Binds future cycles: every release splits its `[Unreleased]` accumulator before tagging.
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** a small CI/pre-release script that auto-derives the dated header from `git show -s --format='%cd' --date=format:'%Y-%m-%d'` (UTC) and asserts no content-bearing `[Unreleased]` remains at tag time (folds into ADR-035's gate).
+- **Concrete revisit triggers:** (a) a future release again strands content under `[Unreleased]` (convention not followed); (b) the repo adopts an automated release tool (e.g., release-please) that owns CHANGELOG generation, superseding the manual split.
+- **Risk knowingly accepted:** the split is manual this cycle, so a careless edit could drop or duplicate a bullet; mitigated by AC-1's line-preservation spot-checks but not by an automated content-diff. Accepted for patch scope; revisit-trigger (b) would replace the manual step entirely.
+
+End of v2.7.2 Phase 1 — Truth & Release design.
