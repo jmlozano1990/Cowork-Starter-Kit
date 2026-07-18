@@ -1,9 +1,9 @@
 # QA Report — v2.8.0 "Showcase"
 
 ## Phase: 5 + 6 (inline) + 7 — combined-path (STANDARD classification)
-## Date: 2026-07-18T09:45:00Z
-## Branch: `release/v2.8.0` @ `48b2456` (base `main` `e24318c`)
-## Status: **REJECTED — 1 blocking finding (WS4), all other surfaces clean**
+## Date: 2026-07-18T09:45:00Z (re-checked 2026-07-18, HEAD `eab90f3`)
+## Branch: `release/v2.8.0` @ `48b2456` → re-checked at `eab90f3` (base `main` `e24318c`)
+## Status: **APPROVED at HEAD `eab90f3`** (initial pass at `48b2456` was REJECTED — 1 blocking finding, now resolved; see §Re-check below)
 
 All verification commands below were re-run independently at HEAD `48b2456`, not
 taken from @dev's or @security's narrative. Every named number is a command I ran
@@ -431,3 +431,69 @@ same-day fix (see Part A/WS4 remediation options) — not a rework cycle.
    + this report to the user for MERGE / REJECT.
 3. This qa-report is committed on `release/v2.8.0` now, per the session
    brief — not pushed.
+
+---
+
+## Re-check — WS4 disclosure fix (2026-07-18, HEAD `eab90f3`)
+
+**Delta since the rejected pass:** `git diff 24e3b42..eab90f3 --stat` → exactly
+`README.md` (+1/-1) and `tests/offline-smoke-test.md` (+13/-4). No other file
+touched — confirmed no other workstream regressed alongside this fix.
+
+**User decision (per commit `eab90f3`):** keep "~15 minutes" (the underlying
+number — median 5.25 min estimated — comfortably supports it) but disclose
+the estimate rather than presenting it as measured. This is remediation
+option 1 from my original finding.
+
+**Fix, read directly:**
+- README.md hero line now reads: *"...three quick turns, about 15 minutes
+  (an estimate — see [methodology](tests/offline-smoke-test.md))."* Link
+  target confirmed present (`tests/offline-smoke-test.md` exists).
+- `tests/offline-smoke-test.md`'s Timing scorecard heading now reads
+  "ESTIMATED, not stopwatch-timed," with an explicit lead sentence: no
+  live-timed human run has been recorded, every number is a grounded
+  estimate, and community stopwatch PRs are explicitly invited to replace
+  rows with real data. The decision-rule paragraph now explains why the
+  hero line carries the qualifier.
+
+**AC-WS4-1 substance re-verification:**
+```
+$ grep -n "15 minutes" README.md | grep -i "estimate"
+3:> ...three quick turns, about 15 minutes (an estimate — see [methodology](tests/offline-smoke-test.md)).
+```
+Exit 0. **Sanity-checked the check itself can fail** (not tautological) by
+piping the OLD undisclosed phrasing ("...15 minutes.") through the identical
+grep chain: exit 1, no match — confirming the check genuinely distinguishes
+disclosed from undisclosed, i.e. it exercises the real defect class rather
+than always passing.
+
+**No regression on other README-dependent ACs** (spot-checked):
+AC-WS2-1 (H1) = 1, AC-WS2-2 (Snyk/PromptArmor in first 60 lines) = 1/1,
+AC-WS3-1 (demo mention) = 2, AC-WS2-6 (hurry callout) = 1 — all unchanged
+from the original pass.
+
+**Version consistency:** `VERSION=2.8.0 BADGE=2.8.0 CHANGELOG=2.8.0` — unaffected.
+
+**Markdownlint** on the 2 changed files: `Linting: 2 files / Summary: 0
+issues in 0 files`.
+
+**`git diff eab90f3 HEAD`** (before this commit): empty — no drift introduced
+by this re-check session.
+
+### Updated verdict
+
+**APPROVED.** The one blocking finding from the initial pass (AC-WS4-1
+substance gap) is resolved: the "15 minutes" claim is now honestly qualified
+as an estimate with a working link to methodology, and the underlying check
+is verifiably non-tautological. Combined with the initial pass's clean
+results across all other 25 ACs, all 9 Phase-4/6 security MUST-FIX/
+MUST-VERIFY items, the archive leak check, the repo-wide dangling-reference
+sweep, the WS1 negative control, and version/markdownlint/YAML hygiene —
+**this cycle is ready to ship.**
+
+Two items remain for the orchestrator at PR-creation time (both already
+known, neither blocks this APPROVED):
+1. **AC-WS7-1** — the social-preview disposition line must be added to the
+   PR description (still absent from any commit on this branch).
+2. Push → open PR → `gh pr checks <PR-number>` must show all green before
+   presenting to the user for MERGE.
