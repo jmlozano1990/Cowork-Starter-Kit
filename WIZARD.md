@@ -224,7 +224,7 @@ Copy the following files from `examples/<preset-name>/context/` to a `context/` 
 - `about-me.md` (user fills this in — leave as-is)
 - `working-rules.md` (pre-filled safe defaults)
 - `output-format.md` (pre-filled for their preset — this is the output-format default recorded in the profile)
-- `writing-profile.md` — **canonical-location rule:** `context/writing-profile.md` is the ONLY writing profile. If CLAUDE.md Phase 3 already generated a personalized one there, DO NOT overwrite it with the preset copy — skip this file. Only copy the preset default when no personalized profile exists. Never leave two writing-profile files in the workspace; skills resolve `context/writing-profile.md`.
+- `writing-profile.md` — **canonical-location rule:** `context/writing-profile.md` is the ONLY writing profile. If the optional Q3 voice turn already generated a personalized one there, DO NOT overwrite it with the preset copy — skip this file. Only copy the preset default when no personalized profile exists. Never leave two writing-profile files in the workspace; skills resolve `context/writing-profile.md`.
 
 ### Step 4 — Install skill files (dynamic, from pool)
 
@@ -340,9 +340,9 @@ If `<workspace>/.claude/skills/` already contains ANY installed skills (regardle
 
 ---
 
-## Phase 1 — Uncertainty Fallback
+## Uncertainty Fallback (Q1)
 
-If the user replies to CLAUDE.md Phase 1 with "not sure", "no idea", "?" or similar:
+If the user replies to Q1 goal-discovery with "not sure", "no idea", "?" or similar:
 
 Ask: "Three angles to start from:
 
@@ -352,7 +352,7 @@ Ask: "Three angles to start from:
 
 Which is closest? Or just describe what's on your mind."
 
-Then resume CLAUDE.md Phase 1 routing with the user's clarified objective.
+Then resume Q1 goal-discovery routing with the user's clarified objective.
 
 ---
 
@@ -362,7 +362,7 @@ Everything below this banner is implementation contract for maintainers and CI, 
 
 ---
 
-## Phase 1 — Role-Generation Rule (AC-W2-9)
+## Role-Generation Rule (Q1, AC-W2-9)
 
 When generating a one-line role description per skill (ADR-030): if the generated role line does not contain at least one keyword from the source skill's `description` field, fall back to the verbatim `description` (truncated to ≤12 words) — never produce a role that is generic or unmoored from the skill's actual purpose.
 
@@ -390,6 +390,6 @@ If the user returns and says "Let's continue" or similar:
 2. If `Status: in-progress` → this is a checkpoint stub from F4. Say: "Picking up where we left off — your goal was [Objective] and we confirmed this bundle: [Confirmed bundle]." Skip Q1 and F4 entirely; resume at the first unanswered field (fill any answers already recorded in the stub), then run the After-Q2 generation steps.
 3. If `Objective:` is populated and Status is complete/absent → "We were working on: [objective]. Want to continue with the team we were assembling, or restart?"
 4. If only `Goal preset:` is populated (v2.0.x profile, no Objective field) → "We had a [preset] workspace started. What were you working on — what was the objective behind it?" Then proceed from ADR-029 Phase 1 with the recovered objective.
-5. If `cowork-profile.md` is missing → restart from CLAUDE.md Phase 1.
+5. If `cowork-profile.md` is missing → restart from Q1 goal-discovery.
 
 **Partial install detection:** After recovering the objective, the wizard inspects `<workspace>/.claude/skills/` to see which skills are already installed. For each expected bundle skill not yet present, the wizard asks: "Still want [Skill] — [role]?" before re-running the install step. The user can drop, keep, or swap any pending skill without re-doing the objective conversation.

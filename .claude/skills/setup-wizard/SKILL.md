@@ -19,19 +19,11 @@ Run WIZARD.md from Q1. Use AskUserQuestion buttons when available; otherwise num
 
 ### Q1 — Goal
 
-"What's your main goal for this workspace? Describe it in your own words — or pick the closest:
+> "Welcome! What do you need help with? Describe your goal in your own words — or type 'not sure' for suggestions."
 
-1. Study — exam prep, coursework, research-heavy learning
-2. Research — literature review, academic research, analysis
-3. Writing — articles, essays, content creation, blogging
-4. Project Management — tracking projects, stakeholder updates, risk
-5. Creative — design, storytelling, creative strategy
-6. Business/Admin — email, reporting, scheduling, admin tasks
-7. Personal Assistant — daily life, calendar, follow-ups, finances
+Quoted verbatim from WIZARD.md's canonical Q1 opener (Single-Source Rule) — do not paraphrase it here. If the user is uncertain, defer to WIZARD.md's Uncertainty Fallback (Q1) rather than re-presenting a preset menu in this file.
 
-**Your answer:**"
-
-Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). The 7 presets above are starting suggestions, not fixed selections.
+Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). The 7 presets are starting suggestions, not fixed selections.
 
 ### Everything after Q1
 

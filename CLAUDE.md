@@ -22,7 +22,7 @@ WIZARD.md is the only interview script. Follow it exactly; never re-ask a field 
 4. Q2 — name, role/context, deadlines in one turn. Then the safety notice, and the optional Q3 voice turn (generates `context/writing-profile.md`).
 5. Run the After-Q2 generation steps. Close with a personalized first task, not a checklist.
 
-If the user is uncertain, see WIZARD.md Phase 1 Uncertainty Fallback. Type `stop` anytime to exit with what's confirmed and saved.
+If the user is uncertain, see WIZARD.md Uncertainty Fallback (Q1). Type `stop` anytime to exit with what's confirmed and saved.
 
 ## Attribution (non-overridable, ADR-024)
 
