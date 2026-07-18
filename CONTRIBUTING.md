@@ -38,7 +38,7 @@ Before merging a new preset PR, verify all 11 items:
 - [ ] **Frontmatter `trigger_examples` list has 3–6 entries if present** — the field is optional; if included it must have at least 3 and no more than 6 example phrases
 - [ ] **Placeholder authoring rules followed** — see `##Placeholder authoring rules` section below
 - [ ] **B10 skill-input file lives under the pipeline path** — if this PR proposes a new skill, any B10 skill-input file (session notes, Q&A responses) must live under `.claude/projects/<slug>/cycles/…` and NOT under any product repo path (examples/, docs/, templates/)
-- [ ] **Prior retro carry-forwards reviewed** — per `docs/retro-template.md` §Carry-Forward Review; every item from the previous cycle's Section 8 must have an explicit disposition before this PR closes
+- [ ] **Prior retro carry-forwards reviewed** — per `docs/internal/process/retro-template.md` §Carry-Forward Review; every item from the previous cycle's Section 8 must have an explicit disposition before this PR closes
 - [ ] **Cross-preset slug-divergence check (community PRs)** — if this PR introduces or edits a skill whose `name:` frontmatter slug already exists in another preset (e.g., `research-synthesis` appears in both `study` and `research`), verify that `## Quality criteria` and `## Anti-patterns` content diverge meaningfully across the two files. ADR-018 permits duplicate slugs only when the two SKILL.md files implement genuinely distinct workflows. A reviewer who finds two files with >60% identical `## Instructions` content should block the PR and request a refactor. (Not CI-enforced per ADR-018 §Consequences.)
 
 ---
@@ -289,14 +289,14 @@ Before approving an agency-sync PR:
 
 - [ ] **Lock file diff reviewed** — verify `cowork.lock.json` changes match expected upstream content; no unexpected files added or removed
 - [ ] **Spot-check ≥3 files per allowed category** — download file content from the new pinned SHA URL (`https://raw.githubusercontent.com/msitarzewski/agency-agents/<NEW-SHA>/<path>`) and scan manually for adversarial content
-- [ ] **Run S1 content scan locally** — apply all 8 patterns from `docs/security/upstream-content-scan-rules.md` against every new or changed file
+- [ ] **Run S1 content scan locally** — apply all 8 patterns from `docs/internal/security/upstream-content-scan-rules.md` against every new or changed file
 - [ ] **nexus-strategy.md absent** — verify `jq '.files[] | select(.path | contains("nexus-strategy"))' cowork.lock.json` returns empty
 - [ ] **Blocked-pattern files absent** — verify none of the 9 blocked-pattern filenames appear in the lock file's `files` array
 - [ ] **`requires_review` files addressed** — any file with `"requires_review": true` in the lock file must be reviewed and cleared by a maintainer before merge
 - [ ] **License hash** — if `license_changed: true` in the PR body, route to `/legal` review before merge; do not approve without legal sign-off
 - [ ] **THIRD-PARTY-NOTICES.md** — verify the regenerated file has correct timestamps, SHA, and MIT license text
 - [ ] **24h soak rule (S7)** — do not approve within 24h of PR opening; allow community review time
-- [ ] **First sync is SECURITY-SENSITIVE** — if this is the bootstrap sync (PR body shows `Bootstrap state: true`), treat as per `docs/security-review.md` Open Issue #3: full audit of ≥3 files per allowed category is mandatory
+- [ ] **First sync is SECURITY-SENSITIVE** — if this is the bootstrap sync (PR body shows `Bootstrap state: true`), treat as per `docs/internal/security/security-review.md` Open Issue #3: full audit of ≥3 files per allowed category is mandatory
 
 ### Goal Taxonomy Keyword Updates (S10)
 

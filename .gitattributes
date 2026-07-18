@@ -3,9 +3,10 @@
 # See docs/spec.md "v2.6.1 — Release Archive Hygiene" (REVISION 2) for KEEP/DROP rationale.
 #
 # IMPORTANT — `gitattributes(5)` does NOT honor negation (`!pattern`) — verified empirically
-# 2026-05-11. Files inside `docs/` and `scripts/` are therefore listed explicitly to surgically
-# DROP internal files while preserving the user-facing files (docs/architecture.md,
-# scripts/setup-folders.sh, scripts/setup-folders.ps1) referenced from README/SETUP-CHECKLIST.
+# 2026-05-11. `scripts/` still needs a surgical per-file DROP (see below). `docs/` uses a
+# directory-prefix DROP (`docs/internal/`) instead — a real `export-ignore` directory match,
+# not a negation — so a new `docs/*.md` file is public by default unless placed under
+# `docs/internal/`; three Council-tooling paths are exempted individually (v2.8.0 ADR-037).
 
 # --- Root files (DROP) ---
 .gitignore              export-ignore
@@ -22,50 +23,14 @@ upstream-contribution/  export-ignore
 # --- Surgical DROP: scripts/ (KEEP setup-folders.sh and setup-folders.ps1; DROP install-pre-commit.sh) ---
 scripts/install-pre-commit.sh   export-ignore
 
-# --- Surgical DROP: docs/ (KEEP docs/architecture.md only; DROP all other docs/*) ---
-docs/OUTPUT-STRUCTURE.md                    export-ignore
-docs/assumptions.md                         export-ignore
-docs/competitive.md                         export-ignore
-docs/compliance-review.md                   export-ignore
-docs/compliance-review-v2.5.md              export-ignore
-docs/compliance-review-v2.5.2.md            export-ignore
-docs/dev-deliberation-v2.3.1.md             export-ignore
-docs/patterns.md                            export-ignore
-docs/personas.md                            export-ignore
-docs/qa-report.md                           export-ignore
-docs/qa-report-v2.3.0.md                    export-ignore
-docs/qa-report-v2.3.1.md                    export-ignore
-docs/qa-report-v2.4.md                      export-ignore
-docs/qa-report-v2.5.md                      export-ignore
-docs/qa-report-v2.5.1.md                    export-ignore
-docs/qa-report-v2.5.2.md                    export-ignore
-docs/qa-report-v2.5.3.md                    export-ignore
-docs/qa-report-v2.5.4.md                    export-ignore
-docs/qa-report-v2.6.0.md                    export-ignore
-docs/qa-report-v2.6.1.md                    export-ignore
-docs/retro.md                               export-ignore
-docs/retro-template.md                      export-ignore
-docs/security-audit.md                      export-ignore
-docs/security-audit-v1.1.md                 export-ignore
-docs/security-audit-v2.3.1.md               export-ignore
-docs/security-audit-v2.4.md                 export-ignore
-docs/security-audit-v2.5.md                 export-ignore
-docs/security-audit-v2.5.2.md               export-ignore
-docs/security-review.md                     export-ignore
-docs/security-review-v1.1.md                export-ignore
-docs/security-review-v2.3.0.md              export-ignore
-docs/security-review-v2.3.1.md              export-ignore
-docs/security-review-v2.4.md                export-ignore
-docs/security-review-v2.5.md                export-ignore
-docs/security-review-v2.5.3.md              export-ignore
-docs/security-review-v2.6.0.md              export-ignore
-docs/security-review-v2.6.1.md              export-ignore
-docs/skills-roadmap.md                      export-ignore
-docs/spec.md                                export-ignore
-docs/ux-review.md                           export-ignore
-docs/project-audit-v2.6.1.md                export-ignore
-docs/research/                              export-ignore
-docs/security/                              export-ignore
+# --- docs/ (default-internal convention, v2.8.0 ADR-037 — a NEW docs/*.md ships to
+# users ONLY if placed outside docs/internal/; inverts the prior per-file allowlist) ---
+docs/internal/          export-ignore
+# Council-tooling-exempt (stay at docs/ root, individually dropped — no path-override
+# mechanism exists for these three; see docs/architecture.md ADR-037):
+docs/spec.md            export-ignore
+docs/retro.md           export-ignore
+docs/patterns.md        export-ignore
 
 # --- Meta (self-ignore) ---
 .gitattributes          export-ignore

@@ -5,7 +5,7 @@ name: Sync Agency Upstream
 # runs S1 content-scan, updates cowork.lock.json + THIRD-PARTY-NOTICES.md,
 # opens PR labeled 'agency-sync'. NEVER auto-merges.
 # First run MUST be treated as SECURITY-SENSITIVE — full audit ≥3 files per
-# allowed category required before merging (see docs/security-review.md S1,
+# allowed category required before merging (see docs/internal/security/security-review.md S1,
 # Open Issue #3).
 
 on:
@@ -138,7 +138,7 @@ jobs:
           BLOCKED_PATTERNS=$(jq -r '.blocked_patterns[].pattern' .cowork-allowlist.json)
           BLOCKED_FILES=$(jq -r '.blocked_files[].path' .cowork-allowlist.json)
 
-          # S1: 8-pattern regex set for content-scan (extracted from docs/security/upstream-content-scan-rules.md)
+          # S1: 8-pattern regex set for content-scan (extracted from docs/internal/security/upstream-content-scan-rules.md)
           # Patterns are listed verbatim from the security rules document
           SCAN_PATTERNS=(
             "ignore (previous|all|prior) instructions?"
@@ -401,13 +401,13 @@ jobs:
             ### Reviewer Checklist (MANDATORY — 2 approvals required per CODEOWNERS)
 
             - [ ] Review `cowork.lock.json` diff — verify no unexpected files added
-            - [ ] Spot-check ≥3 files per allowed category against S1 regex patterns (see `docs/security/upstream-content-scan-rules.md`)
+            - [ ] Spot-check ≥3 files per allowed category against S1 regex patterns (see `docs/internal/security/upstream-content-scan-rules.md`)
             - [ ] Verify `nexus-strategy.md` is absent from updated lock file
             - [ ] Review any files with `requires_review: true` in lock file
             - [ ] If LICENSE hash changed: route to `/legal` review before merge
             - [ ] Review `THIRD-PARTY-NOTICES.md` changes — verify timestamps and SHA match
             - [ ] Run `bash scripts/vendor-agency.sh` and commit the refreshed `vendored/agency-agents/` — the `vendored-integrity-check` CI job fails until vendored content matches the new lock
-            - [ ] If first sync (bootstrap): treat as SECURITY-SENSITIVE per `docs/security-review.md` Open Issue #3
+            - [ ] If first sync (bootstrap): treat as SECURITY-SENSITIVE per `docs/internal/security/security-review.md` Open Issue #3
 
             > **24h soak rule (S7):** Do not merge this PR within 24h of opening. Allow time for community eyes.
 

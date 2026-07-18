@@ -14,7 +14,7 @@
 <summary>Agency-Sync Review Checklist (required when <code>agency-sync</code> label is present)</summary>
 
 - [ ] Reviewed `cowork.lock.json` diff — verified no unexpected files added
-- [ ] Sample-audited ≥3 files per allowed category against S1 regex set (`docs/security/upstream-content-scan-rules.md`)
+- [ ] Sample-audited ≥3 files per allowed category against S1 regex set (`docs/internal/security/upstream-content-scan-rules.md`)
 - [ ] Verified `nexus-strategy.md` is absent from updated lock file
 - [ ] Verified no SPDX changes (or: if `legal-review-required` label is present, @compliance has signed off and label has been removed)
 - [ ] 24h soak rule: PR has been open ≥24h before merge (or a documented security exception is noted below)

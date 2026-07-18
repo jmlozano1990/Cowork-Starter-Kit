@@ -922,7 +922,7 @@ jobs:
       - name: Step 3 — Fetch 2 sample files + verify JSONL accumulator pattern (#28 Fix A regression gate)
         run: |
           # Verify the 8 patterns from upstream-content-scan-rules.md compile cleanly
-          PATTERN_COUNT=$(grep -c '^- `' docs/security/upstream-content-scan-rules.md || echo 0)
+          PATTERN_COUNT=$(grep -c '^- `' docs/internal/security/upstream-content-scan-rules.md || echo 0)
           if [ "$PATTERN_COUNT" -lt 1 ]; then
             echo "ERROR: No regex patterns found in upstream-content-scan-rules.md"
             exit 1
@@ -934,7 +934,7 @@ jobs:
               # Verify pattern compiles via grep -E (compile-time check, hits irrelevant)
               echo "test sample input" | grep -qE "$pat" || true
             fi
-          done < <(grep '^- `' docs/security/upstream-content-scan-rules.md)
+          done < <(grep '^- `' docs/internal/security/upstream-content-scan-rules.md)
           echo "PASS: $PATTERN_COUNT regex patterns compile cleanly"
 
           # JSONL accumulator pattern regression gate — catches subshell-class regressions (#28 Fix A)
