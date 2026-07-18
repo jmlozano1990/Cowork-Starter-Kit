@@ -1,6 +1,6 @@
 # Cowork Setup Wizard
 
-> **Users:** The primary v1.2 entry point is `CLAUDE.md` at the repo root — open this folder as a Cowork Project and the dynamic wizard runs automatically on your first message. Alternatively, type `/setup-wizard` or paste a preset's `project-instructions-starter.txt` into Project Settings > Custom Instructions. This file (`WIZARD.md`) is the authoritative interview script source — not a runtime entry point.
+> **Users:** The primary entry point is `CLAUDE.md` at the repo root — open this folder as a Cowork Project and the dynamic wizard runs automatically on your first message. Alternatively, type `/setup-wizard` or paste a preset's `project-instructions-starter.txt` into Project Settings > Custom Instructions. This file (`WIZARD.md`) is the authoritative interview script source — not a runtime entry point.
 
 ---
 
@@ -24,7 +24,7 @@ Cowork sessions commonly run with **no internet access** — Claude may be unabl
 
 1. **Everything installs locally.** All skills, presets, templates, and context files ship inside this folder. Step 4 installs skills by copying `skills/<slug>/SKILL.md` from the local pool — never by downloading. No wizard step requires the internet.
 2. **Never fetch from GitHub or the agency-agents upstream during a live session.** Upstream content enters this repo only through the maintainer-side `/sync-agency` CI workflow (`.github/workflows/sync-agency.yml`), where the ADR-024 attribution rule above is enforced before merge. At runtime there is nothing to download — do not attempt it, and do not treat `cowork.lock.json` or the registry's `source_url` values as runtime fetch targets. The reviewed upstream library already ships locally under `vendored/agency-agents/` (attribution pre-injected, hash-verified against the lock by CI). When the user asks about upstream agents, read and quote from that folder offline; installing vendored agents as workspace skills remains v2.7+ scope per the F4 pool boundary.
-3. **If a step appears to need the internet** — the user asks for upstream agents, pastes a URL, or a fetch attempt fails with a network or permission error — do not retry silently and do not stall the interview. Say exactly what was blocked, state that setup needs no internet, and continue with the local pool. Example wording: "I can't reach external sites from this session, but nothing in setup requires it — everything installs from the local skills folder. External skills are not yet supported in v2.6 — coming in v2.7+."
+3. **If a step appears to need the internet** — the user asks for upstream agents, pastes a URL, or a fetch attempt fails with a network or permission error — do not retry silently and do not stall the interview. Say exactly what was blocked, state that setup needs no internet, and continue with the local pool. Example wording: "I can't reach external sites from this session, but nothing in setup requires it — everything installs from the local skills folder. Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."
 4. **If the user wants web-dependent features later** (web research, community skill discovery), point them to Cowork's settings to enable web access for their session — that is a user-side toggle the wizard cannot change, and it is never required to complete setup.
 
 ---
@@ -105,7 +105,7 @@ Want to add or remove anything?
 - **Remove:** Name any skill to drop it.
 - **Done / keep all:** confirm to proceed."
 
-**Pool boundary (C-v2.4-7, v2.6 update):** Add-skill suggestions come ONLY from the `skills/` pool (23 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "External skills are not yet supported in v2.6 — coming in v2.7+."
+**Pool boundary (C-v2.4-7, v2.6 update):** Add-skill suggestions come ONLY from the `skills/` pool (23 slugs). No URL paste, no external source, no registry `source_url` direct fetch. If the user names a skill type not in the pool, say: "That's not in the current pool — the closest available is [X]. Want that instead?" Do NOT hallucinate a skill path. If a user pastes a URL or external skill identifier during F4, respond: "Installing skills from external sources isn't supported yet — the wizard installs only from the local, vetted pool."
 
 **Role-generation (ADR-030):** For each skill in the final bundle, generate a one-line role description per the §"Phase 1 — Role-Generation Rule" below. Display as: "Installed skills will help you with: [role for skill 1]; [role for skill 2]; [role for skill 3]."
 

@@ -4,7 +4,31 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
-## [Unreleased]
+## [2.7.2] - 2026-07-18
+
+### Added
+
+- **Version-consistency CI gate** (`version-consistency-check` in `.github/workflows/quality.yml`) — asserts `VERSION` == README badge version == the first CHANGELOG release header on every PR; fails loudly, naming the offending signal, on any malformed/missing value, and treats a stranded `[Unreleased]` header as a hard failure instead of silently skipping it. Closes the version/badge/CHANGELOG drift defect class structurally.
+- `CODE_OF_CONDUCT.md` — Contributor Covenant v2.1, with the required CC BY 4.0 attribution.
+- `.github/ISSUE_TEMPLATE/` — bug report and preset request templates.
+- README GitHub-stars and "PRs welcome" badges alongside the existing CI/License/Version badges.
+- `personal-assistant` added to `curated-skills-registry.md`'s `goal_tags` vocabulary and to the `.claude/skills/setup-wizard/SKILL.md` preset list; registry row-count annotation added (24 rows / 23 unique skill slugs).
+
+### Changed
+
+- **CHANGELOG restructured (ADR-036):** all v2.7.0/v2.7.1 content re-homed from an undated `[Unreleased]` heading into dated `## [2.7.0] - 2026-07-06` and `## [2.7.1] - 2026-07-07` sections below, so the version story matches what actually shipped.
+- `VERSION` and the README version badge bumped to `2.7.2`; README "What's new" refreshed to summarize the actual shipped v2.7.0/v2.7.1 content.
+- WIZARD.md's external-skill refusal wording (2 sites) and README's "Next up" teaser rewritten to drop the missed "coming in v2.7+" deadline while preserving the underlying substance.
+- Stale version markers removed/neutralized: WIZARD.md's "v1.2" entry-point claim, SETUP-CHECKLIST's "v2.6.0" path claim, README's "(new in v1.2)" parenthetical, and `docs/OUTPUT-STRUCTURE.md`'s "(v1.2)" heading marker.
+- `.github/workflows/quality.yml` pool-size comments corrected from "20 files" to the current "23 files".
+
+### Removed
+
+- Legacy `tests/v1.3.3/` directory (superseded).
+
+---
+
+## [2.7.1] - 2026-07-07
 
 ### Added — fourth pass (Step 7 handover: installer-to-workspace transition)
 
@@ -12,6 +36,10 @@ All notable changes to this project are documented here. This project uses [Sema
 - **Post-handover path rule:** kit paths (`skills/`, `vendored/agency-agents/`, `WIZARD.md`) resolve under `_setup-kit/` once archived; the F4 pool boundary, Network & Offline Rule, and ADR-024 apply unchanged. setup-wizard SKILL.md locates the script at either path, so `/setup-wizard` keeps working after the tidy-up.
 - Workspace `CLAUDE.md` template bakes in: per-session profile/deadline behavior, canonical writing-profile/output-format references, proactive skill triggers, the skill-swap affordance against the archived pool, offline rule, and the verbatim safety rule.
 - README "clean handover" callout, SETUP-CHECKLIST troubleshooting entry ("Where did all the setup files go?"), and offline smoke-test pass criteria for the handover + post-handover path resolution.
+
+---
+
+## [2.7.0] - 2026-07-06
 
 ### Added — third pass (v2.7 roadmap implementation, from the 16-agent test campaign)
 
