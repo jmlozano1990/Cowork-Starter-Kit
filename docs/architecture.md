@@ -58,6 +58,8 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-037 | docs/ Information-Architecture Split + Default-Internal `.gitattributes` Convention (v2.8.0) — `docs/internal/{qa,security,compliance,process,planning}/` holds internal artifacts; the per-file DROP allowlist collapses to a single `docs/internal/ export-ignore` directory rule so a *new* `docs/*.md` file defaults to public-unless-placed-internal (closes D-9 latent-leak class); `spec.md`/`retro.md`/`patterns.md` retained at `docs/` root under Council-tooling exemption; `architecture.md`/`research/`/`project-audit-v2.6.1.md` become public | ACCEPTED |
 | ADR-038 | Starter-File Self-Contained Regeneration + CI Drift-Marker Guard (v2.8.0) — the 7 `examples/*/project-instructions-starter.txt` are fully self-contained regenerations of the current v2.7 3-turn interview (NOT thin pointers into `WIZARD.md`), because the paste-only persona has no filesystem access to resolve a pointer; a new additive `quality.yml` step fails the build on any retired-interview marker across all 7 starters (case-insensitive, negative-control-proven) | ACCEPTED |
 | ADR-039 | Canonical Q1 Single-Source Enforcement (v2.8.0) — `WIZARD.md`:44 is the authoritative Q1 opener; `.claude/skills/setup-wizard/SKILL.md` quotes it verbatim and drops its duplicate embedded preset menu (deferring the "not sure" branch to WIZARD.md's Uncertainty Fallback); `CLAUDE.md` retains a compact, meaning-preserving paraphrase (single-source discipline, not budget-forced — 326/400 word headroom confirmed) | ACCEPTED |
+| ADR-040 | Draft-First Routing Presentation (v2.9.0 Dynamic Reclaim) — supersedes the *presentation* aspects of the undocumented v2.7.0 `e2f622d` change: Path A/B/C are presented as equally-first-class *drafts* the user shapes (draft framing + a one-parenthetical `matched: [fixed-vocab token]` reasoning fragment + a three-way close: run / adjust / set aside and go custom), replacing the binary "That sounds like [Preset] — is that right?" verdict; the retired cost-asymmetry tie-break sentence ("a wrong suggestion costs one 'no', while a false Path C costs the whole scaffold") is removed while the tie-break's *routing purpose* is preserved byte-behaviourally; the `≥2` threshold, 16-token `match_signals`, stemming, and the C-v2.4-6/C-v2.4-7 security notes are byte-unchanged | ACCEPTED |
+| ADR-041 | Path C `goal_tags` Matching (v2.9.0 Dynamic Reclaim) — Path C composition reads a third signal, `curated-skills-registry.md`'s `goal_tags` (dormant since ADR-012 v1.2), in addition to `name`/`description`: pool skills whose `goal_tags` domain-slugs include a preset the goal scored ≥1 on in Q1 are surfaced, giving crossover novel goals a richer first draft team; deterministic set-intersection over a fixed 7-slug domain vocabulary (C-v2.4-6 holds); addressable set stays exactly the 23-skill pool (C-v2.4-7 unchanged) | ACCEPTED |
 
 ---
 
@@ -9168,3 +9170,375 @@ Per Workflow Step 4a — ACs adjusted during design (both from production valida
 - **Risk knowingly accepted:** CLAUDE.md's paraphrase can drift in *meaning* from the canonical without a CI gate catching it (only SKILL.md's verbatim copy would be guardable by grep). Accepted this cycle; future-option (a) would add the standing verbatim gate for at least the router surface.
 
 End of v2.8.0 Phase 1 — Showcase design.
+
+---
+
+## v2.9.0 Phase 1 — Dynamic Reclaim Design
+
+> **Cycle:** v2.9.0 — Dynamic Reclaim (re-scoped from the roadmap-committed "Distribution & Trust" content by explicit owner directive 2026-07-18; that content moves to v2.10 unchanged in substance — same re-scope authority pattern as v2.6.0)
+> **Date:** 2026-07-18T15:53:23Z
+> **Branch:** `release/v2.9.0` (cut from `main` HEAD `1b0753d` = the Phase 0 spec commit; in-place branch on main checkout, NOT a sibling worktree — v2.8.0 / v2.7.2 precedent, avoids the v2.5.2 sibling-worktree scope-guard friction)
+> **Mode:** revise (full PM, research-fed)
+> **Classification (BINDING):** **STANDARD** — confirmed post-file-discovery (see §Classification Re-Run). Phase 2 @security = a *combined-path* CI-diff spot-review, **recommended not mandatory** under STANDARD, with 3 enumerated OI-SEC items (see §Classification & OI-SEC). First cycle since v2.4.0 to touch `WIZARD.md`'s routing/security-note prose.
+> **Worktree discipline:** SKIPPED (STANDARD classification; in-place branch on main checkout; `COUNCIL_EXPECTED_BASE_SHA` unset at spawn — F6 base-SHA check logged SKIPPED / fail-open).
+> **Inputs:** `docs/spec.md` §v2.9.0 (6 workstreams, 21 ACs, 5 edge cases, 5 OQs, 3 gate decisions); `docs/research/v2.9-dynamic-reclaim-research.md` (internal drift trace of `e2f622d` + 6 dated external sources); live `WIZARD.md` / `CLAUDE.md` / `.claude/skills/setup-wizard/SKILL.md` / `SETUP-CHECKLIST.md` / `README.md` / `selection-presets.md` / `curated-skills-registry.md` / `.github/workflows/quality.yml` (all read this session).
+
+> *ISO 15288 — Design Definition Process (this whole Phase 1 record).*
+
+### Phase 1 Design Header — Mandatory Gate Records
+
+**EARS check (per AC-B.2) — HIGH-severity ACs reviewed against EARS syntax.** The 21 ACs are almost entirely ubiquitous/state-driven `grep`-verifiable requirements, testable as written. **1 HIGH-severity finding, design-resolved (no user decision → recorded as an Architectural Modification, not an OQ):**
+
+- **AC-DLG-2 and AC-STORE-4 are Check-That-Cannot-Fail (production-validated).** Both are *state-driven* requirements whose literal verify (`grep -ic "draft" <file> >= 1`) **is already GREEN on the un-edited tree** — `.claude/skills/setup-wizard/SKILL.md` already contains "draft" at lines 41/43 ("I'll draft your first status update", "I'll draft it" — closing-message content, not routing), and `README.md` already contains "draft" at lines 129/154 ("Email drafting", "drafts status updates" — feature copy, not routing framing). A no-op change would pass both ACs. `[EARS-REVISED]`: *"WHEN the WS-DIALOGUE edit lands, @qa SHALL verify the SPECIFIC routing/Highlights line changed (SKILL.md:26 routing step; README Highlights bundle-customization bullet), not merely that the file's `draft` count is ≥1."* Bound in §TASK 5 (AC-DLG-2, AC-STORE-4 rows) and §Architectural Modifications. This is the `[[check-that-cannot-fail]]` pattern — the twin of the v2.8.0 AC-WS5-2 finding.
+
+Net: **EARS check: 0 HIGH-severity findings requiring a user-facing OQ — the 1 HIGH finding is design-resolved and recorded as an Architectural Modification + a binding @qa verify note.** All 5 OQs were already framed with @pm defaults and are resolved in §TASK 1 (not EARS-vagueness OQs).
+
+**SoS Classification (per AC-A.1, EC-1 — explicit even when N/A):** N/A — single-project design (`claude-cowork-config`; `registry.json` `depends_on: []`, `parents` none, not under any SoS umbrella; the only external relationship is the MIT-vendoring pipeline from agency-agents, untouched this cycle). UAF 4-viewpoint checklist: (1) Strategic — N/A single-project; (2) Operational — N/A single-project; (3) Systems — N/A single-project; (4) Services — N/A single-project.
+
+**Reliability Analysis:** N/A per NEVER-APPLY (no multi-provider request path, no failover/fallback mechanism, no SLA or availability claim; this is a wizard-dialogue framing + Path-C-matching-richness + storefront-copy cycle — no runtime, no network path).
+
+**Heuristics Check (Rechtin, per AC-C.2) — signals for the two minted ADRs:**
+- *"Don't confuse the functioning of the parts for the functioning of the system."* → FIRES on ADR-040 AND on the AC-DLG-2/AC-STORE-4 check-that-cannot-fail finding. The matching mechanics (the "parts": `≥2` threshold, stemming, vocabulary) already function correctly — the *system* property the owner cares about (does the wizard *feel* co-creative?) was broken by the presentation layer riding on top. The fix is at the system/presentation layer, not the parts. Applied, not merely noted.
+- *"The greatest leverage in system architecting is at the interfaces."* → FIRES on ADR-040. The user-facing interface (the three routing dialogues) is exactly where the drift lives and exactly where the reclaim applies — zero change to the FSM (ADR-011) or the disambiguation state (ADR-021), maximal change to the sentences the user reads.
+- *"Simplify. Simplify. Simplify."* → Signal: partially applicable / held in tension. ADR-041 ADDS a third matching signal (`goal_tags`), which is *more* logic, not less — but it activates a field that has been dead weight in the registry since ADR-012 (v1.2), so net system simplicity improves (a carried-but-unused field becomes load-bearing rather than latent debt). Applied to the ADR-041 decision to reuse the existing field rather than invent a new matching scheme.
+- *"Relationships among the elements are what give systems their added value."* → FIRES on ADR-041. `goal_tags`'s value is precisely the cross-domain *relationships* it encodes (a skill tagged `personal-assistant,project-management,business-admin` bridges three domains); Path C's old name/description-only matching threw those relationships away.
+
+**Reuse Radar (4-source scan, per Step 2a — present even when empty):**
+- Source 1 (reuse-registry): Council `docs/reuse-registry.md` is a Council-internal artifact (ships v0.32.2); N/A for this external target — skipped.
+- Source 2 (scaffold index): `examples/scaffolds/INDEX.md` is a Council-internal artifact (ships v0.32.2); N/A for this external target — skipped. No new app/service/CLI surface is stood up this cycle.
+- Source 3 (CS catalog + ADR tags): N/A — single-project, no constituent-system reuse candidates.
+- Source 4 (SoS interfaces): N/A — `claude-cowork-config` is not under any SoS umbrella; no `sos-interfaces.json` entry applies.
+
+**Reuse Scan (per Step 2a — present even when no candidates):**
+
+| Component | Registry hit | OSS candidate (name+license[ESTIMATED]+health) | Scaffold | Decision | Basis |
+|---|---|---|---|---|---|
+| Path C `goal_tags` matching logic (WS-COMPOSITION / ADR-041) | none | none — this is prose matching-rules in `WIZARD.md`, not code; no library involved | none | REUSE (internal) | reuses the *existing* `curated-skills-registry.md` `goal_tags` field (present, 24/24 rows populated) dormant since ADR-012 — no new dependency, no new schema |
+| Draft-framing dialogue rewrite (WS-ROUTING / ADR-040) | none | none — natural-language wizard script prose | none | BUILD | project-specific interview copy; must preserve byte-exact security notes + `≥2` mechanics; no external asset applies |
+| Demo SVG beat-3 rewrite (WS-STOREFRONT) | none | none — hand-authored inline SVG (v2.8.1 asset, 7-beat) edited in place; asciinema/svg-term produce terminal casts, not this chat mockup | none | EXTEND | extends the existing v2.8.1 synthetic SVG asset (edit beats 3–4 only), not a new build |
+| External UX-research citations (WS-RESEARCH-RECORD, committed Phase 0) | n/a (evidence, not component) | n/a | n/a | REUSE (cite) | 6 vendor-neutral sources reused as citation evidence in the research memo; no code |
+
+**Buy-vs-Build: 4 components scanned — REUSE 2 (dormant-field reuse + citation reuse) / ADOPT 0 / EXTEND 1 / BUILD 1.**
+
+**Production validation (per Step 3b — MANDATORY; this design's logic parses/matches REAL repo artifacts: `WIZARD.md` routing prose, `curated-skills-registry.md` `goal_tags`, the 7 starter files, the demo SVG, and the live `quality.yml` word-count/consistency gates).** Every candidate matcher below was run READ-ONLY (`grep` / `wc` / `awk` only; no `-i`, no redirect onto any artifact) against the LIVE current files of the target repo (single-project cycle → the "every registered project" loop reduces to this one repo). **Production validation: 1/1 target-repo artifact-set PARSED — and REVEALED four findings the spec ACs alone would NOT have caught:**
+
+1. **`goal_tags` is 100% populated, and its values are PRESET SLUGS, not free-form keywords** (OQ-4). `grep -cE '\| (builtin|https?://)' curated-skills-registry.md` = **24 rows** (23 unique pool skills + the ADR-018 study/research `research-synthesis` variant), and **all 24 carry a non-empty `goal_tags` cell** drawn from the fixed 7-slug domain vocabulary. The spec's [UNTESTED] assumption ("some entries still lack the field") is **false** — coverage is complete. This directly shapes ADR-041's matching mechanic: `goal_tags` matching is a *domain-bridge* (goal → preset-domain affinity → skills tagged with that domain), NOT literal token overlap against free tags. A design that assumed free-form tags would have been mechanically wrong. Only reading the real registry caught this.
+2. **AC-DLG-2 and AC-STORE-4 are check-that-cannot-fail** (see EARS finding). `grep -ic "draft" .claude/skills/setup-wizard/SKILL.md` = **2** and `grep -ic "draft" README.md` = **2** BEFORE any edit. Fixture/count-only verification would false-green. Only reading the real files' `draft` hit locations (SKILL.md:41/43, README:129/154 — all incidental) caught it.
+3. **`personal-assistant` starter is at 396/400 words — 4 words of headroom** (OQ-1). `wc -w` across the 7 starters returns 372–396; the CI `starter-file-word-count-check` (`quality.yml`:270–292) hard-fails > 400. The WS-DIALOGUE starter "spot-check + terminology alignment" therefore MUST be word-neutral-or-negative on `examples/personal-assistant/project-instructions-starter.txt` specifically. A blanket "align 'team' → 'draft team'" (+1 word × each occurrence) would push it to 397 — still under 400, but the margin is real and bound in §TASK 5. Only measuring the real files caught the tight file.
+4. **The demo SVG beat-3 bubble cannot hold the new draft dialogue at its current `width="500"`** (WS-STOREFRONT). The retired line 3 "Research Synthesis. Sound right?" is ~30 chars; the new draft+matched dialogue runs longer. `assets/setup-demo.svg` beat-3 `<rect ... width="500" height="88">` (3 text lines ~34 chars max) will truncate. Bound in §TASK 4: @dev widens the bubble and/or re-breaks lines *within* beat 3 — a within-beat layout change, NOT a beat-count change (AC-STORE-2's 7-beat structure preserved).
+
+**B1 verification:** SKIPPED (STANDARD classification; external-project cycle — `scope_allow_delta` is a no-op per V44-S5 / ADR-115 §Implications; @dev operates against `/home/user/claude-cowork-config`, not `The-Council/.claude/agents/dev.md`). See §scope_allow_delta.
+
+**§Maturation Path self-grep (per Workflow step 5.5 — GATE before Phase 1 DONE).** Baseline (post-v2.8.0, through ADR-039) = **5 each**; +2 new ADRs (040, 041), each carrying the verbatim block → **7 each** across the ADR bodies. Post-write `for h in 'Future-state options:' 'Concrete revisit triggers:' 'Risk knowingly accepted:'; do grep -cF "**${h}**" docs/architecture.md; done`:
+
+```
+Future-state options:      -> 7   (was 5)
+Concrete revisit triggers: -> 7   (was 5)
+Risk knowingly accepted:   -> 7   (was 5)
+```
+
+(Each of the three counts increased by exactly 2 — one per new ADR — confirming the headers are the verbatim template slots, not paraphrases.)
+
+---
+
+### TASK 1 — Open-Question Resolutions (BINDING)
+
+> *ISO 15288 — Decision Management Process.*
+
+#### OQ-1 (word-budget headroom) — BIND: **ceilings are 400 words HARD / ≤350 target for BOTH CLAUDE.md and each starter file** (`quality.yml` `claude-md-word-count-check`:180–198 and `starter-file-word-count-check`:270–292). Confirmed by reading the live CI, not recalled.
+
+Live measurements this session: **CLAUDE.md = 325 words** → 75 words of headroom to the hard 400, 25 to the ≤350 target. Starters: business-admin 373, creative 372, **personal-assistant 396 (tightest — 4 words from the 400 hard ceiling)**, project-management 374, research 373, study 373, writing 372. The spec's [UNTESTED] "397/400" premise is **stale** (a v2.6.1-audit figure); the real ceiling is 400 (target 350) and CLAUDE.md has ample room. **Binding:** WS-DIALOGUE's CLAUDE.md edit adds ≈+5 words (§TASK 5), landing ≈330 — under target. Starter edits are word-neutral-or-negative, and **on `personal-assistant` specifically must not exceed 400 (verify `wc -w` per file post-edit).** @pm default (≤10 words/surface; trim locally rather than skip framing) is **confirmed**.
+
+#### OQ-2 (matched-signal markup) — BIND: **inline parenthetical**, `(matched: <token>)`, one short parenthetical, immediately after the preset name. @pm default confirmed.
+
+Cheapest against the word budget, consistent with the wizard's existing parenthetical conventions, and — critically — the *only* form compatible with the C-v2.4-6 constraint bound in ADR-040: the parenthetical echoes **only the specific `match_signals` token(s) that fired** (or, for a tie-break route, the preset display name), never raw user goal text. A separate reasoning line was REJECTED (invites expansion into a reasoning trace, the exact friction the owner ruled out; NN/g's own research caps useful disclosure at ~2 levels — research memo source 1/2).
+
+#### OQ-3 (SETUP-CHECKLIST naming mechanics) — BIND: **all three gate options are authored ready-to-apply in §TASK 3** (revive / new name / unnamed), so the owner's Gate-Decision-1 pick maps to a byte-precise binding with NO design round-trip. @pm default (option (c) unnamed → plain-language replacement) is the recommended path and the one §TASK 3 marks primary, but @architect does not pre-empt the owner's explicit call (owner constraint #6). Symmetric-treatment check: `SETUP-CHECKLIST.md` is the ONLY live surface still carrying "Dynamic Workspace Architect" (3 occurrences, lines 10/24/61); `CHANGELOG.md` also carries it but is append-only historical (EXEMPT). See §Retired-String Cross-Check.
+
+#### OQ-4 (goal_tags backfill completeness) — BIND: **no backfill needed — coverage is already 100% (24/24 registry rows).** Production-validated (see Production validation finding 1). WS-COMPOSITION's richness gain is real and requires zero registry data change this cycle. The @pm default (non-blocking; per-entry fallback to name/description if a `goal_tags` cell were empty) is retained as a **defensive contract in ADR-041** (should a future row ship without `goal_tags`, Path C falls back to name/description for that entry only) — but no entry needs it today.
+
+#### OQ-5 (WS-METRICS execution phase) — BIND: **defer to Gate-Decision-3 (owner's call), @architect recommends Phase 5 @qa hard gate.** @pm default confirmed.
+
+The persona-regression matrix is exactly the class of non-regression evidence that benefits from independent verification before merge (the owner's own north-star is "did co-creation come back *without* losing the 3-turn win" — a claim @dev should not both make and grade). The `tests/offline-smoke-test.md` WS4 precedent already established Phase-5 dry-run persona runs for this repo. If the owner picks the Phase-4 @dev dry-run instead (Gate-Decision-3 alt), the same results table (AC-METRICS-1/2/3) is produced, just authored by @dev and spot-checked by @qa rather than owned by @qa — no design change either way.
+
+---
+
+### TASK 2 — WIZARD.md Replacement Dialogue (byte-precise @dev bindings)
+
+> *ISO 15288 — System Definition Process (the wizard script is the system's primary human interface).*
+
+These are the exact replacement blocks. `WIZARD.md` carries **no word-count CI** (only CLAUDE.md and starters do) — length is unconstrained; the single-source rule (v2.7) is preserved. The **Path A/B/C heading lines are byte-unchanged** (they carry the `scores ≥2` language AC-ROUTE-4 greps for and the routing-condition logic that is out-of-scope to touch).
+
+#### 2a — Judgment tie-break (replaces WIZARD.md line 56 in full)
+
+**RETIRE (exact current text):**
+> **Judgment tie-break (v2.7 — deterministic matching is a hint, not a cage):** the token score picks the DEFAULT route, but if the score says Path C while the goal plainly fits one preset the way any person would read it (e.g. "studying for my biochemistry finals" is Study even if only one signal fires), route it as a Path A suggestion for that preset and present it normally. The user's confirmation is the real gate — a wrong suggestion costs one "no", while a false Path C costs the whole scaffold. When neither tokens nor judgment produce a clear fit, Path C is correct.
+
+**REPLACE WITH (exact new text):**
+> **Judgment tie-break (v2.7 — deterministic matching is a hint, not a cage):** the token score picks the DEFAULT route, but if the score says Path C while the goal plainly fits one preset the way any person would read it (e.g. "studying for my biochemistry finals" is Study even if only one signal fires), route it as a Path A **draft** for that preset and present it normally. The tie-break only ever offers a preset draft the user can shape or set aside — it is a hint toward a starting draft, never a bias toward accepting one. Path A (a preset draft) and Path C (a from-scratch draft) are equally valid, equally fast starting points, and their confirmation turn is identical; neither is the safe default and neither is the costly fallback. When neither tokens nor judgment produce a clear fit, Path C is the correct, first-class outcome — not a fallback.
+
+*Purpose preserved byte-behaviourally* (a Path-C-scoring goal that plainly fits a preset still routes to Path A for that preset). *Cost-asymmetry sentence removed* → `grep -ic 'costs.*whole scaffold\|costs one "no"' WIZARD.md` = 0 (AC-ROUTE-1). *Equal-validity framing added.*
+
+#### 2b — Path A presentation (replaces WIZARD.md lines 62–72; heading line 60 byte-unchanged)
+
+**REPLACE the "Present:" block + the three outcome lines with (exact new text):**
+
+```
+Present: "Here's a **[Preset Name]** draft I built from your goal (matched: [the match_signals token(s) that fired, e.g. finals]) — a starting point, not a locked choice.
+
+Its **core skills**: [core_skill 1], [core_skill 2], [core_skill 3].
+
+Also on the [Preset Name] bench, yours to add now or mid-session later: [optional_skill 1], [optional_skill 2].
+
+Want to run with this draft, adjust it (add any optional skill, or drop one), or set it aside and build a custom bundle from scratch?"
+
+If user runs with core only: proceed to F4 (final bundle confirmation) with `core_skills` as the proposed bundle.
+If user adjusts by adding one or more optional skills: proceed to F4 with `core_skills + selected optional_skills` as the proposed bundle. De-duplicate.
+If user sets it aside: proceed to Path C — a first-class outcome presented with the same draft framing (below), never a fallback.
+
+**Matched-reasoning rule (C-v2.4-6 non-regression, BINDING):** the "matched: [token]" fragment echoes ONLY the specific `match_signals` token(s) that fired for the routed preset — never raw user goal text, never a verbatim slice of the goal. It is one short parenthetical; do NOT expand it into a reasoning trace. If the route came from the judgment tie-break rather than a scored token, write "(matched: reads as [Preset Name])" using the preset display name — still never echoing raw user text. This is the surface Edge Case 2 / OI-SEC-a governs.
+```
+
+*Draft framing within `grep -A6 "Path A —"` (line 2 after heading) → AC-ROUTE-2.* *`matched:` present → AC-ROUTE-3.* *Three-way close replaces the binary "is that right?" → the retired verdict is gone.*
+
+#### 2c — Path B presentation (replaces WIZARD.md lines 76–83; heading line 74 byte-unchanged)
+
+**REPLACE the "Present:" block + the outcome line with (exact new text):**
+
+```
+Present: "Your goal reads two ways (matched: [token(s) for A] → [Preset A]; [token(s) for B] → [Preset B]) — so here are two draft directions, both starting points you can shape:
+
+- **[Preset A]** draft: [skill 1], [skill 2], [skill 3]
+- **[Preset B]** draft: [skill 4], [skill 5], [skill 6]
+
+Want to run with [Preset A]'s draft and pull in from [Preset B], run with [Preset B]'s, mix your own, or set both aside and build from scratch?"
+
+If user picks a direction: proceed to F4 (bundle customization) with the combined starting bundle. If user sets both aside: proceed to Path C — same draft framing, first-class, never a fallback. (The matched-reasoning rule above applies identically: fixed-vocabulary tokens only.)
+```
+
+#### 2d — Path C presentation (replaces WIZARD.md lines 87–91; heading line 85 byte-unchanged) — structural parity + goal_tags
+
+**REPLACE the "Say:" line + the ≤3-list paragraph + the "User confirms" line with (exact new text):**
+
+```
+**Matching (WS-COMPOSITION — read `goal_tags` too):** assemble the draft team from `skills/` by keyword overlap against three signals per pool skill — its `name`, its `curated-skills-registry.md` `description`, AND its `goal_tags` column. `goal_tags` carries each skill's preset-domain slugs (study, research, writing, project-management, creative, business-admin, personal-assistant); pull any skill whose `goal_tags` include a domain the goal scored ≥1 on in Q1 tokenization, so a crossover goal (e.g. a homeschool plan → study + personal-assistant) surfaces skills from every domain it touches, not just literal name matches. Rank by combined overlap; take the top 3 (expandable — see below). This changes only WHICH pool skills surface first; the addressable set is still exactly the 23-skill pool (C-v2.4-7, unchanged).
+
+Present a NAMED draft team with its reasoning, in the same shape Path A/B use:
+
+> "Here's a starting **[goal-derived name, e.g. 'Homeschool Coordination'] draft team** I pulled from the pool (matched: [the goal_tags domain(s) that fired, e.g. study, personal-assistant]): **[Skill A]**, **[Skill B]**, **[Skill C]**. Want to run with this draft, swap any of them, add more from the pool, or go blank-slate?"
+
+**When nothing matches (genuine zero-coverage goal):** do NOT apologize or present a thinner path. Say: "Nothing in the pool matched a starting draft for this one — that's fine, we build yours from scratch. Tell me the first capability you want (e.g. tracking, drafting, summarizing) and I'll pull the closest skills to start the draft." Then route into F4's "Add from full pool" flow.
+
+**Want more:** the draft team is a starting set of 3, not a cap. Any time the user says "want more" / "show me others", surface the next ≤3 pool candidates by the same three-signal matching — identical to F4's ≤3-at-a-time batching. This is the normal next step, not an overflow apology.
+
+User confirms or adjusts. Proceed to F4.
+```
+
+*`goal_tags` within `grep -A5 "Path C —"` (the Matching paragraph is the 2nd line after the heading) → AC-COMP-1.* *"draft team" within `grep -A8 "Path C —"` → AC-ROUTE-5.* *The exact F4 literal "23-skill pool (≤3 suggestions at a time)" (line 104) is NOT touched → AC-COMP-2 stays 1.* *The C-v2.4-6 (line 54) and C-v2.4-7 (line 108) notes are NOT touched → AC-ROUTE-4.*
+
+---
+
+### TASK 3 — Naming Gate: replacement copy for ALL THREE options (owner picks Gate-Decision-1)
+
+> *ISO 15288 — Design Definition Process.*
+
+`SETUP-CHECKLIST.md` carries "Dynamic Workspace Architect" at **lines 10, 24, 61** — the only live surface still using the term (CHANGELOG.md is append-only historical, EXEMPT). Line 24 also carries "confirms the preset you chose" which AC-DLG-5 requires be removed regardless of naming choice. The **line-24 body is the same three-way, non-hierarchical draft framing in all three options**; only the wizard's *name token* differs. Below, `{{WIZARD_REF}}` marks the only varying span.
+
+**Line 24 — replace in full (all three options share this body; substitute `{{WIZARD_REF}}`):**
+> This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run {{WIZARD_REF}} automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then builds a draft workspace with you: a preset draft when your goal clearly fits one, two draft directions when it spans two, or a custom draft team composed from the pool when it fits none — three equally valid starting points, none lesser than the others. Whatever it drafts is a starting point you shape, never a fixed assignment.
+
+*(removes "confirms the preset you chose" → AC-DLG-5 = 0; adds three-way non-hierarchical draft framing.)*
+
+**Option (a) — REVIVE "Dynamic Workspace Architect" (consistent across all surfaces):**
+- Line 10: keep verbatim — "...Cowork auto-loads `CLAUDE.md` and the Dynamic Workspace Architect runs on first message."
+- Line 24: `{{WIZARD_REF}}` = **"the Dynamic Workspace Architect"**
+- Line 61: keep verbatim — "The Dynamic Workspace Architect installs skills from the unified pool automatically during the wizard Q&A."
+- **Consistency obligation:** owner constraint #6 requires the name applied *consistently* — so README (which organically dropped it) must reintroduce it in its wizard descriptions (Highlights + §"How setup works"), and AC-STORE-3 verify becomes `grep -c "Dynamic Workspace Architect" SETUP-CHECKLIST.md` **== README's count** (both > 0). Highest-churn option; sits in tension with the co-creation identity ("architect" = blueprint-handover).
+
+**Option (b) — NEW co-creation name (recommended concrete: "the Workspace Co-Builder"):**
+- Line 10: "...Cowork auto-loads `CLAUDE.md` and **the Workspace Co-Builder** runs on first message."
+- Line 24: `{{WIZARD_REF}}` = **"the Workspace Co-Builder"**
+- Line 61: "**The Workspace Co-Builder** installs skills from the unified pool automatically during the wizard Q&A."
+- **Consistency obligation:** apply the same name in README's wizard descriptions; AC-STORE-3 verify = `grep -c "Dynamic Workspace Architect" SETUP-CHECKLIST.md` == 0 AND `grep -c "Workspace Co-Builder" SETUP-CHECKLIST.md` == README's count. If the owner prefers a different co-creation name, substitute the token throughout — the copy is otherwise identical.
+
+**Option (c) — UNNAMED, plain-language (RECOMMENDED — @pm rec, matches README's hero line):**
+- Line 10: "...Cowork auto-loads `CLAUDE.md` and **the setup wizard** runs on first message."
+- Line 24: `{{WIZARD_REF}}` = **"the setup wizard"**
+- Line 61: "**The wizard** installs skills from the unified pool automatically during onboarding." *(avoids "the setup wizard … the wizard" redundancy in the same sentence.)*
+- **Consistency:** no reintroduction needed anywhere; README already unnamed. AC-STORE-3 verify = `grep -c "Dynamic Workspace Architect" SETUP-CHECKLIST.md` **== 0** (retired repo-wide; CHANGELOG EXEMPT). Lowest-churn; resolves the sole straggler without inventing a brand.
+
+**@architect recommendation: (c).** README and CHANGELOG moved away from the branded term two cycles ago without a deliberate decision; SETUP-CHECKLIST reads as an unintentional straggler. "Architect" connotes someone designing and handing over a blueprint — the exact mental model this cycle moves *away* from. But this is explicitly the owner's call.
+
+---
+
+### ADR-040: Draft-First Routing Presentation (v2.9.0 Dynamic Reclaim)
+
+**Date:** 2026-07-18
+**Status:** ACCEPTED (v2.9.0)
+**Supersedes:** the *presentation* aspects of the undocumented v2.7.0 change `e2f622dcc09f8daefe985a7c531d5a92b21e8a53` ("feat(idea-6): fix F3 goal routing — stemming, richer signals, sane thresholds, judgment tie-break", 2026-07-06). ADR-040 does NOT supersede the *matching-mechanics* aspects of that commit (the `≥2` threshold, the 16-token `match_signals` vocabulary, the light-stemming rule) — those are the legitimate, still-correct bug fix and are byte-preserved.
+**Companion:** ADR-021 (routing FSM — untouched); ADR-011 (word-budget architecture — CLAUDE.md stays under target); ADR-041 (Path C `goal_tags` — the composition arm of the same reclaim).
+
+**Context:** `e2f622d` shipped out-of-pipeline (no Phase 0–7 record). It fixed a real bug — pre-fix Path A required `≥3` signals against an 8-token vocabulary with no stemming, which no natural one-sentence goal reached (5 of 7 personas scored 0–1; corroborated by `docs/research/v2.7-usercase-test-and-improvement-research.md`). But the same commit imported unreviewed product-shaping language the owner never gated: a "judgment tie-break" whose justification read *"a wrong suggestion costs one 'no', while a false Path C costs the whole scaffold."* That sentence frames custom composition (Path C) as the expensive failure mode and preset-matching (Path A) as the cheap safe default, and the tie-break is one-directional (only ever escalates a Path-C-scoring goal *up* to Path A). The visible product: the demo shows a binary "That sounds like Study — … Sound right?" → "Yes, let's go" verdict; Path C's presentation is a flat unlabeled list with no "why" and no core/optional richness. This is the owner's "pre-defined roles… over simplified." The north star (co-creation as product identity) was broken at the *presentation* layer, not the mechanics layer.
+
+**Decision:** Reframe all three routing paths as equally-first-class **drafts the user shapes**, in `WIZARD.md` (the single script source):
+1. **Retire the cost-asymmetry sentence** from the judgment tie-break; preserve the tie-break's routing *purpose* byte-behaviourally (a Path-C-scoring goal that plainly fits a preset still routes to a Path A draft for that preset).
+2. **Path A/B**: replace the binary "That sounds like [Preset] — is that right?" verdict with (i) draft framing (the preset is a *starting point built from the user's words*), (ii) a one-parenthetical `(matched: <fixed-vocab token>)` reasoning fragment, and (iii) a three-way close (run / adjust / set aside and go custom) replacing the two-way confirm/decline.
+3. **Path C**: structural parity with A/B — a NAMED draft team, a matched-on reasoning fragment (or an explicit, non-apologetic "nothing matched — we build from scratch" acknowledgment), and the same expandable "want more" affordance, presented as the normal next step, not an overflow apology.
+4. **Byte-preserved:** the `≥2` threshold, the 16-token `match_signals`, the stemming rule, and the C-v2.4-6 (goal-text-as-DATA) and C-v2.4-7 (pool-boundary) security notes — unchanged in position and wording. Exact replacement text: §TASK 2.
+5. **Security invariant (C-v2.4-6 non-regression):** the new `matched:` fragment is new surfaced output derived from user goal text, so it is bound to echo ONLY `match_signals`/`goal_tags` tokens from the fixed vocabulary (or a preset display name for tie-break routes) — never raw user text. Handed to @security as OI-SEC-a.
+
+**Options considered:** (A) **revert `e2f622d` entirely** — REJECTED, discards a legitimate bug fix (Reclaim ≠ revert); reintroduces the `≥3`-false-Path-C defect. (B) **keep the tie-break sentence, only soften the demo** — REJECTED, leaves the biasing language live in the authoritative script (the source of the drift), fixing the symptom not the cause. (C) **draft-first reframe in `WIZARD.md`, mechanics byte-preserved** — CHOSEN; fixes the framing layer at its single source, keeps the v2.7 completion wins (3-turn budget, checkpoint, fast lane) untouched.
+
+**Consequences:** The wizard reads as co-creative (owner's north star) without a turn-budget cost (the three-way close is one turn, same as the old confirm). Path C stops being the rhetorical stepchild. Cost: `WIZARD.md`'s routing prose grows (no CI budget there — acceptable); the demo SVG, README Highlights, SETUP-CHECKLIST, CLAUDE.md, and SKILL.md must all be brought into consistency (WS-DIALOGUE/WS-STOREFRONT — the drift-repeat risk v2.8.1 exists to catch, mitigated by AC-STORE-1/2 grepping the live `WIZARD.md`). A new `matched:` output surface is introduced (managed by the C-v2.4-6 binding above).
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** (a) a CI grep-gate asserting the retired cost-asymmetry sentence never re-enters `WIZARD.md` (turns the one-time retirement into a standing guard, same pattern ADR-039 proposes for canonical-Q1); (b) a CI assertion that the three routing blocks each contain "draft" + "matched:" (locks the reframe against silent regression); (c) promote the persona-regression matrix (WS-METRICS) into a repeatable `tests/` harness rather than a per-cycle dry-run.
+- **Concrete revisit triggers:** (a) a future cycle re-touches `e2f622d`'s mechanics (threshold/vocabulary/stemming) — the byte-preservation boundary must be re-verified; (b) a 4th routing path or a new entry surface appears — the draft framing must extend to it; (c) WS-METRICS shows any of the 6 documented defect classes regressed under the new framing — the reframe is rolled back per §Rollback.
+- **Risk knowingly accepted:** the reframe is enforced by grep-ACs that check *presence* of "draft"/"matched:", not *quality* of the dialogue — a future edit could keep the keywords while degrading the co-creation feel, and only a persona run (not CI) would catch it. Accepted this cycle; future-option (b) narrows but does not close the gap (keyword presence ≠ felt co-creation); WS-METRICS is the real backstop.
+
+### ADR-041: Path C `goal_tags` Matching (v2.9.0 Dynamic Reclaim)
+
+**Date:** 2026-07-18
+**Status:** ACCEPTED (v2.9.0)
+**Activates:** the `goal_tags` field defined by ADR-012 (v1.2 Skill Discovery Hybrid Architecture) and carried in `curated-skills-registry.md` ever since — dormant (never read by any router) until now.
+**Companion:** ADR-040 (the presentation arm of the same reclaim); C-v2.4-7 (pool-boundary — the invariant this ADR must not breach).
+
+**Context:** Path C's matching read only each pool skill's `name` and the registry `description` for keyword overlap against the goal tokens. For a genuinely novel goal (wedding planning, homeschool coordination), literal name/description overlap is thin, so Path C surfaced a weak, flat starting set — reinforcing the "costly fallback" feel ADR-040 retires. `curated-skills-registry.md` has carried a `goal_tags` column since ADR-012 specifically for semantic matching, but no router ever read it. **Production validation (this session):** all 24 registry rows populate `goal_tags`, and its values are the fixed 7 **preset-domain slugs** (study, research, writing, project-management, creative, business-admin, personal-assistant), NOT free-form tags — many skills carry multiple domains (e.g. `list-tracker` → `personal-assistant,project-management,business-admin`), encoding cross-domain reach.
+
+**Decision:** Path C composition reads a **third** matching signal — `goal_tags` — alongside `name` and `description`. Mechanically a **domain-bridge**: (1) Q1 tokenization already scores the goal against every preset's `match_signals`; (2) for any preset the goal scores **≥1** on (sub-Path-A affinity), Path C pulls pool skills whose `goal_tags` include that preset's slug; (3) combine with the existing name/description overlap, rank, and present the top 3 (Gate-Decision-2 default; expandable via the "want more" affordance). A crossover novel goal thus surfaces skills from *every* domain it touches, not just literal name hits. **Fallback contract:** if a future registry row ships with an empty `goal_tags` cell, that entry falls back to name/description matching only — no entry needs it today (100% coverage). Exact matching prose: §TASK 2d.
+
+**Options considered:** (A) **free-form keyword tags** (invent a new tag vocabulary per skill) — REJECTED, `goal_tags` already exists and is populated; a new field is schema churn and duplicate data. (B) **match goal tokens *directly* against `goal_tags` values** — REJECTED, `goal_tags` values are preset slugs, not English words, so direct token overlap would almost never fire (a design that assumed free-form tags would be mechanically wrong — the production-validation catch). (C) **domain-bridge via the existing Q1 preset scores + `goal_tags`** — CHOSEN; reuses the scores Q1 already computes (no new turn, no new computation surface), reads an existing populated field, and stays a deterministic set-intersection over a fixed 7-slug vocabulary.
+
+**Consequences:** Novel-goal Path C draft teams get materially richer without adding a turn or a dependency, and a field dead since v1.2 becomes load-bearing (net registry-debt reduction). **Security (C-v2.4-6/C-v2.4-7):** the matching remains deterministic set-intersection over a *finite fixed vocabulary* (7 domain slugs), so goal text stays DATA (C-v2.4-6 holds); the addressable set is still exactly the 23-skill pool — `goal_tags` changes only surfacing *order/breadth within* the pool, never its boundary (C-v2.4-7 holds). Both are handed to @security as OI-SEC-b/c. Risk: richer matching can surface a loosely-related skill for a crossover goal — mitigated by the unchanged F4 user-confirmation gate (the real UX/security boundary) and the capped initial count (Gate-Decision-2).
+
+**§Maturation Path (per [[maturation-path-in-adr]] binding)**
+- **Future-state options:** (a) a CI `wizard-consistency-check` extension asserting every pool skill carries a non-empty `goal_tags` cell (turns today's 100%-coverage observation into a standing guard, so a future skill can't ship untagged and silently fall back); (b) weight the three signals (name/description/goal_tags) if persona runs show one dominating noisily; (c) surface the matched domain(s) in the F4 "Add from full pool" step too, not only in the Path C opener.
+- **Concrete revisit triggers:** (a) a registry row ships with an empty `goal_tags` cell (the fallback contract activates for the first time — verify it behaves); (b) the preset-domain vocabulary grows beyond 7 slugs (the bridge's fixed-vocabulary security argument must be re-confirmed); (c) WS-METRICS shows the richer matching increases false-positive suggestion noise beyond the F4 gate's tolerance.
+- **Risk knowingly accepted:** the fallback-to-name/description contract is specified but **untested this cycle** (no empty-`goal_tags` entry exists to exercise it) — it is a paper contract until a row without `goal_tags` appears; future-option (a) would prevent that row from ever shipping, making the untested path unreachable rather than merely untested. Accepted for this cycle's scope (100% coverage today).
+
+---
+
+### TASK 4 — Demo SVG beat-3/beat-4 rewrite (WS-STOREFRONT — mirrors §TASK 2b)
+
+> *ISO 15288 — Design Definition Process.*
+
+The v2.8.1 storyboard is **7 beats**; the rewrite touches **only beats 3 and 4** (the Path A verdict + user confirm) and preserves the 7-beat count and turn structure (AC-STORE-2 — no fabricated turns). Beat 3 must mirror the real new Path A text: draft framing + `matched: finals` + a run/adjust close; beat 4's user reply changes from the binary "Yes, let's go" to a draft-shaping verb.
+
+**Beat 3 (COWORK) — retire lines 59–61** (`"That sounds like Study — your team:"` / `"Flashcard Generation, Note-Taking,"` / `"Research Synthesis. Sound right?"`). **Replace with the semantic content:**
+> "Here's a **Study** draft I built from your goal *(matched: finals)* — Flashcard Generation, Note-Taking, Research Synthesis. Run with it, adjust, or go custom?"
+
+**Layout binding (production-validation finding 4):** this does not fit the current `<rect ... width="500" height="88">` at 3 lines ~34 chars. @dev **widens the beat-3 bubble** (recommend `width="500"→"620"`, or `height="88"→"110"` with beats 4–7 shifted +22px if a 4th text line is used) and re-breaks the lines to avoid truncation. This is a **within-beat layout change, not a beat-count change** — AC-STORE-2's 7-beat structure is preserved. Recommended 3-line break at `width="620"`:
+```
+<text ... y="268">Here's a Study draft I built from your goal</text>
+<text ... y="290">(matched: finals): Flashcard Generation,</text>
+<text ... y="312">Note-Taking, Research Synthesis. Run or adjust?</text>
+```
+
+**Beat 4 (YOU) — retire line 68** (`"Yes, let's go"`). **Replace with:** `"Run with it"` (mirrors the three-way close's first verb; drops the stale binary-confirm echo).
+
+**Verify:** `grep -c "Sound right" assets/setup-demo.svg` = 0 AND `grep -ic "draft\|matched" assets/setup-demo.svg` ≥ 1 (AC-STORE-1). Owner does the live-render eyeball (the standing v2.8.0/v2.8.1 outstanding-item convention).
+
+---
+
+### TASK 5 — @dev Work Order (AC → binding map, with verify commands)
+
+> *ISO 15288 — Implementation Process (hand-off contract to @dev Phase 4).*
+
+| AC | File · anchor | Binding | Verify |
+|---|---|---|---|
+| **AC-ROUTE-1** | `WIZARD.md` line 56 | §TASK 2a full-line replacement (cost-asymmetry sentence gone) | `grep -ic 'costs.*whole scaffold\|costs one "no"' WIZARD.md` = 0 |
+| **AC-ROUTE-2** | `WIZARD.md` lines 62–72 | §TASK 2b Path A block (draft framing) | `grep -A6 "Path A —" WIZARD.md \| grep -ic draft` ≥ 1 |
+| **AC-ROUTE-3** | `WIZARD.md` §TASK 2b | `(matched: …)` parenthetical present | `grep -ic "matched:" WIZARD.md` ≥ 1 |
+| **AC-ROUTE-4** | `WIZARD.md` lines 54, 60, 108 (NOT touched) | mechanics + security notes byte-unchanged | `grep -c "scores ≥2" WIZARD.md` ≥1; `grep -c "C-v2.4-6" WIZARD.md` ≥1; `grep -c "C-v2.4-7\|Pool boundary" WIZARD.md` ≥1 |
+| **AC-ROUTE-5** | `WIZARD.md` lines 87–91 | §TASK 2d Path C block (named draft team + want-more) | `grep -A8 "Path C —" WIZARD.md \| grep -ic "draft\|want more"` ≥ 1 |
+| **AC-DLG-1** | `CLAUDE.md` line 20 | replace bullet 2 → "Present the bundle as a **draft team the user shapes** — "[Skill] as [role]" per the Role-Generation Rule — a starting point to run with or adjust, not a verdict to confirm." (≈+5 words → ~330, under ≤350 target) | `grep -ic draft CLAUDE.md` ≥1 |
+| **AC-DLG-2** ⚠ | `.claude/skills/setup-wizard/SKILL.md` line 26 | replace routing line → "Route per WIZARD.md Q1 (Path A/B/C, stemmed signals, judgment tie-break). Every path produces a **draft** the user shapes — the 7 presets are starting suggestions, not fixed selections, and a custom Path C draft is equally first-class." **@qa: verify line 26 changed — the count-only grep is pre-GREEN on incidental lines 41/43 (check-that-cannot-fail).** | `grep -n draft .claude/skills/setup-wizard/SKILL.md` shows a hit at/near line 26 (NOT only 41/43) |
+| **AC-DLG-3** | `examples/*/project-instructions-starter.txt` | spot-check (already clean — 0 binary-confirm hits); OPTIONAL terminology "team"→"draft team". **`personal-assistant` is 396/400 words — keep word-neutral-or-negative; verify `wc -w` ≤ 400 post-edit.** | `grep -liE "is that right\?" examples/*/project-instructions-starter.txt \| wc -l` = 0; `for f in examples/*/project-instructions-starter.txt; do wc -w "$f"; done` all ≤ 400 |
+| **AC-DLG-4** | `CLAUDE.md` | word budget after edit | `wc -w CLAUDE.md` ≤ 400 (target ≤350; expect ~330) |
+| **AC-DLG-5** | `SETUP-CHECKLIST.md` line 24 | §TASK 3 line-24 body (three-way; removes "confirms the preset you chose") | `grep -c "confirms the preset you chose" SETUP-CHECKLIST.md` = 0 |
+| **AC-COMP-1** | `WIZARD.md` §TASK 2d | goal_tags in Path C matching | `grep -A5 "Path C —" WIZARD.md \| grep -ic goal_tags` ≥ 1 |
+| **AC-COMP-2** | `WIZARD.md` line 104 (NOT touched) | F4 batching literal preserved | `grep -c "23-skill pool (≤3 suggestions at a time)" WIZARD.md` = 1 |
+| **AC-COMP-3** | `README.md` Highlights + lines 116/120 | reframe "≤3 at a time" constraint → progressive-disclosure default; Path C not framed as lesser | manual denylist review recorded in Phase 4 commit message |
+| **AC-STORE-1** | `assets/setup-demo.svg` beats 3–4 | §TASK 4 rewrite | `grep -c "Sound right" assets/setup-demo.svg` = 0; `grep -ic "draft\|matched" assets/setup-demo.svg` ≥ 1 |
+| **AC-STORE-2** | `assets/setup-demo.svg` | 7-beat count preserved (within-beat layout only) | manual side-by-side vs WIZARD.md Q1/bundle/Q2/Q3, disposition in commit message |
+| **AC-STORE-3** | `SETUP-CHECKLIST.md` lines 10/24/61 | §TASK 3 per Gate-Decision-1 pick | `grep -c "Dynamic Workspace Architect" SETUP-CHECKLIST.md` matches gate disposition (0 if unnamed) |
+| **AC-STORE-4** ⚠ | `README.md` Highlights bullets (lines 147, 150) | replace with draft/co-creation copy. **@qa: verify the Highlights bullets changed — count-only grep is pre-GREEN on incidental lines 129/154 (check-that-cannot-fail).** | `grep -n draft README.md` shows a hit in the Highlights section (NOT only 129/154) |
+| **AC-RESEARCH-1** | `docs/research/v2.9-dynamic-reclaim-research.md` (committed Phase 0) | non-regression | `test -f …`; `grep -c "^[0-9]\. \*\*" …` ≥ 4 |
+| **AC-METRICS-1/2/3** | new `docs/internal/qa/` artifact or Phase-4 commit message | per Gate-Decision-3 (Phase 5 @qa hard gate recommended) | results table: 7-persona × 6-defect-class PASS/FAIL; ≥3 novel-goal Path C parity; turn-count ≤4 |
+
+**Recommended README copy (AC-STORE-4 + AC-COMP-3) — for @dev:**
+- Highlights line 147 → *"**Open-ended goal discovery** — no preset menu. The wizard turns your description into a draft you shape: Path A drafts a close preset match, Path B offers two draft directions for overlapping presets, Path C drafts a custom team from the unified pool — three equally first-class starting drafts, not a fast path and a fallback."*
+- Highlights line 150 → *"**Draft-then-shape bundle building** — the wizard proposes a skill bundle as a draft you shape, surfacing a few suggestions at a time and adding more whenever you ask. You confirm when it's right. No batch-install surprises."*
+- Lines 116/120 (optional consistency): reframe "composes a custom bundle … when no preset fits" → "or drafts a custom team from the pool" (removes the residual fallback framing).
+
+---
+
+### Retired-String Cross-Check Inventory (KEEP-DROP discipline — BINDING since v2.8.0)
+
+> *ISO 15288 — Configuration Management Process.*
+
+Repo-wide `grep` this session (excluding `.git`, `vendored/`). **Every retired/renamed string, its live inbound references, and — critically — the strings that LOOK retirable but must be KEPT (incidental content):**
+
+**DROP (live surfaces @dev must update):**
+
+| Retired string | Live surface(s) | Action |
+|---|---|---|
+| `costs the whole scaffold` / `costs one "no"` | `WIZARD.md` (line 56 only) | §TASK 2a retire |
+| `That sounds like **[Preset]**` (Path A verdict) | `WIZARD.md` (line 62) | §TASK 2b replace |
+| `is that right?` (Path A verdict) | `WIZARD.md` (line 62) | §TASK 2b replace |
+| `Sound right?` | `WIZARD.md` (line 62 close), `assets/setup-demo.svg` (beat 3, line 61) | §TASK 2b + §TASK 4 |
+| `That sounds like Study … Sound right?` (demo) | `assets/setup-demo.svg` (beats 3–4) | §TASK 4 |
+| `Yes, let's go` (demo binary confirm) | `assets/setup-demo.svg` (beat 4, line 68) | §TASK 4 → "Run with it" |
+| `Dynamic Workspace Architect` | `SETUP-CHECKLIST.md` (lines 10, 24, 61) | §TASK 3 per Gate-Decision-1 |
+| `confirms the preset you chose` | `SETUP-CHECKLIST.md` (line 24) | §TASK 3 line-24 body |
+| `Q&A bundle customization … (≤3 at a time)` framed as constraint | `README.md` (Highlights line 150) | AC-COMP-3 reframe |
+
+**KEEP — false positives that a naive sweep would wrongly rewrite (production-validated, DO NOT TOUCH):**
+
+| String | Surface(s) | Why it stays |
+|---|---|---|
+| "a draft that sounds like me" | `examples/creative/context/writing-profile.md:53` | writing-profile content about the user's *voice* — unrelated to routing |
+| "content that sounds like you" | `examples/writing/README.md:3` | preset marketing copy about voice-matching — unrelated to routing |
+| "something that sounds like them" | `examples/writing/global-instructions.md:18` | voice-matching trigger content — unrelated to routing |
+| "Email **drafting**", "**drafts** status updates" | `README.md:129, 154` | feature copy — this is why AC-STORE-4's count-only grep is check-that-cannot-fail |
+| "I'll **draft** your first status update / …draft it" | `.claude/skills/setup-wizard/SKILL.md:41, 43` | closing-message content — this is why AC-DLG-2's count-only grep is check-that-cannot-fail |
+| `Dynamic Workspace Architect` in `CHANGELOG.md` | `CHANGELOG.md` | append-only historical record — EXEMPT (do not rewrite history) |
+
+**EXEMPT (docs/internal/** + append-only historical records — NOT rewritten):** `docs/spec.md`, `docs/retro.md`, `docs/architecture.md`, `docs/research/v2.9-dynamic-reclaim-research.md`, and all `docs/internal/**` (qa-report-*, security-review-*, security-audit-*, compliance-review, personas, competitive, assumptions) that contain `Sound right` / `That sounds like` / `Dynamic Workspace Architect` — these are historical QA/security/planning artifacts and the drift-trace itself; rewriting them would falsify the record. `CHANGELOG.md` likewise EXEMPT.
+
+---
+
+### Classification Re-Run (post-OQ, per docs/pipeline-policy.md §PostOQClassificationReRun) & OI-SEC
+
+> *ISO 15288 — Risk Management Process.*
+
+**Final file list (from §TASK 5):** `WIZARD.md`, `CLAUDE.md`, `.claude/skills/setup-wizard/SKILL.md`, `SETUP-CHECKLIST.md`, `README.md`, `assets/setup-demo.svg`, `examples/*/project-instructions-starter.txt` (7), optional `docs/internal/qa/` metrics artifact. **No CI job, no `.github/workflows/*.yml`, no schema, no auth surface, no new dependency, no `cowork.lock.json` / `curated-skills-registry.md` row-data change.**
+
+**Result: CONFIRMED STANDARD** (unchanged from @pm's proposal). Rationale: markdown/copy + one SVG asset edit; identical change-class to v2.8.0 (held STANDARD through Phase 6) and v2.7.2. Re-evaluation against the finalized list found **no upward-flipping surface** — the OQ resolutions removed surface (no `goal_tags` backfill, no registry data change), they did not add any. No file in the list is a guard, workflow, or `scope_allow` surface.
+
+**Phase 2 @security = combined-path CI-diff spot-review — RECOMMENDED, not mandatory under STANDARD** (mirrors the v2.8.0 WS5 precedent). This is the first cycle since v2.4.0 to touch `WIZARD.md`'s routing/security-note prose — the section v2.4.0 wrote C-v2.4-6/C-v2.4-7 against. **OI-SEC items handed to @security:**
+
+- **OI-SEC-a (matched-token echo — C-v2.4-6):** confirm the new `matched:` reasoning fragment (Path A/B opener + Path C opener + demo SVG beat 3) can *never* surface raw user goal text. The bound mechanism (ADR-040 §Decision 5 + §TASK 2b "Matched-reasoning rule"): the fragment echoes ONLY tokens present in the fixed `match_signals` vocabulary (Path A/B) or the fixed 7-slug `goal_tags` domain vocabulary (Path C), or a preset display name for tie-break routes — a closed set, never a slice of the goal string. Verify the implemented `WIZARD.md` prose holds this line, not just the spec's intent. (Edge Case 2 governs.)
+- **OI-SEC-b (goal_tags widening vs pool boundary — C-v2.4-7):** confirm ADR-041's `goal_tags` matching leaves the pool boundary intact — the addressable set stays exactly the 23-skill `skills/` pool; `goal_tags` changes only *which* pool skills surface first, never *whether* a non-pool skill can appear. (Edge Case 5 governs.)
+- **OI-SEC-c (tie-break rework keeps goal-text-as-DATA):** confirm the retired/reworked judgment tie-break (§TASK 2a) keeps goal text as DATA for deterministic keyword matching only — no new code path executes, interpolates, or path-uses the goal string; the reframe is prose-only over the same set-intersection mechanics.
+
+Combined-path eligibility (the abbreviated Phase-6 audit): eligible on the standard grounds — no new dependency, no new CI/auth surface, security notes byte-preserved.
+
+---
+
+### scope_allow_delta (per ADR-115 output contract)
+
+```yaml
+scope_allow_delta:
+  scope: standard   # external project (claude-cowork-config); not The-Council self_improve
+  add: []           # no-op for external-project cycles (V44-S5 / ADR-115 §Implications):
+                    # @dev operates against /home/user/claude-cowork-config, guarded by that
+                    # repo's own pre-commit hook + Phase-3-APPROVED gate, NOT by
+                    # The-Council/.claude/agents/dev.md scope_allow. All §TASK 5 files are
+                    # ordinary project files (WIZARD.md, CLAUDE.md, README.md, SETUP-CHECKLIST.md,
+                    # SKILL.md, assets/setup-demo.svg, examples/*/*.txt) — no guard/workflow surface.
+```
+
+---
+
+End of v2.9.0 Phase 1 — Dynamic Reclaim design.

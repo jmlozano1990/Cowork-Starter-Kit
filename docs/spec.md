@@ -2376,3 +2376,12 @@ Every workstream is a revertible commit set — no schema, no CI, no external si
 
 This mirrors the v2.8.0 precedent's own handling of its highest-risk workstream (WS5): STANDARD classification held, but Phase 2 was called out as recommended-not-required given the surface's history. @architect confirms or re-runs this classification at Phase 1 per the standard re-run discipline.
 
+## Architectural Modifications (v2.9.0)
+
+Phase 1 (@architect) found no AC infeasible and modified no AC's substance. Two verify-strengthening records and one layout record, per the divergence-check contract (details + bindings in `docs/architecture.md` §"v2.9.0 Phase 1 — Dynamic Reclaim Design"):
+
+- AC: AC-DLG-2 (`grep -ic "draft" .claude/skills/setup-wizard/SKILL.md >= 1`) → verify strengthened: @qa MUST confirm the routing line (SKILL.md:26) changed, not merely the file's `draft` count — Reason: the count-only grep is already GREEN on incidental pre-existing text (lines 41/43, closing-message content), a check-that-cannot-fail; production-validated Phase 1.
+- AC: AC-STORE-4 (`grep -ic "draft" README.md >= 1`) → verify strengthened: @qa MUST confirm the README Highlights bullets (lines 147/150) changed, not merely the file's `draft` count — Reason: the count-only grep is already GREEN on incidental copy (lines 129/154, "Email drafting"/"drafts status updates"), a check-that-cannot-fail; production-validated Phase 1.
+- AC: AC-STORE-2 (7-beat SVG, no fabricated turns) → clarified: the demo SVG beat-3 bubble is resized (width/height + line re-break) to hold the longer draft dialogue — a within-beat layout change that PRESERVES the 7-beat count — Reason: the new draft+matched dialogue does not fit the current `width="500"` 3-line bubble (production-validated); resizing within a beat is not a beat-count change.
+- Goal_tags backfill (OQ-4, WS-COMPOSITION): NOT needed — `curated-skills-registry.md` `goal_tags` coverage is already 100% (24/24 rows), so the cycle requires zero registry-data change (the spec's [UNTESTED] "some entries still lack the field" assumption is false — production-validated).
+
