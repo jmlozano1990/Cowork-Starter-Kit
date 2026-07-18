@@ -1,5 +1,11 @@
 name: Release Assets
 
+# REMINDER (v2.8.0 WS4): before tagging, confirm tests/offline-smoke-test.md's timing
+# scorecard has been refreshed for this release (see CONTRIBUTING.md §Pre-release
+# checklist). This workflow does not and cannot enforce that automatically — it is a
+# maintainer step, not a CI gate — but a tag pushed without a current scorecard means
+# the README "15 minutes" claim is shipping unverified for this release.
+
 on:
   push:
     tags:
@@ -36,6 +42,11 @@ jobs:
           LISTING="$(unzip -Z1 "${ZIP}")"
 
           # Negative assertions — these MUST NOT appear in the archive.
+          # v2.8.0 WS5 (ADR-037): the ~10 individually-named docs/ entries collapsed to a
+          # single docs/internal/ prefix-match, which covers the whole 40-file subtree
+          # (docs/internal/{qa,security,compliance,process,planning}/) plus any future file
+          # placed there. docs/research/ and docs/project-audit-v2.6.1.md REMOVED (now public,
+          # see KEEP_PATHS below). docs/patterns.md ADDED (Council-tooling exempt, still internal).
           DROP_PATHS=(
             ".gitignore"
             ".markdownlint.jsonc"
@@ -48,13 +59,8 @@ jobs:
             "scripts/install-pre-commit.sh"
             "docs/spec.md"
             "docs/retro.md"
-            "docs/personas.md"
-            "docs/qa-report.md"
-            "docs/security-review.md"
-            "docs/security-audit.md"
-            "docs/competitive.md"
-            "docs/research/"
-            "docs/security/"
+            "docs/patterns.md"
+            "docs/internal/"
             ".gitattributes"
           )
           for path in "${DROP_PATHS[@]}"; do
@@ -65,6 +71,8 @@ jobs:
           done
 
           # Positive assertions — these MUST be present (guards against over-greedy export-ignore).
+          # v2.8.0 WS5: docs/research/, docs/project-audit-v2.6.1.md, docs/how-it-works.md,
+          # docs/faq.md, and TRUST.md added — all newly public credibility assets.
           KEEP_PATHS=(
             "VERSION"
             "README.md"
@@ -73,9 +81,15 @@ jobs:
             "SETUP-CHECKLIST.md"
             "cowork.lock.json"
             "CLAUDE.md"
+            "TRUST.md"
             "scripts/setup-folders.sh"
             "scripts/setup-folders.ps1"
             "docs/architecture.md"
+            "docs/project-audit-v2.6.1.md"
+            "docs/research/v2.2-skill-landscape.md"
+            "docs/research/v2.7-usercase-test-and-improvement-research.md"
+            "docs/how-it-works.md"
+            "docs/faq.md"
             "vendored/agency-agents/LICENSE"
           )
           for path in "${KEEP_PATHS[@]}"; do

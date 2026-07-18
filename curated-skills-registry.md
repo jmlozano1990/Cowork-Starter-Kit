@@ -81,9 +81,9 @@ Each entry includes:
 
 #### Disposition Annotations
 
-> `doc-summary` — `disposition: covered-by-runtime` — meeting-notes skill + Anthropic runtime DOCX/PDF skills + general Claude summarization are sufficient. No in-tree expansion planned. Source: `docs/skills-roadmap.md` §Section 1.
+> `doc-summary` — `disposition: covered-by-runtime` — meeting-notes skill + Anthropic runtime DOCX/PDF skills + general Claude summarization are sufficient. No in-tree expansion planned. Source: `docs/internal/process/skills-roadmap.md` §Section 1.
 >
-> `action-items` — `disposition: covered-by-runtime` — meeting-notes skill already extracts action items as a workflow step. No standalone in-tree expansion planned. Source: `docs/skills-roadmap.md` §Section 1.
+> `action-items` — `disposition: covered-by-runtime` — meeting-notes skill already extracts action items as a workflow step. No standalone in-tree expansion planned. Source: `docs/internal/process/skills-roadmap.md` §Section 1.
 
 ### Personal Assistant
 
