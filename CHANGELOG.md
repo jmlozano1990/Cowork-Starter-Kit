@@ -4,6 +4,12 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.8.1] - 2026-07-18
+
+### Fixed
+
+- **`assets/setup-demo.svg` storyboard rewritten to mirror the actual `WIZARD.md` interview.** The prior 6-beat demo opened with the user speaking first (the real wizard opens the conversation — `WIZARD.md:44`), and its 5th beat had the user answering Q2 ("Alex — studying for the MCAT, no deadlines yet") immediately after a fast-track menu beat, with Q2 itself never shown — a narrative non-sequitur an owner review caught on the live rendered README. The demo is now a strict 7-beat COWORK/YOU alternation that traces to the real script: Cowork opens with Q1 (`WIZARD.md:44`) → user states a goal → Cowork routes to a preset and proposes a bundle (`WIZARD.md` §F3 tokenization / Path A + §F4 bundle-confirm) → user confirms → Cowork asks the single Q2 turn (`WIZARD.md:136-151`) → user answers → Cowork closes with the workspace-ready summary and now also surfaces the Step 7b clean handover (`WIZARD.md:283-285`, `:313`) — the setup kit archiving itself into `_setup-kit/` — which the demo previously never showed. The fast-track menu beat is dropped (it was the non-sequitur source; the README prose already covers the checkpoint mechanic). SVG remains fully inert (no `<script>`, `<foreignObject>`, `on*=` attributes, or external `href`/`xlink:href` — re-verified with a 0-hit grep plus a negative control), well-formed, and keeps the existing palette/typography/mac-dots-header visual system; the `<title>` aria text now also mentions the clean handover.
+
 ## [2.8.0] - 2026-07-18
 
 **"Showcase"** — Phase B of the 4-phase improvement roadmap (Truth & Release → **Showcase** → Distribution & Trust → Upstream refresh). Focused on visibility and provable trust, not interview behavior — WIZARD.md's Q1/F4/Q2/Q3 flow is unchanged this release.
