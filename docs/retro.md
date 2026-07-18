@@ -2,6 +2,116 @@
 
 ---
 
+## [v2.8.1] - 2026-07-18 — Demo Story Truthfulness
+
+**Date:** 2026-07-18
+**Classification:** STANDARD — single presentational inert-SVG asset rewrite + version trio (VERSION/README badge/CHANGELOG). No auth/schema/CI-workflow/guard/secret/permission surface touched; confirmed at Phase 5 and re-confirmed independently at Phase 7.
+**Mode:** patch, v2.5.4-precedent combined path (Phase 0 interactive requirements + Phase 3 gate → @dev Phase 4 → combined Phase 5+6+7 @qa). Phase 1/Phase 2/Phase 6 collapsed into the Phase 3 exact-dialogue gate binding plus @qa's combined-path re-verification, per the established STANDARD-patch ceremony.
+**Rework rate:** 0% (Phase 4 binding SHA `491ad18` = HEAD at merge; no post-Phase-4 fix commits).
+**Cycle SHAs:** Phase 4 binding SHA `491ad18`, @qa combined 5+6+7 APPROVED (`docs/internal/qa/qa-report-v2.8.1.md`, 339 lines), merged (squash) `f4d2fb0` via PR #62 2026-07-18T14:48:26Z. CI: 50 pass / 0 fail (one transient-network rerun of Link Check (External) on `contributor-covenant.org` — a link this PR didn't touch; the push-event twin run had already passed). Tag `v2.8.1` pushed; Release auto-publishing via `release-assets.yml`.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | Orchestrator + User | 0 | Interactive — triggered by the owner reviewing the LIVE rendered demo (not a spec/code review) and catching two narrative defects: the user spoke first (the real wizard opens, WIZARD.md:44), and beat 5 answered a Q2 the demo never asked, directly after an unrelated fast-track-menu beat. Requirements also independently verified the Step 7b `_setup-kit/` cleanup feature was ALREADY SHIPPED (v2.7) — the real gap was demo discoverability, not missing functionality, reframing the fix as "surface it in the final beat," not "build it." |
+| 3. User Gate | User | 0 | APPROVED — exact 7-beat replacement dialogue bound verbatim (byte-for-byte) before implementation began; fast-track menu beat explicitly dropped (it was the non-sequitur source). |
+| 4. Implementation | @dev | 0 | 1 commit, 4 files exactly in scope. 4 disclosed, benign deviations (local unpushed amend, xmllint-absent fallback, README alt/caption reviewed-unchanged, "Next up" teaser reviewed-not-stale) — all self-verified. |
+| 5+6+7. Test+Audit+Approval | @qa | 0 | Combined-path independent re-verification of all 4 hard gates (traceability, inert-SVG, version-consistency, no-competitor-naming) plus animation timing, geometry, markdownlint, and full diff-audit — each mechanically-checkable gate paired with a negative control proving it can actually fail. All 4 of @dev's disclosed deviations independently re-checked from source, not trusted from narrative. APPROVED. |
+| 7. Merge | Orchestrator + User | 0 | PR #62 squash-merged `f4d2fb0` on green CI (50/0 after 1 transient rerun); tag `v2.8.1` pushed; release auto-published via `release-assets.yml`. |
+
+**Net-new findings across the full cycle: 0.** No CRITICAL/WARNING/blocking findings at any phase. The cycle's one real "finding" — the demo narrative defect — was caught and precisely bound BEFORE Phase 4, which is exactly why nothing surfaced downstream.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC-a | 7-beat dialogue traces to WIZARD.md (Q1:44, F3/F4 Path A:50–101, Q2:136–151, closing:313 + Step 7b:281–285), byte-exact to the Phase 3 binding | Easy — exact-text binding supplied at gate; @dev implemented verbatim; @qa confirmed 15/15 lines byte-identical |
+| AC-b | SVG remains inert (0 `<script>`/`foreignObject`/`on*=`/external `href`), well-formed, no external resource refs | Easy — reused the established v2.8.0 inertness pattern; re-verified with a fresh negative control |
+| AC-c | VERSION/README badge/CHANGELOG trio = 2.8.1 | Easy — standing `version-consistency-check` CI gate (shipped v2.7.2) makes this close to self-enforcing |
+| AC-d | No competitor naming in the diff | Easy — deny-list grep, 0 hits |
+| AC-e | Animation retimed: 7 strictly-increasing entrances, uniform hold, single infinite loop, no beat-to-beat overlap; viewBox grows to fit | Easy — extended the existing 6-beat cadence pattern by one beat; consistent 12-point spacing, consistent 10px gaps |
+
+All 5 ACs: **Easy** — every one had an exact-line or exact-text binding delivered before implementation, and none required a design judgment call at Phase 4. Continues the pattern established since v2.5.4: gate-time exact bindings correlate directly with 0% rework.
+
+---
+
+### 3. Token Cost Actuals
+
+| Model Tier | Sessions | Estimate |
+|-----------|---------|---------|
+| opus | 0 | No Phase 1/Phase 2 full sessions — combined path |
+| sonnet | ~3 | Orchestrator+PM Phase 0 (interactive), @dev Phase 4, @qa combined Phase 5+6+7 |
+| haiku | 0 | — |
+
+Estimated cycle cost: <$0.10 — patch-mode, single-asset scope, STANDARD, combined path. Same cost class as v2.5.4 (the lowest-cost cowork cycle at the time); v2.8.1 matches it on a comparably narrow scope.
+
+---
+
+### 4. Phase Durations
+
+| Phase | Agent | Timestamp | Duration |
+|-------|-------|-----------|----------|
+| 0. Requirements + 3. Gate | Orchestrator + User | 2026-07-18T13:45:07Z | Combined interactive round (owner screenshot review → Q&A → exact-dialogue gate binding, one session) |
+| 4. Implementation | @dev | 2026-07-18T14:02:00Z | ~17 min after gate |
+| 5+6+7. Test+Audit+Approval | @qa | 2026-07-18T14:11:48Z | ~10 min after Phase 4 DONE |
+| 7. Merge | Orchestrator + User | 2026-07-18T14:48:26Z (`f4d2fb0` commit time) | ~10 min CI-to-merge (after PR review) |
+
+**Total pipeline wall-clock (gate → merge): ~63 minutes.** Fast for a well-gated STANDARD patch, consistent with the v2.5.4/v2.6.1 quick-mode cost class — most of the elapsed time is PR-review/CI latency, not agent work.
+
+---
+
+### 5. Phases Abbreviated
+
+Patch mode, v2.5.4-precedent combined path: Phase 1 (Design), Phase 2 (Security Review), and Phase 6 (Audit) collapsed into the Phase 3 exact-dialogue gate binding plus @qa's combined Phase 5+6+7 pass — appropriate for a STANDARD single-asset patch with no auth/schema/CI surface. @ux SKIPPED (single inert marketing/demo asset, no product UI/component surface — rationale recorded in the qa-report). G1 public artifact audit: SKIPPED — `bump_type=patch` (ADR-110 rule; patch bumps do not auto-trigger G1 regardless of `github.enabled`). F3 Confluence: SKIPPED (`confluence.enabled=false`). F6 repo-description drift check: SKIPPED (patch bump).
+
+---
+
+### 6. Rework Rate and Causes
+
+**0%.** Phase 4 binding SHA `491ad18` is the same commit that shipped (squashed into `f4d2fb0`) — no post-Phase-4 fix commits, no @qa REJECT-then-fix round.
+
+**This is the desired shape for a well-gated patch cycle, and it's worth recording as such rather than as "nothing happened."** The two catches that mattered both landed upstream of implementation. Phase 0's interactive requirements gathering is what surfaced the narrative defect at all — from the owner reviewing the actual rendered artifact, not a code or spec review. Phase 3's gate then bound the exact replacement dialogue, beat-for-beat, before @dev wrote anything. @dev's implementation and @qa's independent re-verification both then confirmed the binding was honored exactly — real work (@qa re-ran all 4 hard gates plus animation/geometry/lint/diff checks from the raw branch, with negative controls, rather than trusting the Phase 4 narrative), but confirmation work, not discovery work, because there was nothing left to discover by the time it started. A cycle that ships this cleanly is not evidence QA had nothing to do — it is evidence the earlier phases did their job.
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=0, issue=0, info=0** at the Phase 5–7 layer.
+
+The substantive prevention happened before Phase 5: the owner's live-render review is what stopped the confusing demo narrative from persisting indefinitely (it had already shipped once, in v2.8.0, unnoticed until someone actually watched it play out), and the Phase 3 gate's exact-dialogue binding is what prevented any drift between "what was approved" and "what got built" — the kind of drift that would otherwise be @qa's job to catch after the fact. Zero findings at Phase 5–7 is the outcome of that upstream precision, not a sign the QA pass was light — see §1 and §6 for what @qa actually re-ran.
+
+---
+
+### 8. Pattern Detection
+
+**Check-That-Cannot-Fail — reinforcement, not a new WATCH instance.** This cycle applied the discipline 3 times at the QA-verification layer: a negative control on the inert-SVG grep (injected `onload=` into a scratch copy, confirmed the check fires), a negative control on the version-consistency replication (VERSION=9.9.9 in an isolated scratch copy, confirmed FAIL), and a self-test of markdownlint (injected an MD009 trailing-whitespace violation, confirmed it fires — relevant given MD009 has bitten this repo before, in v2.7.2). The existing patterns.md row for this discipline ("Check-That-Cannot-Fail (design-stage negative test on a CI gate)," INFO/validated practice, WATCH 2/3 — v2.7.2, v2.8.0) tracks a specifically *design-stage* instantiation of the principle; v2.8.1's instances are at the *QA-verification* stage instead, so this does not mechanically advance that counter to 3/3. It is, however, evidence the underlying discipline ("prove a check can fail before trusting it green") is generalizing past the design phase where it was first formalized.
+
+**Owner-Review-as-Phase-0-Input — 1st instance, healthy signal.** This is the first cycle in this project's history where the Phase 0 defect report originated from the owner reviewing the LIVE rendered artifact (the actual animated demo, as a user would see it) rather than from a spec re-read, a code review, or a written bug report. It caught something none of those other review modes would have: a narrative sequencing problem that only reads as wrong when you watch the beats play out in order. This aligns with the project's own render-verify principle and is worth tracking if it recurs — not yet a pattern, but a good habit worth naming.
+
+**Two process findings, both outside this repo's own scope for remediation:**
+
+1. **@qa subagent active-project pin-inheritance guard block (Council-side, fail-closed).** When @qa's combined-path session attempted to write and commit `docs/internal/qa/qa-report-v2.8.1.md` directly, The-Council's `qa-scope.sh` guard rejected the write: the session had no `COUNCIL_ACTIVE_PROJECT` env var and no matching `.session-pin-<pid>` file anywhere in its process-ancestor chain, so active-project resolution fell through to `registry.json`'s `"self"` default — meaning @qa's write was checked against The-Council's own scope, not `claude-cowork-config`'s, and was correctly rejected as out-of-scope. @qa diagnosed the exact precedence chain (`--project` arg > session-pin > env var > registry.json) rather than attempting a workaround, and could not self-remediate by design (`.session-pin-*` files are reserved for the orchestrator main session; @qa's own agent-scope forbids touching `registry.json`/`pipeline.md`). Resolved this cycle via the same shape already adopted for this project in v2.7.2 (see patterns.md "Subagent Worktree Council-State Stranding," WATCH 1/3): @qa authored the finalized report content, the orchestrator performed the actual write and commit. **This is fail-closed, not a security exposure** — the guard did exactly what it should when active-project resolution is ambiguous. FLAGGED as a Council self-improve candidate (fixing session-pin propagation for standalone-launched subagent sessions); out of scope for this repo, no action needed here.
+2. **Transient external-link CI flake (`contributor-covenant.org`, ~5s network error, passed on rerun).** The PR's Link Check (External) job hit a transient network error resolving `contributor-covenant.org` — a link this PR did not touch (`CODE_OF_CONDUCT.md` is unrelated to the 4-file demo/version-trio scope) — and passed cleanly on rerun; the push-event twin run had already succeeded. This is not a new broken-link instance and requires no action in this repo this cycle. It does add one more data point of context to the already-flagged lychee local-replication gap (2-cycle-recurring per the v2.8.0 pipeline notes: local CI replication doesn't cover network-dependent external-link checks) — feeding, not creating, the already-parked link-sweep-enforcement carry-forward for Phase C.
+
+No new patterns.md row proposed by @qa from this cycle; both process findings above are context for existing tracked items, not new instances requiring promotion.
+
+---
+
+### 9. Retrospective Verdict
+
+**HEALTHY.** v2.8.1 is close to the ideal outcome for a STANDARD patch cycle: 0% rework, 0 findings at Phase 5–7, ~63 minutes gate-to-merge, and — most importantly — the one real defect this cycle exists to fix was caught and precisely specified *before* any code was written, by the owner actually watching the rendered artifact rather than reading about it. That is the shape every patch cycle should aim for, and it is worth stating plainly rather than burying in a table: zero downstream findings here is a sign the upstream phases worked, not a sign QA had nothing to verify — @qa still independently re-ran all 4 hard gates, animation/geometry, markdownlint, and a full diff-audit from the raw branch, each with a negative control where one was mechanically possible, rather than trusting the Phase 4 narrative.
+
+Two process notes surfaced outside the cycle's own product scope: a Council-side guard-resolution gap blocked @qa's direct report commit (correctly, fail-closed — no security exposure) and was worked around this cycle using the same orchestrator-commits-on-@qa's-behalf shape already established for this project; it is flagged as a Council self-improve candidate, not a `claude-cowork-config` action item. A transient external-link CI flake added color to the already-tracked lychee local-replication gap but produced no new finding.
+
+Carry-forwards OUT of this cycle: **none new.** Existing parked items are unchanged and remain correctly deferred to Phase C (v2.9.0 Distribution & Trust): the `sync-agency-dry-run` PATTERN_COUNT gate that has never fired since v2.0.0, the link-sweep pre-push enforcement promoted at v2.8.0's 3rd KEEP-DROP instance, and the WS7 social-preview user visual-check from v2.8.0. v2.8.1 touched none of that surface and adds nothing to the queue.
+
+---
+
 ## [v2.8.0] - 2026-07-18 — Showcase
 
 **Date:** 2026-07-18
