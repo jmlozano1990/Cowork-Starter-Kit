@@ -30,13 +30,97 @@ jobs:
   link-check-external:
     name: Link Check (External)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: lycheeverse/lychee-action@f613c4a64e50d792e0b31ec34bbcbba12263c6a6 # v2.3.0
         with:
-          args: --no-progress --exclude-path vendored/agency-agents "**/*.md"
+          # v2.13.0 WS-LINK (ADR-050, closes Pattern #3 — 5 consecutive cycles):
+          # host-anchored excludes for the two chronically-flaky hosts named in
+          # docs/retro.md. Anchored to the URL's host component
+          # (^https?://(<subdomain>.)*<host>(/|$)) so a substring match inside an
+          # unrelated URL's path/query (e.g. https://example.com/?ref=shields.io)
+          # or a look-alike host (notshields.io.evil.example) is NOT excluded —
+          # only the real host is (MF-4 / AC-LINK-1, tightened from Phase 2's S3
+          # substring-regex finding). This job's fail-suppression setting has been
+          # dropped entirely (AC-LINK-1/AC-LINK-3): a genuine break in any
+          # non-excluded external link now blocks merge, where it previously did
+          # not reliably.
+          args: --no-progress --exclude-path vendored/agency-agents --exclude '^https?://([a-z0-9-]+\.)*shields\.io(/|$)' --exclude '^https?://([a-z0-9-]+\.)*contributor-covenant\.org(/|$)' "**/*.md"
           fail: true
+
+  skills-allowlist-check:
+    name: Skills Allowlist Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Enforce top-level .claude/skills allowlist (fail-closed)
+        run: |
+          # v2.13.0 WS-F2-CI (ADR-050, closes F2 / MF-7(b)): the kit's own top-level
+          # .claude/skills/ must contain exactly {setup-wizard, skill-studio} — a
+          # Skill-Studio-generated skill accidentally committed to the kit's own top
+          # level must be caught mechanically, not left to a human remembering to
+          # check it every release.
+          #
+          # Exit-code contract (MF-1): 0 clean; 1 a stray entry OR a missing required
+          # entry; 2 .claude/skills/ absent OR present-but-unlistable — fail-closed,
+          # an unreadable directory must never default-pass (Phase-2 S1: a naive
+          # implementation that only checks `[ -d ... ]` and lets a `find` permission
+          # error silently empty the listing degrades an unlistable directory to the
+          # same exit 1 as "both required entries missing" — this job treats that
+          # case as its own fail-closed exit 2 instead).
+          #
+          # MF-2 (A03 hygiene): children are enumerated with a properly-quoted `find`,
+          # never an unquoted `$(ls)` (word-splitting / glob-expansion risk on an
+          # oddly- or maliciously-named directory).
+          set -o pipefail
+          SKILLS_DIR=".claude/skills"
+          ALLOWED_SET="setup-wizard skill-studio"
+
+          if [ ! -d "$SKILLS_DIR" ]; then
+            echo "::error::${SKILLS_DIR} not found or not a directory — fail-closed."
+            exit 2
+          fi
+
+          FOUND_RAW="$(mktemp)"
+          FIND_ERR="$(mktemp)"
+          trap 'rm -f "$FOUND_RAW" "$FIND_ERR"' EXIT
+
+          if ! find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d > "$FOUND_RAW" 2>"$FIND_ERR"; then
+            echo "::error::${SKILLS_DIR} is present but unlistable (find failed) — fail-closed."
+            cat "$FIND_ERR"
+            exit 2
+          fi
+          if [ -s "$FIND_ERR" ]; then
+            echo "::error::${SKILLS_DIR} produced listing errors while enumerating children — fail-closed."
+            cat "$FIND_ERR"
+            exit 2
+          fi
+
+          FOUND_SORTED=$(sed 's|.*/||' "$FOUND_RAW" | sort -u)
+
+          FAIL=0
+          while IFS= read -r entry; do
+            [ -z "$entry" ] && continue
+            case " ${ALLOWED_SET} " in
+              *" ${entry} "*) : ;;
+              *)
+                echo "::error::Stray top-level skill directory: ${SKILLS_DIR}/${entry} (allowed: setup-wizard, skill-studio)"
+                FAIL=1
+                ;;
+            esac
+          done <<< "$FOUND_SORTED"
+
+          for req in $ALLOWED_SET; do
+            if ! printf '%s\n' "$FOUND_SORTED" | grep -qxF "$req"; then
+              echo "::error::Required top-level skill directory missing: ${SKILLS_DIR}/${req}"
+              FAIL=1
+            fi
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "skills-allowlist-check PASSED — ${SKILLS_DIR} contains exactly: setup-wizard, skill-studio."
 
   shellcheck:
     name: ShellCheck

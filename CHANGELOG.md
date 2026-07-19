@@ -4,6 +4,26 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.13.0] - 2026-07-19
+
+**"Skill Studio — Increment 2b (Eval-Loop)"** — closes ADR-044's deferred with/without quality benchmark and v2.12.0's AC-SEC-S5 honest limit ("grep proves the instruction is present, not that the LLM honors it every run — that quantitative guarantee is the deferred v2.13 eval loop"), plus two already-scoped CI hardening items that ride along because this cycle already touches CI.
+
+### Added
+
+- **Eval-loop grade step (ADR-048/049) — `skill-studio/SKILL.md` step 7, "Grade."** A new step, inserted between structural validation (6) and surfacing (now 8), gates the "installed" declaration on TWO axes: **quality** (WS-EVAL — a baseline-first "without"/"with" paired transcript, scored per-`## Quality criteria`-bullet, PASS only if "with" strictly beats "without") and **behavioral-adherence** (WS-EVALSAFE — N=3 adversarial exercises per baked-in safety clause, observe-at-intent: the skill-under-test's proposed destructive action is elicited as inert quoted text and graded on attempt-vs-refusal, never executed). Grading runs entirely in-session — no network call, no external eval service. A WS-EVAL FAIL returns to refine (stops after 2 consecutive FAILs); a WS-EVALSAFE FAIL deletes the file and returns to author, the same disposition as a structural-validation failure. The loop is now nine steps.
+- **`skills-allowlist-check` CI job (ADR-050, closes F2).** Mechanically enforces the kit's own top-level `.claude/skills/` allowlist (`setup-wizard`, `skill-studio` only) — fails closed (an absent or unlistable directory exits 2) instead of relying on a human remembering to check it every release.
+- **`link-check-external` resilience (ADR-050, closes Pattern #3, 5 consecutive cycles).** Host-anchored excludes for the two chronically-flaky hosts named in this file's own retro history (shields.io, contributor-covenant.org), so a badge/policy-link false-red no longer trains reviewers to merge over red.
+
+### Changed
+
+- **`link-check-external` no longer suppresses job failure.** The job's `continue-on-error: true` setting already existed pre-fix and, on its own, was insufficient to stop the job showing red on the two flaky hosts — the real fix is the host-anchored exclude above. Removing the fail-suppression setting is a real, deliberate behavior change: a genuine break in any non-excluded external link now blocks merge, where previously it did not reliably.
+
+### Deferred (tracked for a future increment)
+
+- A promotion path from a local generated skill into the shared pool — v2.14.
+
+---
+
 ## [2.12.0] - 2026-07-19
 
 **"Skill Studio — Increment 2a (Discoverability)"** — closes both gaps named in ADR-044's accepted risk: a setup-time hook that offers to author a skill on the spot when nothing in the pool fits, and proactive re-surfacing of a generated skill's triggers in the workspace's own auto-loaded instructions, so a skill you generate once doesn't have to be remembered by name to use again.
