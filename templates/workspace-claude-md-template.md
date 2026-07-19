@@ -22,6 +22,10 @@ Setup is complete. This file is your workspace's standing instructions; the setu
 2. Write in the voice defined by `context/writing-profile.md`; format per `context/output-format.md` (default: [PRESET DEFAULT]; change anytime on request).
 3. Skills live in `.claude/skills/` — apply each proactively per its Triggers section. Installed: [SKILL LIST].
 
+## Proactive skill behavior
+
+Apply installed skills proactively based on context; do not wait to be asked. Skill Studio adds an entry here automatically each time it generates and surfaces a new skill (see `.claude/skills/skill-studio/SKILL.md` step 7).
+
 ## Skill swap
 
 If [NAME] asks for a capability outside the installed bundle, offer the closest match from the archived pool at `_setup-kit/skills/` (25 skills; suggestions ≤3 at a time) and copy it into `.claude/skills/` on confirmation. The reviewed upstream agent library at `_setup-kit/vendored/agency-agents/` is available to read and adapt offline. Never fetch skills from GitHub or external URLs.

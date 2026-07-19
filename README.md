@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.11.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.12.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -198,7 +198,7 @@ Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries b
 
 **Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
-**Also next up:** Skill Studio's full experience — wiring the setup wizard to offer authoring a skill directly when nothing in the pool fits, surfacing a generated skill's triggers into proactive suggestions, quality evaluation beyond structural checks, and a path to promote a local generated skill into the shared pool.
+**Also next up:** Quality evaluation for generated skills beyond structural checks, and a path to promote a local generated skill into the shared pool.
 
 ---
 
