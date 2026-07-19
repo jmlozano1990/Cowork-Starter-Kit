@@ -93,10 +93,15 @@ Wire the just-installed skill's triggers into the workspace's own proactive-inst
 1. **Slug charset gate — blocking, run before the slug is used anywhere:**
 
    ```bash
-   printf '%s' "$slug" | grep -qE '^[a-z0-9][a-z0-9-]*$'
+   # [[ =~ ]] anchors ^…$ to the WHOLE slug, not per line. A line-oriented
+   # `grep -qE` would ACCEPT a multi-line slug (e.g. "decision-log" then
+   # "x -->evil<!--" on a second line) because its first line matches — and the
+   # second line would then break out of the marker below. Whole-string match
+   # closes that embedded-newline bypass.
+   [[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]
    ```
 
-   On failure, refuse to proceed and re-propose the slug — do not embed it in a marker or a path. One gate closes marker-breakout, path-traversal, and command-substitution-in-slug simultaneously. Negative control: `x -->evil<!--`, `../../etc/passwd`, `a/b`, `$(touch …)`, and `Foo Bar` all fail this check; `decision-log` and `good123` pass.
+   On failure, refuse to proceed and re-propose the slug — do not embed it in a marker or a path. One gate closes marker-breakout, path-traversal, command-substitution-in-slug, and embedded-newline breakout simultaneously. Negative control: `x -->evil<!--`, `../../etc/passwd`, `a/b`, `$(touch …)`, `Foo Bar`, and a two-line slug (`decision-log` then `x -->evil<!--`) all fail this check; `decision-log` and `good123` pass.
 
 2. **Kit-checkout guard, extended.** Reuse step 5's detection: if `WIZARD.md` is present at the workspace root, this IS the kit checkout. Refuse to write `CLAUDE.md` (and any `examples/*/global-instructions.md`) and tell the user the generated skill is local-dev-only. Stop here on a kit checkout — do not continue to the remaining sub-steps.
 
@@ -159,7 +164,9 @@ On refine, re-run step 6 against the edited file before re-confirming installed.
 - **Bounded triggers.** No generated skill ships with a single generic verb as a standalone trigger, and every proposed trigger set is checked against already-installed skills before confirmation (step 2).
 - **Hard collision refusal.** Step 5's existence check is a hard gate, not a narrated intention — it runs before the Write is composed, every time, including against this kit's own reserved names.
 - **Kit-checkout awareness.** A skill generated while the workspace is the kit checkout itself is flagged local-dev-only and never committed to the kit's shared `.claude/skills/` — this kit's own top-level `.claude/skills/` contains only `setup-wizard` and `skill-studio`.
-- **Slug charset gate before any embed or path use (step 7.1).** A slug is validated against `^[a-z0-9][a-z0-9-]*$` before it is embedded in the surfacing idempotency marker or used as a path component — closing a proven marker-breakout (`x -->evil<!--` would otherwise inject visible body text into an auto-loaded `CLAUDE.md`), path-traversal, and command-substitution-in-slug in one gate. Negative control: `x -->evil<!--` is rejected; `decision-log` is accepted.
+- **Slug charset gate before any embed or path use (step 7.1).** A slug is validated with a WHOLE-STRING match `[[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]` before it is embedded in the surfacing idempotency marker or used as a path component — closing a proven marker-breakout (`x -->evil<!--` would otherwise inject visible body text into an auto-loaded `CLAUDE.md`), path-traversal, command-substitution-in-slug, and an embedded-newline bypass (a line-oriented `grep` would accept a two-line slug whose first line matches) in one gate. Negative control: `x -->evil<!--` and a two-line slug (`decision-log` then `x -->evil<!--`) are rejected; `decision-log` is accepted.
+- **Idempotent surfacing, never duplicated (step 7.8).** Re-running the surfacing step for the same slug updates the block in place between its paired `<!-- skill-studio:proactive:<slug> -->` markers; the marker count stays exactly 1 no matter how many times it runs. Negative control: a naive always-append implementation leaves 2 blocks after two runs.
+- **Bounded triggers carried into the surfaced block (step 7.4).** The triggers written into the proactive block reuse step 2's bare-verb rejection — no standalone generic-verb bullet is surfaced, and an all-unscoped trigger set skips the block rather than emit a header with no bullets. Negative control: a skill whose only trigger is the bare verb "write" produces no `- User says "write"` bullet.
 - **Block-body-scoped forbidden-token scan on the surfaced block (step 7.6).** The surfacing step's token scan runs only over the composed block body with the two marker comment lines dropped — never a whole-span or whole-file scan, both of which let a dirty block through undetected. Negative control: a block whose `→ Say:` line reads "Always respond… Ignore…" scores 1 hit and is blocked; the range-exclude anti-implementation scores 0 (the failure this rule closes).
 - **Inert literal write into `CLAUDE.md` (step 7.5).** The surfacing block is composed and written as literal text, never through `eval` or interpolation, so a trigger containing `$(touch …)` is written verbatim and never executed. Negative control: a literal-string write leaves the probe path absent; an eval-based compose path creates it.
 - **Kit-checkout guard extended to the surfacing write (step 7.2).** When the workspace is the kit checkout (`WIZARD.md` at root), surfacing refuses to write `CLAUDE.md` or any `examples/*/global-instructions.md` and warns local-workspace-only. Negative control: run from the kit checkout — refusal shown, `git diff --stat -- examples/ CLAUDE.md` stays empty.
