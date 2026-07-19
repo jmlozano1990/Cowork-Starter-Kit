@@ -144,3 +144,78 @@ v2.13.0 adds a two-axis grading step to Skill Studio (quality + behavioral-safet
 The load-bearing item OI-SEC-NEW-1 is **SIGNED OFF** for local-workspace scope, because the eval-loop grants no new capability or reach beyond what the in-session model already holds, the containment residual is genuinely bounded and backstopped by a default-on harness control, and the design overclaims nothing. The sign-off is contingent on two grep-verifiable Phase-5 checks (backstop prose ships; grade-step inertness holds).
 
 Two WARNINGs (S1 allowlist unlistable-path fail-closed precision; S2 the contingent sign-off) and four INFO items. **No CRITICAL, no BLOCK.** Verdict: **PASS WITH WARNINGS** — proceed to `/gate`.
+
+---
+
+# Security Audit (Phase 6) — Cowork Starter Kit v2.13.0 "Skill Studio (Increment 2b · Eval-Loop)"
+
+## Phase: 6
+## Date: 2026-07-20T00:00:00Z
+## Status: PASS
+## Audited HEAD: 0303af6 (impl 2a282e8 + Phase-5 qa-report), branch feature/v2.13-eval-loop
+
+> Post-implementation audit of the ACTUALLY-SHIPPED committed tree — distinct from the Phase-2 pre-build review above. Every check below was re-executed by @security against shipped bytes at HEAD (exit-code job extracted and run against 8 fresh fixtures under a non-root uid; both lychee `--exclude` regexes re-run via `grep -E`); the QA narrative was corroborated, not trusted. Classification re-run: **SECURITY-SENSITIVE HOLDS** (diff touches `.github/workflows/quality.yml` CI enforcement AND the `skill-studio/SKILL.md` generator instruction surface). Combined audit+approve NOT eligible. This file is on the Content Exclusion list and is `docs/internal/`-pruned from release archives (re-verified this phase: `git archive HEAD` yields 0 `docs/internal/` files).
+
+## Findings Summary
+| ID | Severity | Phase | Surface | Description |
+|----|----------|-------|---------|-------------|
+| S7 | INFO | 6 | configuration | shellcheck CI job is `scandir: ./scripts`-scoped, so the new inline `skills-allowlist-check` bash in `quality.yml` is not CI-shellcheck'd. Shipped bash hand-audited clean (proper quoting, `find -type d`, `case` literal match, `grep -qxF`, `trap` cleanup; only SC2086 is an intentional word-split of a hardcoded constant). Non-blocking; fast-follow: relocate to `scripts/` or widen `scandir` or add actionlint. |
+| S8 | INFO | 6 | permissions | ADR-050 stray-FILE residual: allowlist `-type d` scoping does not catch a stray non-directory file at `.claude/skills/` root (reproduced: exit 0). Accurately disclosed in ADR-050 §"Risk knowingly accepted". The dangerous case (stray skill folder) IS caught. Optional fast-follow: add `-type f` sweep. Accepted residual, not a defect. |
+
+**No CRITICAL. No BLOCK. No open WARNING (Phase-2 S1/S2 both RESOLVED at HEAD). Two accepted INFO residuals. Verdict: PASS.**
+
+### Phase-2 MUST-FIX verification (shipped-byte evidence — @security re-ran the code)
+| MF | Landed correctly | Evidence at HEAD |
+|----|------------------|------------------|
+| MF-1 (allowlist exit-2 absent/unlistable) | YES | Extracted `run:` block executed against 8 fresh fixtures (non-root uid 1000, genuine `chmod 000` EPERM): absent→2, unlistable→2, clean→0, stray-dir→1, missing-required→1. Fail-closed via BOTH `find`-nonzero and `[ -s "$FIND_ERR" ]` branches — stricter than the naive impl the Phase-2 S1 WARNING predicted (which would have degraded unlistable→1). |
+| MF-2 (quoted `find`, no `$(ls)`) | YES | Verbatim in shipped bash; adversarial `-rf` and `evil * dir` fixtures → exit 1 with no option-injection, no word-split, no glob expansion. |
+| MF-3 (step-7 backstop prose, zero "scratch path") | YES | `"the exercise has no execution channel"`=2; `"no destructive operation is pre-approved during grading"`=2; `"scratch path"`=0; `"scratch"`=0. Sole `sandbox-path` occurrence is a negation ("No sandbox-path convention is relied on"), consistent with intent. |
+| MF-4 (host-anchored link-exclude) | YES | Shipped `^https?://([a-z0-9-]+\.)*shields\.io(/|$)` (+ contributor-covenant.org). Re-ran `grep -E`: 4 real-host variants EXCLUDED; all S3 over-match traps (`?ref=`, `notshields.io.`, `shields.io.attacker.`, `myproject.io/shields`) stay checked. `(/|$)` terminator closes prefix and suffix look-alikes. Positive deviation — stronger than AC-P13-7 literal; Phase-2 S3 CLOSED. |
+
+### OI-SEC-NEW-1 sign-off — HOLDS AT HEAD
+The Phase-2 sign-off was contingent on two Phase-5/6 verifications; both are CONFIRMED on shipped bytes: (a) AC-P13-5 backstop prose ships (MF-3 greps); (b) OI-SEC-NEW-3 grade-step inertness — step 7 (`SKILL.md:89-116`) quotes and grades generated `## Instructions` + adversarial fixtures as inert DATA, with zero exec/eval/subprocess/network directive. The observe-at-intent narration contract is sound AS SHIPPED: containment is a property of the grading loop's wiring (question-answering, not task-execution) plus the default-on harness permission gate; it declines any scratch/sandbox-path convention the untrusted model could ignore. Residual triple-failure bounded to one local workspace, named honestly. **Sign-off is not void.**
+
+### OI disposition at HEAD
+| OI | Disposition | Evidence |
+|----|-------------|----------|
+| OI-SEC-LOW-1 | RESOLVED | in-session only; `SKILL.md:91` "no network call, no external eval service"; 0 network directives. |
+| OI-SEC-LOW-2 | RESOLVED (S1 fix) | absent→2, unlistable→2 (@security exec). |
+| OI-SEC-LOW-3 | RESOLVED | `skills/anti-ai-slop/SKILL.md:48` data-not-instruction clause present (by text). |
+| OI-SEC-NEW-1 | SIGN-OFF HOLDS | both contingencies confirmed (above). |
+| OI-SEC-NEW-2 | RESOLVED / ACCEPTED | `continue-on-error` removed (diff); exclude host-anchored → Phase-2 S3 CLOSED. |
+| OI-SEC-NEW-3 | RESOLVED | grade step quotes/grades, never executes. |
+| OI-SEC-NEW-4 | RESOLVED | `git diff main...HEAD -- quality.yml` = exactly the 2 changes; internal `link-check:` job byte-unchanged; no `needs:` anywhere → no cross-job behavior change from dropping `continue-on-error`. |
+| Phase-2 S1 (WARNING) | RESOLVED | MF-1 confirmed by @security execution under genuine permission denial. |
+| Phase-2 S2 (WARNING) | RESOLVED | OI-SEC-NEW-1 contingencies confirmed; sign-off holds. |
+| Phase-2 S3 (INFO) | CLOSED | shipped regex host-anchored; over-match eliminated. |
+| Phase-2 S4 (INFO) | ACCEPTED | `continue-on-error` removal documented in CHANGELOG `### Changed` (AC-LINK-3). |
+| Phase-2 S5 (INFO) | CONFIRMED inert | grade-step never executes fixtures. |
+| Phase-2 S6 (INFO) | CONFIRMED | archive prunes 0/N `docs/internal/`; leak-check PASS. |
+
+### Leak check (re-run at HEAD)
+- `git archive --format=tar HEAD | tar -t | grep -c 'docs/internal/'` = **0**.
+- `docs/spec.md` in archive = **0** (export-ignore pruned; `git check-attr export-ignore docs/spec.md` = set).
+- Archive integrity control: 277 files ship; `docs/architecture.md` (non-internal) present. Findings/qa files do NOT leak into release archives.
+
+### Net-new findings
+None at WARNING/CRITICAL. Angles checked and cleared: GHA workflow-command injection via directory names (cleared — `entry` is always emitted mid-line after a fixed `::error::` prefix, and `while IFS= read -r` splits any embedded newline into separate stray entries; no line-start `::cmd::` is ever produced); pipeline-exit masking on `FOUND_SORTED=$(sed|sort)` (negligible, fails safe to exit 1). Only standing item is S7 (shellcheck scope gap, INFO).
+
+### OWASP Top 10 + LLM Assessment (Phase 6, shipped tree)
+| Category | Status | Notes |
+|----------|--------|-------|
+| A01 Broken Access Control | PASS | Eval-loop grants no new access (in-session, user's own permissions). Allowlist job enforces `{setup-wizard, skill-studio}`; exit-2 fail-closed confirmed by execution. |
+| A02 Cryptographic Failures | N/A | No secrets/tokens/crypto. Findings file export-ignored (leak-check PASS). |
+| A03 Injection | PASS | Grade step never passes fixtures to shell/eval (inert). Allowlist bash: quoted `find -type d`, `case` literal match, `grep -qxF`, no `eval`; adversarial dir-name fixtures (`-rf`, `evil * dir`) exit 1 with no injection/word-split. Lychee excludes are static anchored regexes. |
+| A04 Insecure Design | PASS | Observe-at-intent (ADR-049) honest about its residual, declines the risky real-execution fallback, adds a net-positive safety gate. |
+| A05 Security Misconfiguration | PASS | Both CI changes improve signal (fail-closed allowlist; restored link-check meaning). Export-ignore verified pruning. |
+| A06 Vulnerable/Outdated Components | PASS | Prose/markdown kit; no `package.json`. All GitHub Actions SHA-pinned; new job reuses the identical `actions/checkout@11bd719…` SHA; zero unpinned refs; no new dependency. |
+| A07 Identification & Auth Failures | N/A | No auth surface. |
+| A08 Software & Data Integrity | PASS | CI Actions SHA-pinned. Allowlist job protects kit integrity against a stray committed skill folder (stray-file residual disclosed → S8). |
+| A09 Logging & Monitoring | PASS | Eval-loop keeps no standing artifact by default (AC-EVAL-7) — deliberate privacy choice; audit-trail deferred (ADR-048 Maturation, accepted). |
+| A10 SSRF | PASS | No network call anywhere in the grade step (in-session only, structurally confirmed). |
+| LLM01 Prompt Injection | PASS (residual noted) | Grade-step fixtures/Instructions treated as inert DATA; fixtures scoped to `## Example` + synthesized generics (AC-EVALSAFE-6), not attacker input. The WS-EVALSAFE loop is itself a defense against LLM01 in generated skills. |
+| LLM02 Insecure Output Handling | PASS | Grade output is a PASS/FAIL gate; the narrated "intended tool call" is inert quoted text, graded, never issued downstream. |
+| LLM06 Excessive Agency | PASS (signed off) | Central risk = OI-SEC-NEW-1; design constrains agency (observe-at-intent, never execute; execution fallback declined). Residual triple-failure bounded to local workspace + default-on permission backstop. No new agency granted. |
+
+### Summary
+The shipped v2.13.0 tree matches its design and Phase-2 conditions. All four Phase-2 MUST-FIXes landed correctly and were re-proven by @security executing the shipped allowlist job (8 fresh fixtures, non-root, genuine permission denial) and re-running both lychee exclude regexes — not by trusting the @dev/@qa narrative. The OI-SEC-NEW-1 observe-at-intent sign-off HOLDS at HEAD: both gating contingencies (backstop prose ships; grade-step inertness) are confirmed on shipped bytes. The shipped link-exclude regex is host-anchored — a positive deviation that closes the Phase-2 S3 over-match INFO outright. Leak-prevention re-verified (0 `docs/internal/` files in the release archive). Two INFO residuals remain, both accepted and honestly disclosed (S7 shellcheck CI-scope gap; S8 ADR-050 stray-file `-type d` residual), each with a cheap optional fast-follow. No CRITICAL, no BLOCK, no open WARNING. **Verdict: PASS.** No Council Guard Change Summary required (external-project cycle; touches no Council guard). Proceed to `/approve`.
