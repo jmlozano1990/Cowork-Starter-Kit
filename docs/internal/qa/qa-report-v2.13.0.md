@@ -190,3 +190,95 @@ The repo's `shellcheck` CI job is scoped to `scandir: ./scripts` only. The new `
 ## Verdict
 
 **APPROVED-WITH-NOTES.** Both security-sign-off contingencies hold (AC-P13-5, OI-SEC-NEW-3). S1's WARNING is confirmed genuinely fixed under a real non-root permission-denied fixture, not just claimed fixed. The WS-LINK regex shipped is stronger than spec's literal minimum and closes a security-review INFO finding proactively. 33/33 ACs verified against the committed tree with fresh, independently-authored fixtures across two independent skill domains (mail-triage and the real anti-ai-slop pool skill) for the LLM-behavioral checks. Proceed to `/audit` (Phase 6, mandatory — SECURITY-SENSITIVE classification, do not combine-path). Recommend folding the shellcheck CI-scope gap into a future cheap-tightening cycle (not blocking this one).
+
+---
+
+# Final Approval (Phase 7) — Cowork Starter Kit v2.13.0 "Skill Studio (Increment 2b · Eval-Loop)"
+
+## Phase: 7
+## Date: 2026-07-20T00:25:00Z
+## Audited HEAD: d95087e (Phase-6 security audit doc; impl `2a282e8`), branch `feature/v2.13-eval-loop`
+## Verdict: APPROVED
+
+> Guard-block observation: every read/grep/write this session went through directly against `/home/user/claude-cowork-config/...` — no PreToolUse block observed appending this section. Pin-inheritance held for the 6th agent-invocation this session (@pm → @architect → @security-Phase2 → @dev → @qa-Phase5 → @security-Phase6 → @qa-Phase7, this one).
+
+## 1. Phase 5 + Phase 6 landed green — cross-checked, not re-derived from scratch
+
+- **Phase 5** (`docs/internal/qa/qa-report-v2.13.0.md:1-193`, committed `0303af6`): Verdict **APPROVED-WITH-NOTES**. 33/33 ACs PASS (26 base + AC-P13-1..7), 0 FAIL, 0 literally-stale AC. 4 negative controls re-run with fresh fixtures (`inbox-zero-triage`, `decision-brief`, 8 allowlist trees, 11-URL WS-LINK set) — none reused from spec/design/security fixtures. Both OI-SEC-NEW-1 sign-off contingencies (AC-P13-5 backstop prose, OI-SEC-NEW-3 grade-step inertness) independently CONFIRMED. `qa_issues_prevented`: blocker=0, issue=0, info=2.
+- **Phase 6** (`docs/internal/security/security-review-v2.13.0.md:150-222`, committed `d95087e`): Verdict **PASS**. Findings Summary table present (S7, S8, both INFO). All 4 Phase-2 MUST-FIXes (MF-1..4) re-executed by @security against shipped bytes at HEAD — not trusted from the QA narrative — and confirmed landed correctly, including the S1 unlistable-directory case under a genuine non-root `chmod 000` EPERM. OI-SEC-NEW-1 sign-off HOLDS AT HEAD. Full OWASP A01-A10 + LLM01/02/06 pass, all PASS or N/A. **No CRITICAL, no BLOCK, no open WARNING.**
+- Both S1/S2 Phase-2 WARNINGs are RESOLVED per the Phase-6 OI disposition table (`security-review-v2.13.0.md:188-189`). No open WARNING or CRITICAL anywhere in the v2.13.0 cycle at HEAD.
+
+## 2. Rework rate — 0% (evidence, not inference)
+
+`git diff 2a282e8 d95087e -- ':(exclude)docs/internal/'` → **empty** (verified this session). The only two commits between the Phase-4 implementation binding SHA (`2a282e8`) and Phase-6 HEAD (`d95087e`) are:
+- `0303af6` "docs(qa): v2.13 Phase 5 testing" — 1 file, `docs/internal/qa/qa-report-v2.13.0.md`, +192/-0.
+- `d95087e` "docs(security): v2.13 Phase 6 audit" — 1 file, `docs/internal/security/security-review-v2.13.0.md`, +75/-0.
+
+Neither commit touches a shipped product file (`VERSION`, `CHANGELOG.md`, `README.md`, any `SKILL.md`, `quality.yml` all byte-identical to `2a282e8`). **Rework rate: 0% substance — no post-Phase-4 fix commit of any kind, mechanical or substantive.** This is the "clean build" case per this project's own retro convention (contrast v2.12.0's ~5%, which had a genuine post-QA fix commit).
+
+## 3. Classification consistency — SECURITY-SENSITIVE held throughout, no combine-path
+
+- Phase 2 (`security-review-v2.13.0.md:8`): `Classification: SECURITY-SENSITIVE — CONFIRMED (touches .github/workflows/quality.yml AND extends the skill-studio/SKILL.md generator instruction surface)`.
+- Phase 6 (`security-review-v2.13.0.md:157`): `Classification re-run: SECURITY-SENSITIVE HOLDS ... Combined audit+approve NOT eligible.`
+- Phase 5 verdict explicitly routes to a mandatory, separate `/audit` ("do not combine-path"). No STANDARD reclassification attempted anywhere in the cycle. **Consistent Phase 2 → Phase 7.**
+
+## 4. Timestamp sanity
+
+| Phase | Doc header `## Date` | Git commit (converted to UTC) | Order |
+|---|---|---|---|
+| 5 | `2026-07-19` (date-only) | `0303af6`: Jul 20 00:00:30 +0400 → 2026-07-19T20:00:30Z | — |
+| 6 | `2026-07-20T00:00:00Z` | `d95087e`: Jul 20 00:11:04 +0400 → 2026-07-19T20:11:04Z | after Phase 5 ✓ |
+| 7 (this) | `2026-07-20T00:25:00Z` | (this write) | after Phase 6 ✓ |
+
+Commit-timestamp ordering is correct and monotonic (Phase 5 commit precedes Phase 6 commit by ~10 min). **One formatting note, not a blocker:** the Phase-5 doc header uses a date-only `## Date: 2026-07-19` field rather than a full ISO-8601 timestamp; Phase 2 and Phase 6 both use full `...T00:00:00Z` form. Recommend the Phase-5 template add `T00:00:00Z` for header consistency — logged as a cheap process nit for the retro, not a rework trigger (the underlying git-commit ordering is independently sound).
+
+## 5. Auto-fail trigger scan — CLEAN
+
+Case-insensitive scan of both `qa-report-v2.13.0.md` and `security-review-v2.13.0.md` for: `zero issues`, `perfect score`, `flawless`, `100%`, `luxury`, `premium`, `production-grade`, `enterprise-grade`, `world-class` → **0 matches**. The "33/33 PASS" and "0 CRITICAL/BLOCK/open WARNING" claims are counts backed by an itemized AC re-derivation table (`qa-report-v2.13.0.md` §4) and a Findings Summary table, not unbacked superlatives — does not trip the pattern. No spec-claimed-but-absent-from-code items found (version/CHANGELOG/README cross-checked independently this session: `VERSION=2.13.0`, CHANGELOG top `[2.13.0]`, README badge `2.13.0-green` — all match). **Auto-fail scan: CLEAN.**
+
+## 6. Accepted INFO residuals (S7 / S8) — correctly recorded, not silently dropped
+
+Both independently re-verified present in the Phase-6 Findings Summary table (`security-review-v2.13.0.md:159-165`) with severity, surface, and an explicit disposition:
+- **S7** (shellcheck CI-scope gap) — INFO, non-blocking, fast-follow named (relocate to `scripts/` or widen `scandir`).
+- **S8** (ADR-050 stray-file `-type d` residual) — INFO, accepted, cross-referenced to the ADR's own "Risk knowingly accepted" section, fast-follow named (`-type f` sweep).
+
+Neither is a WARNING or CRITICAL; neither blocks this verdict. Both are genuine carry-forward candidates for the retro (§7 below), not merge blockers — confirmed accepted-with-rationale, not omitted.
+
+## 7. Cycle-Tier Evidence (Infra/config tier)
+
+Diff touches `.github/workflows/quality.yml` and `.claude/skills/skill-studio/SKILL.md` → **Infra/config tier**. Required evidence present: dry-run/staging verification (the `skills-allowlist-check` `run:` block extracted byte-identical and executed against 8 fresh fixture trees under a non-root uid by both @qa Phase 5 and @security Phase 6 independently; both lychee `--exclude` regexes re-run via `grep -E` against an 11-URL trap set) + before/after diff narrative (`git diff main...HEAD -- .github/workflows/quality.yml`: exactly 2 lines removed, 1 job added, internal `link-check` job byte-unchanged — confirmed by both phases independently).
+
+## 8. qa_issues_prevented (cycle total, v2.13.0)
+
+- **blocker:** 0
+- **issue:** 0
+- **info:** 2 (S7 shellcheck CI-scope gap; S8 ADR-050 disclosed stray-file residual) — found at Phase 5, independently re-confirmed at Phase 6, not double-counted across phases.
+
+## 9. Completion Report
+
+| Item | Result |
+|---|---|
+| Tests / ACs | 33/33 PASS, 0 FAIL, 0 literally-stale (Phase 5, re-checked Phase 7) |
+| Security | Phase 2 PASS WITH WARNINGS (0 CRIT/2 WARN/4 INFO) → Phase 6 PASS (0 CRIT/0 BLOCK/0 open WARN/2 accepted INFO). Both WARNINGs RESOLVED at HEAD. |
+| Rework rate | **0%** — no post-Phase-4 fix commit (see §2) |
+| qa_issues_prevented | blocker=0, issue=0, info=2 |
+| Classification | SECURITY-SENSITIVE, held Phase 2→7, no combine-path |
+| Auto-fail scan | CLEAN |
+| Leak check | `git archive HEAD`: 0 `docs/internal/` files, `docs/spec.md` export-ignore set and pruned (independently re-verified this session) |
+| Version consistency | VERSION / CHANGELOG / README badge all `2.13.0` |
+| What ships | Two-axis Skill Studio grading step (quality + behavioral-safety, observe-at-intent, ADR-048/049/050), fail-closed `skills-allowlist-check` CI job, host-anchored `link-check-external` job replacing the old suppressed/substring-regex link check |
+| Public artifact audit (F2/G1) | Not run this cycle (JIRA/Confluence off, no PM sync configured per task framing); `/refresh-public claude-cowork-config` remains a standing, repeatedly-carried, post-merge/orchestrator-owned open item (see §10 — not new to this cycle, not a blocker) |
+
+## 10. Retro carry-forward candidates (handed to `/retro`, none block this APPROVED)
+
+1. **S7** — shellcheck CI job `scandir` doesn't cover the new inline `skills-allowlist-check` bash in `quality.yml`. Cheap fast-follow: move to `scripts/` or widen `scandir`.
+2. **S8** — ADR-050's `-type d` allowlist scoping doesn't catch a stray non-directory file at `.claude/skills/` root. Accepted residual, honestly disclosed; optional `-type f` sweep fast-follow.
+3. **Phase-5 header timestamp format** — `## Date: 2026-07-19` is date-only where Phase 2/6 use full ISO-8601 `T00:00:00Z`. Cosmetic; recommend template fix (§4).
+4. **`/refresh-public claude-cowork-config`** — carried across v2.9.0 → v2.10.0 → v2.11.0 → v2.12.0 retros as a standing, never-confirmed-run, post-merge/orchestrator-owned MINOR-bump public-artifact audit. Not this cycle's item to fix, but now on its 5th carry — worth a direct decision (run it or explicitly drop it) rather than continuing to re-carry.
+5. **Council-side pin-inheritance guard gap** — prior retros (v2.8.1 through v2.12.0) logged this CRITICAL, Council-side, 6-consecutive-cycle recurring finding. This session's own guard-block observations (§0 of this file, and matching notes in the Phase-2/Phase-6 security docs) recorded **zero blocks across all 6 agent invocations this cycle** — worth confirming at retro whether this is a genuine fix landing or a session-specific artifact before declaring the pattern closed.
+
+---
+
+## Verdict (Phase 7)
+
+**APPROVED.** All four Flip-to-APPROVED checklist items are satisfied: (1) test output excerpt — 33/33 ACs PASS with sample assertions cited above; (2) Infra/config-tier evidence — dry-run fixture execution + before/after diff narrative, independently reproduced at both Phase 5 and Phase 6; (3) spec-to-code cross-reference — full 33-row AC re-derivation table in the Phase-5 section; (4) prior-phase findings (S1/S2 Phase-2 WARNINGs) confirmed RESOLVED at Phase 6 with shipped-byte evidence. Rework rate 0%, classification held SECURITY-SENSITIVE throughout with no combine-path, auto-fail scan CLEAN, leak-check CLEAN, 2 accepted INFO residuals correctly disclosed and non-blocking. **Ready to merge.**
