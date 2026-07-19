@@ -2,6 +2,131 @@
 
 ---
 
+## [v2.11.0] - 2026-07-19 — Skill Studio (Increment 1 · Walking Skeleton)
+
+**Date:** 2026-07-19
+**Classification:** STANDARD + MANDATORY Phase-2 hard gate — proposed at Phase 0 (@pm, capability-driven not file-surface-driven: the generator authors instruction surface indefinitely without per-instance review), confirmed at Phase 1 (@architect, KDQ-1 exemption re-verified loop-by-loop against every relevant CI job), re-confirmed PASS WITH WARNINGS at Phase 2 (@security, 0 CRITICAL / 7 WARNING / 2 INFO), and re-confirmed a third time at the combined Phase 5+6+7 gate (@qa, against the full Phase-4 diff — two net-new files, zero workflow/guard/settings/schema/auth/dependency surface, git-diff-verified). Not escalated to SECURITY-SENSITIVE (local single-workspace blast radius; AC-SAFE-5 shared-pool path structurally closed). External project — no Council Tier-A surface, no Guard Change Summary required.
+**Mode:** discovery-first full pipeline — the increment converts the PR #68 discovery brief's Increment-1 recommendation into a buildable Phase-0 cycle (governing precedent ADR-043 sourcing / ADR-015 9-section template / ADR-016 60-line floor). Phase 0 spec (Revise, appended) → Phase 1 design (ADR-044 loop-pattern-only reuse of Anthropic's Apache-2.0 conversational skill-creation tool — method not artifact, nothing vendored; ADR-045 Option-c: the portable validator rides the existing `shellcheck` CI job with zero `quality.yml` edit, keeping AC-VALID-4 intact) → Phase 2 security (PASS WITH WARNINGS, S1–S7 bound as Phase-4 MUST-FIX/MUST-VERIFY) → Phase 3 gate (APPROVED, scope-locked walking skeleton, 4 "full experience" items explicitly deferred) → Phase 4 implementation → combined Phase 5+6+7 @qa substance gate (independent 27-AC re-derivation from the committed tree, 7 security MF/MV re-runs each with a fresh negative control authored that session, 5 functional loop simulations, a decisive validator-inertness proof against a live `$(…)` trap, and a fresh 59/60 line-floor boundary pin).
+**Rework rate:** **0% — clean single-commit build.** Phase-4 binding SHA `c3f9f3d` IS the exact tree @qa approved AND the squash-merge source; no post-Phase-4 fix commit of any kind. This is a stronger 0% than v2.10.0's (which needed 1 post-QA CI-fix commit for a CMP byte-mirror desync): v2.11.0 shipped first-try green with no substance rework and no mechanical fix commit. The only red at merge was a shields.io external-link flake (§8), which required no code change and the owner merged over with eyes open.
+**Cycle SHAs:** discovery brief `c8348ee` (PR #68) → Phase 0 spec `995b105` (Revise, 27 blocking ACs across 5 workstreams + 3 KDQs) → Phase 1 design `db06d03` (ADR-044/ADR-045, all 3 KDQs resolved at Phase 1) → Phase 2 security `233b236` (PASS WITH WARNINGS, 0 CRIT/7 WARN/2 INFO, S1–S7 bound) → Phase 3 gate APPROVED (scope-lock + mandatory-Phase-2 hard-gate confirmation + all 3 KDQ resolutions accepted; not separately committed) → Phase 4 implementation `c3f9f3d` (single commit — two net-new files + 3 fixtures + release hygiene, all 7 security MF/MV shipped same-cycle) → combined Phase 5+6+7 @qa APPROVED-WITH-NOTES (`docs/internal/qa/qa-report-v2.11.0.md` — 27/27 blocking ACs re-derived, 7/7 security MF/MV neg-controls fired, shellcheck exit 0, markdownlint 0/4) → PR #69: 48/48 substantive checks green, sole red Link Check External (shields.io flake, incl. a pre-existing stars badge not in the diff), user chose "merge now," squash-merged `e924176`. Tag `v2.11.0` pushed; Release "Skill Studio (Increment 1)" published Latest.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings Count | Severity Breakdown |
+|-------|-------|---------------|-------------------|
+| 0. Requirements | @pm | 0 blocking | Discovery-first (PR #68), Revise mode appended. 27 blocking ACs across 5 workstreams (WS-META / WS-VALIDATOR / WS-SAFETY / WS-ATTRIB / WS-RELEASE) + AC-SEC-S8/S9 INFO. 3 KDQs framed for @architect (registry/CI classification of the meta-skill; validator-parity-over-time mechanism; arbitrary-workspace write mechanics), 5 gate decisions surfaced, 4 "full experience" items explicitly deferred (setup-trigger / surfacing / eval-loop / promote-to-pool). Classification proposed STANDARD + mandatory Phase 2, capability-driven. |
+| 1. Design | @architect | 0 blocking | ADR-044 (reuse the interview→draft→validate LOOP PATTERN only from Anthropic's Apache-2.0 tool — no code vendored, wrong output shape + too heavy, citation internal-only) + ADR-045 (Option-c: portable validator rides the existing `shellcheck` job, zero `quality.yml` edit → AC-VALID-4 preserved). All 3 KDQs resolved at Phase 1: KDQ-1 (`skill-studio` = exempt meta-skill following the `setup-wizard` precedent, exemption re-verified loop-by-loop against `skill-depth-check`/`skill-format-check`/`registry-*`/`wizard-consistency-check` — none matches top-level `.claude/skills/*`), KDQ-2 (parity via documented SYNC-SOURCE discipline in the script header), KDQ-3 (direct `Write` to `<workspace>/.claude/skills/<slug>/`). |
+| 2. Security Review | @security | 0 CRITICAL / 7 WARNING / 2 INFO | The 7 WARNINGs are one finding wearing seven hats: **the safety model is present but unfalsifiable** — every AC-SAFE clause written into the generator's prose, but the only executable generation-time gate (the structural validator) checks structure, not safety. S1 (forbidden-token scan documented, never executed on output), S2 (data-not-instruction on Studio's own reads — manual-read, no neg-control, placement unspecified), S3 (propagation gated only by fragile LLM self-classification), S4 (no trigger-overlap-comparison step exists), **S5 (validator injection — the one executable gate must not itself execute untrusted content; decisive)**, S6 (collision refusal must be a hard pre-write gate, native permission prompt not always present), S7 (kit-checkout leak residual + release allowlist). Each converted to an executable check with a proven/specified negative control, reusing the project's own recipes (CONTRIBUTING:129 scan; the house data-not-instruction line; setup-wizard:49 overwrite-confirm). S8/S9 INFO. |
+| 3. User Gate | User | 0 | APPROVED — build the walking skeleton as scoped, 4 "full experience" items deferred not descoped; mandatory Phase 2 confirmed as a hard gate; all 3 KDQ resolutions accepted. S1–S7 carried as binding Phase-4 ACs. |
+| 4. Implementation | @dev | 0 | Single commit `c3f9f3d`, two net-new files (`.claude/skills/skill-studio/SKILL.md` + `scripts/skill-studio-validate.sh`) + 3 shipped fixtures + release hygiene; all 7 security MF/MV shipped same-cycle. **Pin-inheritance guard — fresh data point: @dev writes MOSTLY SUCCEEDED this cycle; only the VERSION write guard-blocked** (path-aliasing with Council `self_improve` scope_allow), the rest landed directly. Narrowest block yet — see §8. |
+| 5+6+7. Test+Audit+Approval | @qa | 0 blocker / 0 issue / 2 INFO (own catches) | Independent 27-AC re-derivation from the committed tree; 7 security MF/MV re-runs each with a FRESH negative control authored that session (not reused from the review's text); 5 functional loop simulations (clean / injection-shaped / greedy-trigger / collision / unconfirmed-destructive); the decisive S5 inertness proof (a live `$(id>…)` trap left every probe absent, and a naive `eval` of the same trap was shown to fire — control proven non-vacuous); a fresh 59-line-FAIL / 60-line-PASS boundary pin (shipped fixtures only test 43 and 61); shellcheck exit 0; markdownlint 0/4. F1 (behavioral residue) + F2 (release allowlist not CI-enforced) — both INFO, non-blocking, both → the deferred eval-loop. **APPROVED-WITH-NOTES.** The @qa gate itself ran guard-blocked (could not `Write` fixtures to `/tmp` or the repo — consistent with §8's pin-inheritance pattern from the writer side); controls run via `printf` scaffolding in an explicitly-ungoverned scratch dir, returned author-and-return. |
+| Merge | Orchestrator + User | 0 substantive (1 external-host flake, non-defect) | 48/48 substantive checks green; sole red = Link Check External (lychee) on shields.io, incl. a stars badge not in this diff. Owner chose "merge now" over the verified flake. Squash-merged `e924176` (PR #69). Tag + Release "Skill Studio (Increment 1)" published Latest. |
+
+**Net-new across the full cycle: 0 CRITICAL, 0 BLOCKER, 0 ISSUE.** 2 INFO from @qa's own independent pass. The headline is the Phase-2→Phase-4 prose→executable conversion (§7, §8), not this table.
+
+---
+
+### 2. AC Difficulty Assessment
+
+| AC | Description | Classification |
+|----|-------------|---------------|
+| AC-META-1..5 | file+frontmatter, 7-step loop documented, wizard-independence, confirm hard-stop, worked example | Easy→Medium — 1 grep (`name: skill-studio`=1) + 4 manual reads; cleanly follows the `setup-wizard` precedent (49 lines, free-form, no `trigger_examples`, no registry row) |
+| AC-VALID-1, -2, -4 | parameterized/offline, CI parity + positive control, shellcheck/markdownlint/zero-`quality.yml`-edit | Easy — mechanically verifiable; `REQUIRED_SECTIONS` array + `MIN_LINES=60` confirmed **byte-parity** against `quality.yml:342-353`; template→PASS(171 lines); `curl|wget|npm|pip`=0; `git diff main…-- quality.yml`=0 lines |
+| **AC-VALID-3** | negative control, both failure modes | **Medium — check-that-cannot-fail applied to the validator's own boundary.** Shipped fixtures cover 43-line (floor) and 61-line-missing-section; @qa added a FRESH 59/60 pair to pin the exact `-lt 60` boundary the shipped fixtures don't reach (43 and 61 are far from 60). 59→FAIL, 60→PASS confirmed the boundary precisely. |
+| **AC-SEC-S5** | validator treats target content as inert DATA | **Hard-by-design — the decisive single control of the cycle.** The one executable gate must be proven it cannot be made to execute a booby-trapped fixture. @qa authored a FRESH trap (different payload from the shipped one: `## When to use $(id > /tmp/ss_qa_probe)` + a backticked line), ran the validator → both probes absent, structure graded literally; then proved the trap is LIVE by piping the header substring through a naive `eval` and confirming it DID create the probe. A control proven inert only against the fixture it ships with — and never proven able to fire — is not a check. |
+| **AC-SEC-S1 / S3 / S6** | executable safety gates (forbidden-token scan / data-not-instruction propagation / hard pre-write collision) | **Hard-by-design — the cycle's core work.** Each converts a prose clause into an executable step-6/step-5 gate. S1: CONTRIBUTING:129 scan (dirty fixture=1 → blocks+deletes, clean=0 → proceeds). S3: propagation self-scan (content-reading noclause→block, clean→proceed). S6: `test -d` pre-write existence gate covering reserved names; `setup-wizard/SKILL.md` byte-untouched (diff=0). All three fire against fresh neg-controls. |
+| **AC-SEC-S2 / S4 / S7 + step-1 / step-4 behavioral clauses** | data-not-instruction on Studio's own reads; trigger-overlap + generic-verb rejection; kit-checkout warning + allowlist; injection-as-DATA; unconfirmed-destructive refusal | **Hard-by-design — check-that-cannot-fail applies; the irreducible behavioral residue.** Bound as ordered instructions with sound presence-grep neg-controls where possible (S2: skill-studio=1 / setup-wizard=0 — the grep can distinguish), but their RUNTIME is LLM-behavioral, not executable. Boundary demonstrated: a leaked "ignore previous instructions" trips the token scan (=1); a bare "reveal your system prompt" does not (=0) — F1. |
+| AC-ATTR-1, -2 | internal citation only; public copy silent | Easy — `architecture.md` carries the ADR-044 prior-art citation internally (grep=30); diff-scoped README/CHANGELOG grep for `anthropic|skill-creat`=0 (one whole-file CHANGELOG match at l458 is v2.5-era, above `[2.10.0]`, untouched) |
+| AC-REL11-1, -2, -3 | VERSION / CHANGELOG / teaser reconciliation | Easy — `VERSION`=2.11.0; `## [2.11.0]`=1; the pre-existing "Next up" teaser retained verbatim + a distinct "Also next up" naming the 4 deferred items (traceable in the diff, not vanished) |
+
+**Difficulty concentration:** same shape as v2.10.0/v2.9.0 — every genuinely Hard item sits at the safety/verification layer (converting prose to executable gates and proving each can fire), not the implementation layer. The two net-new files themselves are straightforward; the work of the cycle was making their safety model **falsifiable**.
+
+---
+
+### 3. Token Cost Actuals
+
+| Model Tier | Sessions | Estimate |
+|-----------|---------|---------|
+| opus | @security Phase 2 (7 WARNING findings, each with a specified negative control, decisive-control identification) + @qa Phase 5-7 (27-AC re-derivation, 7 MF/MV re-runs with fresh live controls, the S5 inertness proof, the 59/60 boundary pin) | Largest driver — both are deliberately opus-tier judgment tasks per this project's routing convention ("does this control *actually fire*?" and "is this safety clause an executable gate or merely present?" are not sonnet/haiku work) |
+| sonnet | @pm Phase 0 (discovery-fed Revise, 27 ACs + 3 KDQs), @architect Phase 1 (2 ADRs, 3 KDQ resolutions), @dev Phase 4 (single content-authoring commit), orchestrator Phase 3/7/8 | Majority of session count — full pipeline, no phase skipped |
+| haiku | 0 | No mechanical sub-tasks delegated — same as v2.9.0/v2.10.0; the verification work (fresh negative controls, live-trap proof, boundary pinning) required judgment at each step, not pure mechanical execution |
+
+Precise per-cycle `metrics.json` aggregation remains unreliable for this project (known `model:"unknown"` gap, unrelated to v2.11.0). Qualitatively: lighter than v2.10.0 on the build side (two net-new files vs. 4 skills + registry/preset edits) but comparable @qa depth (7 fresh neg-controls + 5 simulations + a decisive live-trap proof).
+
+---
+
+### 4. Phase Durations
+
+| Phase | Agent | Timestamp (real committer date, UTC) | Duration |
+|-------|-------|-----------|----------|
+| Discovery brief | @pm | 2026-07-19T10:25:15Z (PR #68) | prior-cycle input, not counted |
+| 0. Requirements | @pm | 2026-07-19T10:55:48Z | ~30 min from discovery → spec commit |
+| 1. Design | @architect | 2026-07-19T11:08:53Z | ~13 min — 2 ADRs + 3 KDQ resolutions |
+| 2. Security Review | @security | 2026-07-19T11:29:13Z | ~20 min — 7 WARNING findings, each with a specified negative control |
+| 3. User Gate | User | (not separately committed) | scope-lock + mandatory-Phase-2 confirm + 3 KDQ resolutions |
+| 4. Implementation | @dev | 2026-07-19T11:55:09Z | ~26 min — single commit; VERSION write guard-blocked, rest landed directly |
+| 5+6+7. Test+Audit+Approval | @qa | 2026-07-19T12:11:24Z | ~16 min — 27-AC re-derivation + 7 fresh neg-controls + 5 simulations + live-trap proof, guard-blocked (printf scaffolding) |
+| Merge (PR #69) | Orchestrator + User | not separately timestamped in this handoff | squash-merge `e924176`; the orchestrator should backfill precise ISO stamps into `pipeline.md`'s Merge row rather than this retro inventing false-precision timestamps |
+
+**Discovery→QA-approval wall clock: ~1h 46m** (10:25→12:11); **spec→QA: ~1h 16m.** Notably tight for a full pipeline carrying a mandatory Phase-2 hard gate — consistent with a well-scoped walking skeleton (two net-new files). No outlier phase.
+
+---
+
+### 5. Phases Abbreviated
+
+**None — full pipeline, no phase skipped**, plus the mandatory Phase-2 hard gate (capability-driven, confirmed at Phase 3). Discovery-first: the increment rode the pre-existing PR #68 discovery brief rather than opening cold. Phase 5+6+7 ran combined per this project's STANDARD-cycle precedent, but was a genuinely full substance gate (independent 27-AC re-derivation + 5 functional simulations + 7 fresh neg-controls + a decisive live-trap proof), not a pass-through. @ux was not separately invoked — the meta-skill's prose is *generator instructions*, not end-user UI; folded into @qa's narrative (verdict PASS). **G1 public-artifact audit / `/refresh-public claude-cowork-config`: this is a MINOR bump (2.10.0→2.11.0), so it should fire; not confirmed run in this handoff — carried forward (§9), not assumed complete.**
+
+---
+
+### 6. Rework Rate and Causes
+
+**0% — and cleaner than v2.10.0's 0%.** Phase-4 binding SHA `c3f9f3d` is simultaneously (a) the exact tree @qa reviewed and (b) the squash-merge source. No post-QA commit of any kind — no substance fix, and (unlike v2.10.0, which needed one `cp` pool→mirror CI-fix commit) **no mechanical fix commit either.** The build shipped first-try green on all 48 substantive checks.
+
+The single red at merge — Link Check External (lychee) failing on shields.io, including a stars badge that isn't even in this diff — is an external-host flake, not a tree defect; it required no change and the owner merged over it with eyes open. Precise fact: **substance-rework 0%, mechanical-rework 0%, one known-flaky external check waived by the owner** (see §8, Pattern #3).
+
+---
+
+### 7. Issues Prevented
+
+**qa_issues_prevented (this cycle's own @qa catches at the gate): blocker=0, issue=0, info=2.** F1 (behavioral residue — a non-token-carrying injection like a bare "reveal your system prompt", or a cleanly-worded destructive body, passes the executable token scan and rests on the behavioral gate; inherent to a skill-that-writes-skills; → deferred eval-loop) and F2 (MF-7b release allowlist has no automated CI enforcement — it fires correctly as a QA/release-time assertion, proven against a stray dir, but a future kit-checkout leak relies on QA catching it; → deferred eval-loop or a future CI-touching cycle).
+
+**Separately — the real prevention story, kept distinct from the gate tally so a clean qa_issues_prevented number doesn't quietly absorb it:** the 7 Phase-2 WARNINGs (S1–S7) were caught at Phase 2 as "safety present but unfalsifiable" and, at Phase 4, converted from prose into executable checks — each with a negative control @qa independently re-ran and observed fire. Without the pipeline, this generator would have shipped its **entire safety model as unenforced prose** — the exact v2.10.0 S3/S4/S5 defect class, at a heavier risk shape (a generator authoring instruction surface indefinitely, not fixed once-reviewed skills). That is 7 latent LLM01/LLM02 exposures converted to enforced, proven-live gates before merge.
+
+---
+
+### 8. Pattern Detection
+
+Four threads. Honest dispositions.
+
+**Pattern #1 — safety-clause-in-generator-prose-not-bound-as-executable-gate: 2nd consecutive, WATCH 2/3, DO NOT promote to BINDING.** v2.10.0 (S1/S2 unsound-verify commands + S3/S4/S5 data-not-instruction convention present-in-prose but not AC-bound) → v2.11.0 (S1–S7: the entire Skill Studio generator safety model documented in the meta-skill's prose but enforced by nothing except a structure-only validator). Same class, WARNING severity, **2 consecutive cycles**, at an escalating risk shape. **Adjacent to but DISTINCT from** patterns.md's `Check-That-Cannot-Fail` row (whose cited instances v2.7.2/v2.8.0 are "a check exists but hasn't been proven it can go red"; this sub-pattern is "a safety CONVENTION exists in prose but isn't bound as an executable check at all"). **Recorded as a SIBLING patterns.md row** (v2.10.0's retro recommended CLOSING the parent row's WATCH; folding a distinct sub-pattern in would muddy its cited instances). **DO NOT promote to BINDING now (2 of 3); promote at a 3rd consecutive occurrence — watch v2.12.** **Healthy counter-signal:** v2.11.0 did not merely repeat the pattern — the pipeline CAUGHT it at Phase 2 (all 7 WARNINGs) and FIXED it at Phase 4 (S1/S3/S5/S6 are now genuinely executable gates, each proven able to fire against a fresh @qa control). The recurrence is the design-stage TENDENCY to author safety as prose, not shipping unfalsifiable safety.
+
+**Pattern #2 — subagent pin-inheritance guard gap: 5th consecutive cowork cycle, with a fresh, narrowing data point.** v2.7.2 → v2.8.1 → v2.9.0 → v2.10.0 → v2.11.0. What's new this cycle is a **narrowing of the blast radius from the writer side:** @dev's writes MOSTLY SUCCEEDED — **only the VERSION write guard-blocked** (path-aliasing with Council's `self_improve` scope_allow), while the rest landed directly; @pm/@architect/@security/@qa were still blocked (the @qa gate this cycle also ran guard-blocked, confirming the role/path correlation). A **partial, role/path-correlated block is exactly what a path-aliasing misresolution produces** — consistent with v2.10.0's root-cause pin (scope guards resolve project root via `git rev-parse --show-toplevel` from inside a Council worktree → The-Council's root, not the registered project's; `active_project=self` compounds it). Still **CRITICAL** priority; still explicitly out of `claude-cowork-config`'s own scope; still the top `/self-improve` candidate — root-resolution must honor the registered-project path / `COUNCIL_ACTIVE_PROJECT`, not `git rev-parse --show-toplevel`, when invoked from inside a worktree.
+
+**Pattern #3 — shields.io external-link-check flake: recurring since v2.8.1, not a defect, resilience candidate.** The Link Check External (lychee) job has flaked on external hosts (shields.io badges, contributor-covenant) recurrently since v2.8.1. This cycle it was the **sole red at merge** (48/48 substantive green) and included a stars badge not even in the diff. This is not a tree defect and the owner correctly merged over it — but a link-check that reds on transient external-host availability **trains reviewers to merge over red, which erodes the signal.** Candidate for a resilience fix — exclude known-flaky external hosts (shields.io, contributor-covenant) from the external link-check, or split external-link into a non-blocking advisory job — **folded into the next cycle that already touches CI** (so it doesn't itself trigger the workflow-edit ceremony for its own sake). Feeds the standing link-sweep carry-forward.
+
+**Pattern #4 — walking-skeleton discipline held (healthy signal).** The cycle shipped EXACTLY the scoped increment (two net-new files + baked-in safety + internal citation + release hygiene) with all 4 "full experience" items explicitly deferred — not descoped, not silently dropped: the README "Also next up" teaser and the CHANGELOG "Deferred" block record them by name. 0% rework, first-try-green CI. Increment discipline is doing exactly what it should. Recorded so the register isn't all-warnings.
+
+---
+
+### 9. Retrospective Verdict
+
+**HEALTHY-ship.**
+
+On the product: a clean cycle at every layer. 0% substance rework AND 0% mechanical rework — the Phase-4 tree is the QA tree is the merge source (`c3f9f3d`), first-try green on all 48 substantive checks. All 27 blocking ACs independently re-derived from the committed tree; the 7 Phase-2 WARNINGs each converted from prose to an executable gate and each proven able to fire against a fresh negative control — including the decisive S5 inertness proof (a live `$(…)` trap left every probe absent while a naive `eval` of the same trap fired) and a fresh 59/60 line-floor boundary pin the shipped fixtures don't reach. The two INFO residuals (F1 behavioral residue, F2 release allowlist not CI-enforced) are the irreducible tail of a skill-that-writes-skills walking skeleton, both anticipated at Phase 2, both routed to the already-deferred eval-loop.
+
+On process: the standout is a genuinely healthy loop-close. The exact defect class v2.10.0's retro named — a safety/verification convention referenced in prose but not bound as an executable check — reappeared, was CAUGHT at Phase 2, and was FIXED at Phase 4. That is the pipeline working as designed on a recurrence, not a recurrence slipping through. It is recorded as WATCH 2/3 (not promoted) precisely because two catches-and-fixes are a good streak, not yet a structural certainty. The one process item that is NOT healthy is the pin-inheritance guard gap, now in its 5th consecutive cowork cycle with a narrowing but still role/path-correlated blast radius and a known fix locus — competently worked around every cycle, which makes it more urgent to actually fix, not less.
+
+**Carry-forwards OUT of this cycle** (all cheap, none blocking, none reopening this cycle's APPROVED verdict):
+1. The 4 deferred "full experience" items — setup-trigger integration, proactive surfacing, eval-testing loop, promote-to-shared-pool — stay queued as **Increment 2+** (visibly recorded in the README "Also next up" teaser + CHANGELOG "Deferred" block; nothing silently dropped).
+2. **F1** (behavioral residue) + **F2** (release allowlist not CI-enforced) — both fold into the deferred eval-testing loop.
+3. **External-link-check resilience** — exclude flaky external hosts (shields.io, contributor-covenant) or make external-link a non-blocking advisory job; land in a future cycle already touching CI. Feeds the standing link-sweep carry-forward.
+4. **CRITICAL, Council-side (NOT a `claude-cowork-config` carry-forward):** the pin-inheritance guard gap (§8, Pattern #2) — root-resolution must honor the registered-project path / `COUNCIL_ACTIVE_PROJECT`, not `git rev-parse --show-toplevel`, when invoked from inside a worktree. Unblocked-and-actionable for `/self-improve`; 5th consecutive cowork cycle.
+5. **`/refresh-public claude-cowork-config`** — MINOR-bump public-artifact audit (release body, repo description/topics); not confirmed run in this handoff, actionable post-merge.
+
+---
+
 ## [v2.10.0] - 2026-07-19 — Empowerment Skills
 
 **Date:** 2026-07-19
