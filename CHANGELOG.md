@@ -4,6 +4,24 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.11.0] - 2026-07-19
+
+**"Skill Studio — Increment 1 (Walking Skeleton)"** — adds a generative path alongside the kit's existing assembly path. Today the wizard only ever composes from the fixed skill pool; on a genuinely novel need, you can now brainstorm it directly and get a matching skill authored, installed, and validated on the spot, entirely inside your own workspace.
+
+### Added
+
+- **`skill-studio`** — an always-available meta-skill that runs a full brainstorm → propose → confirm → author → install → validate → refine loop. Call it any time a need doesn't fit any of the 25 pool skills — "I keep needing X, make me a skill" — and it drafts a skill-spec for your approval before writing anything, then installs a complete, structurally-validated skill to your own workspace. Generated skills are local to your workspace only and are never added to the shared pool or registry.
+- **`scripts/skill-studio-validate.sh`** — a portable, offline, dependency-free structural validator that checks any skill file against the same section and length rules the kit's own CI uses, so a generated skill can be checked without needing this repo or an internet connection.
+
+### Deferred (tracked for a future increment)
+
+- Wiring the setup wizard to offer skill authoring directly when no pool skill fits.
+- Surfacing a generated skill's triggers into proactive suggestions the way pool skills are.
+- Quality evaluation beyond structural validation.
+- A promotion path from a local generated skill into the shared pool.
+
+---
+
 ## [2.10.0] - 2026-07-19
 
 **"Empowerment Skills"** — grows the pool by exactly the JTBD-justified amount: two new skills plus one recalibration extension, evidence-sourced (research memo + a documented adapt-vs-author sourcing scan), offered through the existing bundle-customization surfaces and never forced into any preset's `core_skills`.
