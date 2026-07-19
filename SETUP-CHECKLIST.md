@@ -21,7 +21,7 @@ First, articulate the goal you want this workspace to support — in your own wo
 
 Pick the preset closest to your goal as a starting suggestion (the wizard will confirm or refine it once you start talking): study, research, writing, project-management, creative, business-admin, or personal-assistant. If none feels close, pick any — the wizard's Path C will compose a custom bundle from your goal description.
 
-This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the setup wizard automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then builds a draft workspace with you: a preset draft when your goal clearly fits one, two draft directions when it spans two, or a custom draft team composed from the pool when it fits none — three equally valid starting points, none lesser than the others. Whatever it drafts is a starting point you shape, never a fixed assignment.
+This step substitutes for the `CLAUDE.md` auto-load path — it tells Cowork to run the setup wizard automatically when you start talking. The wizard leads with your goal description (the one you articulated above), then builds a draft workspace with you: a preset draft when your goal clearly fits one, two draft directions when it spans two, or a custom draft team composed from the pool when it fits none. These are three equally valid starting points, none lesser than the others. Whatever it drafts is a starting point you shape, never a fixed assignment.
 
 **Step 2 — Create your Cowork Project**
 
@@ -135,7 +135,7 @@ This is expected, not a failure. Cowork sessions usually run **without internet 
 
 **"Where did all the setup files go?" (after finishing the wizard)**
 
-That's the Step 7 handover working as designed: when setup completes, the wizard replaces `CLAUDE.md` with your personalized workspace instructions and moves the installer (wizard script, skill pool, preset examples, vendored agent library) into `_setup-kit/`. Nothing is deleted — `/setup-wizard`, the 23-skill pool, and the offline agent library all keep working from the archive.
+That's the Step 7 handover working as designed: when setup completes, the wizard replaces `CLAUDE.md` with your personalized workspace instructions and moves the installer (wizard script, skill pool, preset examples, vendored agent library) into `_setup-kit/`. Nothing is deleted — `/setup-wizard`, the 25-skill pool, and the offline agent library all keep working from the archive.
 
 **Onboarding didn't start automatically**
 

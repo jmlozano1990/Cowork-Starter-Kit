@@ -337,8 +337,8 @@ jobs:
       - name: POOL — Enforce 9-section structure and 60-line floor on skills/ pool
         run: |
           # ADR-016 v2.4 amendment: POOL loop runs BEFORE ENFORCED_EXAMPLES loop.
-          # Iterates over skills/*/SKILL.md (23 files) — the canonical consolidated pool.
-          # v2.4.0: skills/ pool added (F1 consolidation). All 23 files must meet depth standard.
+          # Iterates over skills/*/SKILL.md (25 files) — the canonical consolidated pool.
+          # v2.4.0: skills/ pool added (F1 consolidation). All 25 files must meet depth standard.
           REQUIRED_SECTIONS=(
             "## When to use"
             "## Triggers"

@@ -4,6 +4,25 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.10.0] - 2026-07-19
+
+**"Empowerment Skills"** — grows the pool by exactly the JTBD-justified amount: two new skills plus one recalibration extension, evidence-sourced (research memo + a documented adapt-vs-author sourcing scan), offered through the existing bundle-customization surfaces and never forced into any preset's `core_skills`.
+
+### Added
+
+- **`skills/anti-ai-slop`** — an opt-in authenticity pass that flags AI-tell vocabulary, uniform sentence rhythm, and empty hedging in any drafted content, in any preset domain, while never flagging a device the writer's own sample text or `context/writing-profile.md` establishes as intentional style. Offered via `cross_cutting_skills` (all 7 preset `goal_tags`), not auto-applied — an output-altering rewrite is offered, never silent.
+- **`skills/weekly-review`** — a GTD-style Collect → Process → Review → Plan pass across the user's own workspace files, on a weekly cadence distinct from the daily briefing or a single-project status update. Offered via `optional_skills` on `personal-assistant` and `project-management`, plus `study` via `goal_tags` only.
+- **`voice-matching` recalibration** — new trigger phrases ("check if my voice has changed," "recalibrate my voice," "update my writing profile") and a numbered recalibration path: compare a new sample against the recorded profile, name both consistent and drifted patterns explicitly (never a binary verdict), then update `context/writing-profile.md` in place only on explicit confirmation, showing the exact derived delta first.
+- **`curated-skills-registry.md` — new `### Cross-Domain` subsection** for skills whose `goal_tags` span 3+ preset domains, rather than forcing a genuinely multi-domain skill under one arbitrary preset heading. Registry grows from 24 rows / 23 unique slugs to 26 rows / 25 unique slugs.
+- **`docs/research/v2.10-empowerment-skills-research.md`** — internal offer-architecture/CI audit plus dated, URL-cited external sources on AI-slop detection and knowledge-worker empowerment, feeding the two AUTHOR decisions above.
+- **ADR-042** (pool expansion + Cross-Domain registry subsection) and **ADR-043** (adapt-vs-author sourcing policy, codifying the "research it properly or pull from a tested repo" quality bar for future pool additions).
+
+### Changed
+
+- Pool-count prose updated from 23 to 25 skills at all seven live locations (`WIZARD.md`, `SETUP-CHECKLIST.md`, `templates/workspace-claude-md-template.md`, `tests/offline-smoke-test.md`, `README.md`) plus one descriptive CI comment in `.github/workflows/quality.yml` — zero logic, permission, or pass/fail-condition changes anywhere in that file. The C-v2.4-6/C-v2.4-7 security notes in `WIZARD.md` stay byte-unchanged in substance; only the count moves.
+- **Security hardening from Phase 2 review:** the `.github/workflows/quality.yml` zero-logic-delta verify is now a sound comment-only-line inversion (the prior added-line-only form missed deletions and SHA-pin swaps); both new ingesting skills carry an explicit data-not-instruction line for pasted/read content; `voice-matching` recalibration and all `## Writing-profile integration` readers (`voice-matching`, `editing-pass`, `anti-ai-slop`) now treat `context/writing-profile.md` as descriptive style data only — a non-style imperative found there is surfaced to the user, never obeyed.
+- **v2.9.0 fast-follows:** the AC-STORE-4 verify command (`docs/internal/security/security-review-v2.9.0.md`) replaced with a sound, anchor-scoped grep, proven to fail on the pre-v2.9.0 tree; `SETUP-CHECKLIST.md`'s dense Step 1 sentence split in two for readability, substance unchanged; README gains "What's new in v2.10" and "What's new in v2.9" sections (the latter closing a v2.9.0 retro carry-forward).
+
 ## [2.9.0] - 2026-07-18
 
 **"Dynamic Reclaim"** — reclaims the wizard's co-creation framing without touching the v2.7 routing fix underneath it: the presentation layer changes, the `≥2`-threshold/vocabulary/stemming mechanics and both C-v2.4-6/C-v2.4-7 security notes stay byte-unchanged.

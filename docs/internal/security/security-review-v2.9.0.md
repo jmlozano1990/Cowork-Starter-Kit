@@ -113,12 +113,21 @@ Swept authored public copy — naming options ("Workspace Co-Builder" / "Dynamic
 grep -n "Route per WIZARD.md Q1" .claude/skills/setup-wizard/SKILL.md | grep -i draft
 ```
 
-**AC-STORE-4 (section-scoped, robust against the incidental 129/154 hits) — proven to fail pre-change this session:**
+**AC-STORE-4 — CORRECTED verify command (v2.10.0 F-1; supersedes the awk form below).**
+The original `awk` command (retained below, struck through, for the record) is a check-that-cannot-fail:
+its section boundary `/^### /` never closes because README has NO second `###`-level heading after
+`### Highlights` (`awk '/^### Highlights/{s=1;next} s&&/^### /{c++} END{print c+0}' README.md` = 0),
+so `f` stays 1 to EOF and captures the incidental `README.md:154` "drafts status updates" bullet — it does
+NOT fail on the pre-change tree (reproduced: `git show '33fd22c^:README.md' | awk '…' | grep -ic draft` = 1).
+Replaced with a direct grep on the net-new v2.9.0 Highlights bullet header (immune to line 154), with a
+negative control PROVEN this session:
 ```bash
-# Extract only the ### Highlights section, then look for "draft".
-# Pre-change: no output, exit 1 (FAIL = correct). Post-change: bullets carry "draft", exit 0.
-awk '/^### Highlights/{f=1;next} /^### /{f=0} f' README.md | grep -i draft
+# AC-STORE-4 (F-1 corrected). Pre-v2.9.0 (33fd22c^): 0 -> FAIL (correct). Current: 1 -> PASS.
+#   git show '33fd22c^:README.md' | grep -cF 'Draft-then-shape bundle building'   # = 0
+#   grep -cF 'Draft-then-shape bundle building' README.md                          # = 1
+grep -qF 'Draft-then-shape bundle building' README.md
 ```
+~~`awk '/^### Highlights/{f=1;next} /^### /{f=0} f' README.md | grep -i draft`~~  (unsound — do not use)
 
 **S3 — byte-identity of the two security notes (recommended new Phase-4 MUST-VERIFY):**
 ```bash

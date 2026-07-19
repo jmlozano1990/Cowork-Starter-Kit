@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.9.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.10.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -145,7 +145,7 @@ You describe your goal in plain language. The wizard routes to the closest prese
 ### Highlights
 
 - **Open-ended goal discovery** — no preset menu. The wizard turns your description into a draft you shape: Path A drafts a close preset match, Path B offers two draft directions for overlapping presets, Path C drafts a custom team from the unified pool — three equally first-class starting drafts, not a fast path and a fallback.
-- **Unified skill pool** — 23 skills (`skills/<slug>/SKILL.md`) consolidated into a single canonical source. The wizard composes your bundle from this pool regardless of which path it takes.
+- **Unified skill pool** — 25 skills (`skills/<slug>/SKILL.md`) consolidated into a single canonical source, including an authenticity pass (`anti-ai-slop`) and a periodic GTD review (`weekly-review`). The wizard composes your bundle from this pool regardless of which path it takes.
 - **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
 - **Draft-then-shape bundle building** — the wizard proposes a skill bundle as a draft you shape, surfacing a few suggestions at a time and adding more whenever you ask. You confirm when it's right. No batch-install surprises.
 - **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
@@ -177,6 +177,14 @@ Every preset includes a non-negotiable rule: **Cowork will always ask for your c
 All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.lock.json` and **ships vendored inside this repo** at `vendored/agency-agents/` — 110 agent files, each fetched at the pinned commit, checksum-verified against the lock, and attribution-injected (ADR-024) before commit. CI re-verifies the vendored tree against the lock on every pull request (`vendored-integrity-check`), fully offline. Nothing is downloaded at runtime — sessions need no GitHub access. The `/sync-agency` CI workflow opens a PR on every upstream SHA bump — no content reaches users without human review. See **[TRUST.md](TRUST.md)** for the full threat model.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
+
+## What's new in v2.10
+
+Two new pool skills close real gaps: `anti-ai-slop` is an opt-in authenticity pass that flags AI-tell vocabulary, uniform rhythm, and empty hedging in any drafted content, without touching a writer's own established style; `weekly-review` runs a periodic Collect → Process → Review → Plan pass across your own files, distinct from the daily briefing or a project status update. `voice-matching` also gains an explicit recalibration path — check whether your voice has drifted and update your profile deliberately, instead of living with a stale onboarding snapshot. All three are offered, never forced, through the existing bundle-customization and full-pool-suggestion flows — no new interview questions, no `core_skills` changes. The pool grows to 25 skills.
+
+## What's new in v2.9
+
+"Dynamic Reclaim" — reclaims the wizard's co-creation framing without touching the underlying routing fix. Path A/B's binary preset verdict became an explicit draft frame naming which signal matched, with a three-way close (run with it, adjust it, or set it aside for custom). Path C now mirrors that same structure — a named, reasoned draft team instead of a flat skill list — and its matching reads the registry's `goal_tags` column too, so a crossover goal surfaces skills from every domain it touches. The remaining "Dynamic Workspace Architect" naming was retired to plain language across the kit.
 
 ## What's new in v2.8
 

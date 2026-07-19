@@ -2385,3 +2385,335 @@ Phase 1 (@architect) found no AC infeasible and modified no AC's substance. Two 
 - AC: AC-STORE-2 (7-beat SVG, no fabricated turns) → clarified: the demo SVG beat-3 bubble is resized (width/height + line re-break) to hold the longer draft dialogue — a within-beat layout change that PRESERVES the 7-beat count — Reason: the new draft+matched dialogue does not fit the current `width="500"` 3-line bubble (production-validated); resizing within a beat is not a beat-count change.
 - Goal_tags backfill (OQ-4, WS-COMPOSITION): NOT needed — `curated-skills-registry.md` `goal_tags` coverage is already 100% (24/24 rows), so the cycle requires zero registry-data change (the spec's [UNTESTED] "some entries still lack the field" assumption is false — production-validated).
 
+---
+
+### v2.10.0 — Empowerment Skills
+
+**Mode:** revise. **PM mode:** deep — research-fed (internal offer-architecture/CI audit + external AI-slop and knowledge-worker-empowerment research), per explicit owner directive 2026-07-18: *"I want to be sure that we do also have 'additional' skills to add that can be useful. Like Anti AI slop, config the user voice if needed, any other thing that empowers Cowork should be possible to be done to increase the experience! The call of the user but we do offer."*
+
+#### Roadmap Context — claude-cowork-config — 2026-07-19T20:07:37Z
+
+⚠️ **ROADMAP CONTEXT — 1 conflict (owner-pre-resolved, 3rd instance), 0 supersession risks**
+
+| Fact | Status |
+|---|---|
+| Sections rendered | ✅ 8/8 |
+| Conflicts | ⚠️ 1 — the committed v2.10 roadmap slot named different content; resolved by explicit owner directive, not by this agent — see §Conflicts with Proposed Scope |
+| Freeze gate | ✅ no ACTIVE ecosystem gate affects `claude-cowork-config` — `sos-gates.json` has 1 entry, `SOFT-FREEZE-CS1`, state=LIFTED, affects `[pillar-os, motif]` only |
+| Supersession | ✅ 0 — queue is empty (see §Supersession Check) |
+
+##### Already Committed (near-term)
+
+- `pipeline.md` `## Current Task` (v2.9.0 entry, post-retro): **"NEXT cycle: v2.10 Distribution & Trust (needs user go-ahead; folds sync-agency PATTERN_COUNT + link-sweep carry-forwards)."** This is what the v2.10 slot was committed to be, as of the v2.9.0 retro.
+- `improvement-plan-2026-07-18.md`'s 4-phase roadmap (A "Truth & Release" v2.7.2 SHIPPED → B "Showcase" v2.8.0 SHIPPED → C "Distribution & Trust" [slot moved v2.9.0→v2.10 at the v2.9.0 cycle] → D "Upstream refresh → multi-tool" v2.10/v3.0 SECURITY-SENSITIVE, explicitly gated on C completing first).
+- `docs/spec.md`'s own v2.9.0 section, §Roadmap Context §Already Committed: "the deferred 'v2.10 Distribution & Trust' content... has zero surface overlap with this cycle's [v2.9.0] wizard-dialogue/routing/storefront-prose changes."
+
+##### Deferred / Carry-Forwards
+
+- **"Distribution & Trust" content (plugin manifest, `compatibility`/`metadata` frontmatter, per-skill CI evals, catalog submissions) moves v2.10 → v2.11, unchanged in substance.** This is the **third** exercise of the owner's roadmap re-scope authority on this project (v2.6.0's Phase 0 section records the first instance; v2.9.0's Phase 0 section records the second, moving this same content v2.9.0→v2.10; this spec is the third, moving it v2.10→v2.11). Nothing in the deferred content is dropped — only the slot number changes, again.
+- **Phase D "Upstream refresh → multi-tool" (v2.10/v3.0, SECURITY-SENSITIVE)** was always explicitly "gated on C completing first," not pinned to a fixed version number — its slot moves in lockstep with Distribution & Trust's, to **v2.12** (one slot after wherever Distribution & Trust now lands).
+- **`sync-agency-dry-run` PATTERN_COUNT gate** (never fired since v2.0.0) and **link-sweep pre-push enforcement** (promoted at v2.8.0's 3rd KEEP-DROP instance) — both were carried to "v2.10 Distribution & Trust" by the v2.9.0 retro. They move with Distribution & Trust's content to **v2.11**; this cycle (v2.10.0 Empowerment Skills) touches neither `sync-agency.yml` nor the link-sweep mechanism.
+- **v2.9.0 fast-follows** F-1 (AC-STORE-4 verify-command fix), F-3 (`SETUP-CHECKLIST.md:24` sentence split), and the optional "What's new in v2.9" README section are folded into this cycle as **WS-FASTFOLLOW** (owner process instruction: cheap, touch the same surfaces this cycle already opens). `/refresh-public claude-cowork-config`'s GitHub-facing sweep (release body, repo description/topics) remains a separate, orchestrator/user-run action — not a spec workstream, consistent with how v2.9.0's own retro logged it.
+
+##### Cross-Repo Dependencies
+
+None. `registry.json`: `claude-cowork-config` has `"depends_on": []` and no `parents`. No ecosystem SoS membership. The only standing external relationship is the MIT-licensed vendoring pipeline from the `agency-agents` upstream — untouched by this cycle.
+
+##### JIRA Open Items
+
+Not configured for this project — `registry.json`'s `claude-cowork-config.integrations` has no `jira` key. Source skipped: "JIRA integration not configured for claude-cowork-config — source skipped."
+
+##### GitHub Signals
+
+- **0 open issues, 0 open PRs** (`gh issue list --state open` / `gh pr list --state open`, checked 2026-07-19T20:07Z).
+- **Latest release: `v2.9.0` "Dynamic Reclaim"** (Latest, 2026-07-18T19:37:50Z), tag chain `v2.7.1` → `v2.7.2` → `v2.8.0` → `v2.8.1` → `v2.9.0` all present and dated correctly (`gh release list`).
+- `VERSION` file currently reads `2.9.0` — confirms no version drift ahead of this spec.
+
+##### Conflicts with Proposed Scope
+
+**One conflict, owner-pre-resolved — recorded per the audit contract, not newly escalated.** `pipeline.md`'s committed "NEXT" for v2.10 named **"Distribution & Trust"** — this spec's actual scope is **"Empowerment Skills"** (net-new pool skills + offer-architecture wiring), a materially different surface, and one not present anywhere in the original 4-phase `improvement-plan-2026-07-18.md` roadmap at all. Resolution: the owner's 2026-07-18 directive (quoted at the top of this section) is a live, in-session instruction to build an additional-skills cycle now, not a silent @pm resolution. This is the third instance of the same re-scope pattern already exercised twice on this project (v2.6.0, v2.9.0) — see §Deferred/Carry-Forwards for the full disposition chain. Distribution & Trust content is not dropped, only deferred one further slot (v2.10 → v2.11).
+
+##### Supersession Check
+
+| Queued item | Rebuilds/replaces the surface this spec modifies? | Basis |
+|---|---|---|
+| *(none)* | — | `.claude/projects/claude-cowork-config/stack-profile.json` has no `planning` key and no `planning.queued_cycles[]`; no `.claude/projects/claude-cowork-config/next-cycle-scope` file exists (checked directly, 2026-07-19). Queue is empty. |
+
+**Supersession check: no queued item rebuilds this surface** — the table is empty because there is nothing queued, not because anything was screened out. The deferred "Distribution & Trust" content (plugin manifest, catalog submissions, per-skill evals) has zero surface overlap with this cycle's pool/registry/preset additions — it operates one layer up (packaging and distribution of the existing pool), not on pool contents themselves.
+
+##### Ecosystem-Context-Brief
+
+`.claude/projects/ecosystem/sos-gates.json` contains 1 entry: `SOFT-FREEZE-CS1`, `state: LIFTED` (lifted 2026-07-14), `affects: [pillar-os, motif]`. `claude-cowork-config` is not in `affects[]`, and the gate is not ACTIVE regardless. **Ecosystem-Context-Brief = no constraint on this cycle.**
+
+##### Gate-Cycle Pre-Spec Check (AC-06 / v0.32.3, extended v0.32.3 Fix G2)
+
+- **Check A (queued gate-cycle):** `.claude/projects/claude-cowork-config/stack-profile.json` has no `planning` key and no `planning.queued_cycles[]` — fail-open, Check A skipped. No `next-cycle-scope` file exists either.
+- **Check B (security-debt lock):** `awk`-scoped scan of `docs/retro.md`'s most-recent cycle section (`## [v2.9.0] - 2026-07-18 — Dynamic Reclaim`, current top section) for a `NEXT-CYCLE-LOCKED` CF-line bullet — **Security-debt lock: none found** (`awk '/^##? .*[0-9]{4}-[0-9]{2}-[0-9]{2}/{n++; if(n==2) exit} {print}' docs/retro.md | grep -nE '^- \*\*CF-[A-Za-z0-9._-]+ \(HIGH, deferrals: [0-9]+\)\*\*.*\*\*NEXT-CYCLE-LOCKED\*\*'` → 0 matches).
+
+Both checks pass cleanly. No gate-jump or security-debt warning fires.
+
+#### Problem
+
+The 23-skill pool covers seven preset domains at production depth, but two real gaps exist that the owner has now explicitly named and asked to close: (1) **no skill helps a user recognize and remove the vocabulary/rhythm/hedging tells that make AI-drafted text read as generic** — `voice-matching` and `editing-pass` both carry partial, writing-preset-scoped anti-tic guidance (em-dash flood, hedged-language overuse, generic transitions — see their own `## Anti-patterns` sections), but nothing in the pool applies that discipline as a deliberate, evidence-based pass over content from *any* domain (a PM status update, a research summary, a business email can all read as AI-slop just as easily as a blog draft, and none of those presets' skills carry the same guidance); (2) **`voice-matching`'s writing-profile is captured once, at onboarding (optional Q3), with no supported path to recalibrate it** as a user's writing genuinely changes or as more samples accumulate — the skill's own `## Instructions` describe reading `context/writing-profile.md` and named samples, but nothing in its `## Triggers` or `## Instructions` currently handles "check if my voice has drifted" or "update my profile from this new sample" as a distinct, supported request. Beyond the owner's two named seeds, external research into what else durably empowers a non-technical knowledge worker in an AI workspace (see the companion research memo) surfaces one further evidence-backed, currently-uncovered JTBD: **no skill performs a periodic (weekly-cadence) zoom-out review** across a user's own files — `daily-briefing` is same-day/forward-only, `status-update`/`risk-assessment` are audience-calibrated project artifacts, and `follow-up-tracker` is commitment-specific; none is the GTD-style Collect→Process→Review→Plan weekly pass a meaningful share of personal-assistant- and project-management-class users report needing.
+
+#### Target Users
+
+- **Primary — anyone drafting output they'll present as their own words (Sam/Alex/Maria-class):** newsletter writers, students submitting lab reports, analysts producing client deliverables, and PM users drafting status updates all currently have no systematic way to catch AI-slop tells before publishing, regardless of which preset they're in.
+- **Primary — Sam-class writers whose voice evolves over time or across projects:** the writing profile is currently a one-time onboarding artifact with no supported recalibration path.
+- **Secondary — Casey/Riley-class users (personal-assistant, project-management) who want a periodic, not just daily/ad-hoc, review of what's outstanding:** currently unserved by any existing pool skill.
+- **Tertiary — the owner/future maintainer:** wants the pool to keep growing where there's real, evidence-backed JTBD value, without the offer surface (F4, Q1/Path A/B "also on the bench," Path C matching) becoming noisy or the pool becoming bloated with overlapping skills — this cycle's slate-discipline (6 candidates considered, 3 built) is itself in service of this persona.
+- Out of scope this cycle: any user whose need is already served by an existing skill under a different name (see §Candidate Slate dispositions for `doc-summary`/`action-items`/`prompt-gate` overlap checks); Tier-2 community skill discovery; any change to `core_skills` bundles or the 3-turn interview budget.
+
+#### Candidate Slate (Gate Decision 1 — owner call, see §Gate Decisions)
+
+Six candidates considered, scannable in one pass. Full reasoning, tier justification, and overlap checks below the table.
+
+| # | Skill | User value (one line) | Tier | goal_tags | Recommendation |
+|---|---|---|---|---|---|
+| 1 | **anti-ai-slop** (new skill) | Evidence-based pass that removes AI-tell vocabulary, uniform rhythm, and empty hedging from ANY output, respecting the user's own established voice | `cross_cutting_skills` | all 7 presets (universal, matches `prompt-gate`'s row) | **BUILD** |
+| 2 | **voice-matching recalibration** (extend existing skill, NOT a new skill) | Lets a user explicitly re-check or refresh their writing profile as their voice or samples change, instead of a one-time onboarding artifact | *(no new tier — extension of an already core/cross-cutting skill)* | *(unchanged: writing,creative)* | **BUILD** |
+| 3 | **weekly-review** (new skill) | A GTD-style Collect→Process→Review→Plan pass across a user's own files, on a weekly cadence rather than daily/ad hoc | `optional_skills` on `personal-assistant` + `project-management` | personal-assistant,project-management,study | **BUILD** |
+| 4 | **decision-log** (new skill) | Durable capture of a decision + its rationale (distinct from meeting-notes' transcript extraction or risk-assessment's risk table) | *(not placed — deferred)* | *(not assigned — deferred)* | **DEFER to v2.11+** |
+| 5 | **information-diet triage** (new skill) | Triage a pile of incoming reading (links/articles/emails) by urgency before summarizing any one of them | *(not placed — deferred)* | *(not assigned — deferred)* | **DEFER, weak differentiation from `doc-summary`** |
+| 6 | **connector-leverage audit** (config content, not a skill) | Reminds the user what Google Drive/Gmail/Slack connectors are authorized and whether their goal would benefit from one | *(not a pool skill — belongs in `templates/preset-template/connector-checklist.md` content, if anywhere)* | n/a | **REJECT this cycle** — wrong artifact shape for the skills pool |
+
+**Recommendation: build items 1–3 this cycle (2 new skill files + 1 extension of an existing skill). Defer 4–5. Reject 6 as mis-shaped for the pool.** This keeps the offer-architecture additions to exactly the two named owner seeds plus the single strongest externally-researched gap — consistent with the choice-overload discipline already established in this project (v2.9.0 research memo, Iyengar & Lepper) and with the owner's own "the call of the user but we do offer" framing: three real, evidence-backed additions to the offer surface, not a maximal slate.
+
+##### 1. anti-ai-slop — BUILD
+
+**User value:** a deliberate, evidence-based rewrite pass that removes the vocabulary, rhythm, and hedging tells documented in the companion research memo (Part 2, Track A) — usable on ANY drafted content, not only Writing-preset drafts.
+
+**Tier placement — `cross_cutting_skills`, not `core_skills`, not a preset's `optional_skills`, and explicitly NOT an implicit/always-on skill like `prompt-gate`.** Three reasons: (a) the JTBD is genuinely domain-crossing (a PM status update needs de-slopping as much as a newsletter draft) — the exact shape `cross_cutting_skills` exists for; (b) unlike `prompt-gate` (an input-side clarification step, safe to run silently because it only asks questions), this is an output-altering rewrite — auto-applying it without being asked risks contradicting a user who deliberately wants formal register, hedged academic language, or "furthermore"-style transitions in a specific context (e.g., a hedge is *correct* in Alex's lab report when a finding is genuinely uncertain). The owner's own directive is explicit that these are offered, not forced; an implicit always-on pass would violate that framing even though it's architecturally available (see the `prompt-gate` non-precedent in the research memo). (c) `goal_tags` set to all 7 preset slugs, matching `prompt-gate`'s own row exactly, so Path C's `goal_tags`-based matching surfaces it for any crossover/novel goal too.
+
+**Overlap check:** `voice-matching` and `editing-pass` both already carry partial anti-tic guidance (em-dash flood, hedged-language overuse, generic transitions) scoped to their own workflows (voice transplant; structured multi-depth editing). `anti-ai-slop` does not replace either — it is the pass available when NEITHER of those skills is in the user's bundle (a PM, business-admin, or research-preset user producing text with no writing-preset skills installed) or when a final, dedicated authenticity check is wanted after either of those skills has already run. The skill's own `## When to use` section must state this relationship explicitly so it doesn't read as a third, redundant editing skill.
+
+**Content brief for @dev (Phase 4), not prescriptive prose — @architect/@dev own the actual authoring:** `## Anti-patterns`/`## Quality criteria` must name the three independently-checkable categories from the research memo (banned/tell vocabulary list; sentence-length/rhythm uniformity; hedging-without-commitment), each with the SPECIFIC vocabulary items sourced this session (delve, tapestry, crucial, pivotal, seamless, robust, leverage, elevate, navigate-as-metaphor, "in the realm of," "it's important to note," the "it's not just X, it's Y" construction, "In today's fast-paced world"-class openers). Must carry an explicit **anti-anti-pattern**: never flag a device the sample text or `context/writing-profile.md` establishes as the user's real, intentional style (the em-dash-density corrective from the Duey AI source) — this is the single most important content requirement, since a bad implementation would make the skill an AI-detector-cosplay tool hostile to legitimate stylistic choices, exactly the failure mode `voice-matching`'s own anti-patterns already guard against.
+
+##### 2. voice-matching recalibration — BUILD (extend, do not create a new skill)
+
+**User value:** an explicit, supported way to say "check if my voice has drifted" or "update my writing profile from this new sample," instead of the profile being a one-time onboarding artifact with no update path.
+
+**Extend-vs-new decision (made here, not punted to the owner as a gate decision — this is a scoping call within @pm's ordinary judgment, not a conflicting-requirements escalation):** **extend `skills/voice-matching/SKILL.md`**, do not create a new `voice-calibration` skill. Three reasons: (a) ADR-013 already establishes `voice-matching` as "the primary runtime implementation of the writing-profile" — recalibration is the same domain, not an adjacent one; splitting it into two skills would mean two files both reading/writing `context/writing-profile.md`, a duplication risk `voice-matching`'s own `## Anti-patterns` ("averaging samples to generic clear writing," "ignoring existing samples") is specifically designed to prevent by staying the single owner of that file; (b) zero new registry row, zero new `goal_tags`, zero new cross_cutting/optional_skills entry, zero pool-cardinality bump — the cheapest possible way to deliver the JTBD, directly serving the choice-overload discipline this cycle is otherwise adding two new pool entries against; (c) it is naturally reachable by every user who already has `voice-matching` installed (writing preset's `core_skills`, creative preset's `optional_skills`, and the `cross_cutting_skills` list) — no new offer-surface wiring needed at all.
+
+**Content brief for @dev:** add explicit trigger phrases to `## Triggers` ("check if my voice has changed," "recalibrate my voice," "update my writing profile") and a numbered recalibration path in `## Instructions`: (1) compare a newly-provided sample against the named patterns already recorded in `context/writing-profile.md`; (2) state plainly whether the new sample is consistent with the recorded profile or has drifted, naming which specific pattern changed (not a vague "your voice has evolved"); (3) on explicit user confirmation, update `context/writing-profile.md` in place — never silently. This is additive content inside the existing 9-section structure (most likely `## Triggers` + `## Instructions`), not a restructuring; the skill's line count may grow within its existing band but this is not expected to threaten the 150-line soft cap given the skill's current length.
+
+**Non-blocking suggestion, not a hard AC:** `curated-skills-registry.md`'s one-line description for `voice-matching` could optionally mention recalibration for registry-browsing discoverability; left to @architect/@dev discretion since the primary discovery path (an already-installed skill responding to a new trigger phrase) doesn't depend on the registry blurb.
+
+##### 3. weekly-review — BUILD
+
+**User value:** a periodic (not daily, not ad hoc) Collect→Process→Review→Plan pass across the user's own workspace files, closing a JTBD gap no existing skill covers (see §Problem).
+
+**Tier placement — `optional_skills` on `personal-assistant` AND `project-management`, plus `goal_tags` including `study` for Path-C-only discoverability in the third domain.** Reasoning: these are the two strongest-fit domains (Casey-class daily-life admin; Riley-class sprint/status tracking), each meriting the more prominent Q1 Path A/B "also on the bench" surfacing that `optional_skills` gives (vs. `cross_cutting_skills`' F4-only, up-to-3-among-competitors visibility). `study` is a real but weaker fit (a "weekly study review" is plausible for an Alex-class user but not a primary JTBD for that persona) — carried via `goal_tags` only, so a crossover goal can still surface it through Path C without adding a third preset's `optional_skills` line and without growing the always-shown surface for a weaker fit. This is a deliberately different placement shape from `anti-ai-slop`'s (`cross_cutting_skills`), and the difference is intentional: `anti-ai-slop` is genuinely universal (all 7 domains, roughly equal fit), `weekly-review` has two strong homes and one weak one — the tier choice reflects that distinction rather than defaulting every new skill to the same mechanism.
+
+**Overlap check:** `daily-briefing` (same-day, forward-only — no periodic zoom-out), `status-update` (project-audience-calibrated artifact, not a personal review), `risk-assessment` (risk-specific table, not a general review), `follow-up-tracker` (commitment-specific, not a full Collect→Process→Review→Plan pass). No existing skill's JTBD is redundant with this one; the GTD weekly-review structure (companion research memo, Track B source 2) is a distinct, well-established pattern none of the four adjacent skills implement.
+
+**Content brief for @dev:** four-phase structure in `## Instructions` mirroring GTD's Collect (surface anything new/unprocessed since last review) → Process (triage into done/active/deferred) → Review (surface stalled items, approaching deadlines) → Plan (name 1–3 priorities for the coming week) — reading whatever local files the user points it at (task trackers, `list-tracker` output, notes), consistent with this product's file-based, no-live-connector-fetch model. Must explicitly frame itself as **descriptive/organizational, not directive** (name what's stalled and due, don't prescribe what to prioritize) — the same non-advice framing `spend-awareness`'s hard-block boundaries already establish as house convention for skills that could otherwise read as presumptuous.
+
+##### 4. decision-log — DEFER to v2.11+
+
+**Why it's real:** the context-engineering research (companion memo, Track B source 3) specifically calls out durable decision+rationale capture ("preferences, decisions, corrections, commitments") as a distinct, valuable memory category — separate from the transcript-level extraction `meeting-notes` already does.
+
+**Why deferred, not built:** getting the scope boundary right — durable decision trail vs. redundant restatement of what `meeting-notes` (decisions extracted per-meeting), `risk-assessment` (risk-specific), and `follow-up-tracker` (commitment-specific) already partially cover — is a real design question that deserves its own research/validation pass, not a rushed fourth new-skill slot squeezed into a cycle whose primary mandate is two owner-named seeds plus a small evidence-backed slate. Recommend a future `/validate` pass specifically on this JTBD before committing a v2.11+ cycle to it.
+
+##### 5. information-diet triage — DEFER
+
+**Why it's real:** knowledge workers report spending roughly a fifth of their week gathering/searching for information (companion memo, Part 3 framing) — triaging a pile of incoming reading before summarizing any one item is a plausible, evidence-adjacent JTBD.
+
+**Why deferred:** weak differentiation from `doc-summary` (marked `covered-by-runtime` in the registry's own disposition annotations) and from `research-synthesis`/`literature-review` for the research persona specifically — the JTBD as researched doesn't clear the same "genuinely uncovered, checkable gap" bar `weekly-review` clears. Not rejected outright; flagged as needing a sharper JTBD definition (what specifically does triage produce that summarization doesn't?) before it belongs on a build slate.
+
+##### 6. connector-leverage audit — REJECT this cycle (wrong artifact shape)
+
+**Why it's real:** `templates/preset-template/connector-checklist.md` already exists and documents Google Drive/Gmail/Slack connector scopes — a skill that actively reminds a user what's authorized and whether their stated goal would benefit from enabling one is a plausible "empowers Cowork" idea matching the owner's literal brief.
+
+**Why rejected as a *skill*:** this is a setup/config-surface concern (parallel to the wizard's own F4/connector-checklist flow), not a runtime content-generation or organizational JTBD — the shape doesn't fit the 9-section SKILL.md template (there's no "output" to produce beyond a status readout of already-known settings) and stretching it into that shape would be a worse fit than leaving it as connector-checklist content, which is exactly where it already partially lives. Noted here to show this direction was considered, not overlooked, per the owner's literal "any other thing" framing — but the right vehicle, if pursued at all, is a `templates/preset-template/connector-checklist.md` content enhancement in a future cycle, not a pool skill in this one.
+
+#### Scope Statement
+
+This is **v2.10.0 "Empowerment Skills"**, re-scoped by explicit owner directive (2026-07-18) — the third exercise of the same roadmap re-scope authority already used at v2.6.0 and v2.9.0 (see §Roadmap Context). **MINOR bump: 2.9.0 → 2.10.0** (new user-facing pool skills + new offer-architecture surface — not a doc-only patch, matching this project's own versioning convention that new surface, not just new content, is what earns a minor). Seven workstreams (WS-SKILLS, WS-REGISTRY, WS-PRESETS, WS-CI, WS-STOREFRONT, WS-FASTFOLLOW, WS-RESEARCH-RECORD). See §Will NOT Do for explicit exclusions and §Technical Constraints for the invariants that stay byte-unchanged.
+
+#### Core Features (MVP) — Workstreams
+
+##### WS-SKILLS — Author 2 new pool skills + extend 1 existing skill, template-compliant
+
+Deliver `skills/anti-ai-slop/SKILL.md` and `skills/weekly-review/SKILL.md`, both conforming to the canonical 9-section template (ADR-015: `## When to use` → `## Triggers` → `## Instructions` → `## Output format` → `## Quality criteria` → `## Anti-patterns` → `## Example` → `## Writing-profile integration` → `## Example prompts`), 60-line CI floor (ADR-016), 80–120-line target band, `name`/`description` (≤160 chars)/`tools: [claude-code]`/`trigger_examples` (3–6 entries) frontmatter (ADR-029 MF-3). Content briefs for each are in §Candidate Slate items 1 and 3 above — this workstream is the authoring itself, owned by @architect (Phase 1 constraints) and @dev (Phase 4 content), not prescribed in full prose by this spec. Extend `skills/voice-matching/SKILL.md` per the content brief in §Candidate Slate item 2 (additive `## Triggers`/`## Instructions` content, no section restructuring, no new registry/preset entries).
+
+##### WS-REGISTRY — curated-skills-registry.md rows, goal_tags, cardinality footnote
+
+Add two new Tier-1 rows (`anti-ai-slop`, `weekly-review`) to `curated-skills-registry.md`, following the existing schema (`name`/`description`/`source_url: builtin`/`vetting_date`/`tier: 1`/`goal_tags`) and placed in a new or existing thematic section consistent with the file's current organization (by preset domain — since both new skills span multiple domains, place them in a location consistent with how `prompt-gate`'s cross-domain row is currently sectioned, or introduce a small "Cross-Domain" subsection if @architect judges that cleaner — Open Question OQ-1). `goal_tags` values: `anti-ai-slop` = `study,research,writing,project-management,creative,business-admin,personal-assistant` (all 7, matching `prompt-gate`'s row); `weekly-review` = `personal-assistant,project-management,study`. Update the file's own cardinality footnote ("The registry therefore has 24 rows across 23 unique skill slugs") to the new count (26 rows across 25 unique slugs).
+
+##### WS-PRESETS — selection-presets.md tier placements
+
+`cross_cutting_skills:` line: add `anti-ai-slop` (5 → 6 entries) plus its rationale-table row ("Universal AI-tell removal pass, usable regardless of preset — writing/creative benefit most directly, but any generated text in any domain benefits"). `personal-assistant` and `project-management` presets: add `weekly-review` to each preset's `optional_skills:` line (each currently 2 entries; both become 3). **No `core_skills` line changes anywhere** (binding owner constraint) — confirmed zero `core_skills:` diffs is itself a verifiable AC.
+
+##### WS-CI — Update prose-hardcoded pool-count references (no CI logic changes)
+
+Seven live (non-historical) locations hard-code "23-skill"/"23 skills"/"(23 slugs)" in prose and must be updated to reflect the new 25-skill pool: `WIZARD.md` (3 occurrences, 2 carrying the C-v2.4-6/C-v2.4-7 pool-boundary security note — the note's *substance* is unchanged, only the number), `SETUP-CHECKLIST.md` (1), `README.md` (1, folded into WS-STOREFRONT below since it's the same edit as the skill-count Highlights bullet), `templates/workspace-claude-md-template.md` (1 — this is the text that becomes a user's own post-handover `CLAUDE.md`), `tests/offline-smoke-test.md` (1). `.github/workflows/quality.yml`'s `skill-depth-check` job carries one stale descriptive comment ("23 files") that should be updated for accuracy — **this is a comment-only edit; the job's actual loop (`for skill_file in skills/*/SKILL.md`) and `registry-cardinality-check`'s floor-based assertion (`-lt 18`) both self-adjust and require zero logic changes.** No new CI job, no new allowlist entry, no changed pass/fail condition anywhere in this workstream — see §Classification for why this still gets flagged rather than assumed harmless.
+
+##### WS-STOREFRONT — README skill-count + Highlights mention + optional "What's new in v2.10"
+
+`README.md`'s "Unified skill pool — 23 skills" Highlights bullet updates to 25 and gains one clause naming the new empowerment-skill offerings (matching the existing bullet's terse style, not a marketing paragraph). Optional (owner discretion, not a hard AC): a "What's new in v2.10" section following the v2.7/v2.8 precedent — CHANGELOG's `[2.10.0]` entry already carries the substance, so this is a nice-to-have, not a gap, exactly as the v2.9.0 retro logged the equivalent optional item for that cycle.
+
+##### WS-FASTFOLLOW — v2.9.0 carry-forwards (cheap, same surfaces)
+
+Three items folded in per the owner's process instruction (cheap, touch surfaces this cycle already opens):
+1. **F-1:** fix the AC-STORE-4 verify command recorded in `docs/architecture.md`/`docs/internal/security/security-review-v2.9.0.md` — the documented `grep`+awk-boundary check doesn't actually fail on the pre-change tree (v2.9.0 retro §8/§9 carry-forward 1). Replace with a direct, anchor-scoped grep on the specific added/retired bullet text, matching the pattern AC-COMP-3 already uses elsewhere.
+2. **F-3:** split `SETUP-CHECKLIST.md:24` into two sentences for conciseness (v2.9.0 retro §7 INFO note — plain vocabulary already correct, just dense).
+3. **Optional:** a "What's new in v2.9" README section (v2.9.0 retro carry-forward 3) — same optional/nice-to-have disposition as WS-STOREFRONT's v2.10 equivalent above; may be done together if the owner wants both retrospective sections at once.
+
+##### WS-RESEARCH-RECORD — Commit the research memo
+
+`docs/research/v2.10-empowerment-skills-research.md` is committed alongside the spec — internal offer-architecture/CI audit + dated, URL-cited external sources (AI-slop evidence + knowledge-worker-empowerment evidence), no competitor/tool names, consistent with `docs/research/`'s public status since v2.8.0's WS5.
+
+#### Will NOT Do (Out of Scope)
+
+- No new interview question turns — the 3-core-turn budget (Q1, bundle confirm, Q2) plus optional Q3 is untouched; every new skill surfaces through offer/discovery mechanisms that already exist (`cross_cutting_skills` F4 offer, preset `optional_skills` "also on the bench," Path C `goal_tags` matching, F4 "Add from full pool").
+- No `core_skills` changes to any preset — binding owner constraint, verified as a zero-diff AC.
+- No new SKILL.md beyond the two named (`anti-ai-slop`, `weekly-review`) — `decision-log` and `information-diet-triage` are explicitly deferred (§Candidate Slate items 4–5), not built partially or stubbed.
+- No `connector-leverage` skill or any change to `templates/preset-template/connector-checklist.md` this cycle (§Candidate Slate item 6 — rejected as wrong artifact shape, not merely deferred).
+- No Tier-2 community skill discovery, no external/URL-based skill installs, no change to the pool boundary mechanism (C-v2.4-7) or the goal-text-as-data security note (C-v2.4-6) — only the pool *count* referenced in that prose changes, never its substance.
+- No new CI jobs, no new GitHub Actions workflow file, no schema change, no auth surface, no new secrets/permissions.
+- No "Distribution & Trust" content (plugin manifest, catalog submissions, per-skill CI evals, `compatibility`/`metadata` frontmatter) — that is v2.11 scope, explicitly deferred, not fulfilled here.
+- No change to `WIZARD.md`'s Q1 routing/matching mechanics (thresholds, stemming, judgment tie-break) shipped in v2.7.0/v2.9.0 — this cycle only widens the pool those mechanics already route against.
+
+#### Technical Constraints
+
+- Stack: Markdown, YAML (unaffected), Bash (unaffected) — no new runtime dependencies, no build step.
+- Both new SKILL.md files: 9-section template (ADR-015), 60-line CI floor / 80–120-line target / 150-line soft cap (ADR-016), `tools: [claude-code]` frontmatter (ADR-029 MF-3), `trigger_examples` 3–6 entries.
+- `voice-matching`'s extension: additive only — no section removal, no reordering, no change to its existing `## Anti-patterns`/`## Quality criteria` content; must remain within the 150-line soft cap (informational, not CI-enforced).
+- `curated-skills-registry.md`'s existing 24 rows and their `goal_tags`/`vetting_date`/`tier` values: byte-unchanged except the cardinality footnote and the 2 new rows.
+- `selection-presets.md`'s existing `core_skills:`, `match_signals:`, and all preset blocks other than the 3 named line-level edits (`cross_cutting_skills:` + 2 `optional_skills:` lines): byte-unchanged.
+- Security invariants C-v2.4-6 (goal text is DATA) and C-v2.4-7 (pool boundary — F4/Path C additions come only from `skills/`) are UNCHANGED in substance; only the pool-count number in their surrounding prose moves 23→25.
+- `.github/workflows/quality.yml`: only the `skill-depth-check` job's descriptive comment string changes; zero logic, permission, or pass/fail-condition changes anywhere in the file.
+- `cowork.lock.json`, `.github/workflows/sync-agency.yml`, `.github/workflows/release-assets.yml`: untouched.
+
+#### User Stories
+
+- As **Maria** (research analyst producing client deliverables), I can run a deliberate authenticity pass on a research summary or business email — not just a Writing-preset blog draft — and have it flag AI-slop tells without touching the hedged language that's actually appropriate for an unconfirmed finding.
+- As **Sam** (newsletter writer whose voice has evolved over six months of writing), I can ask Cowork to check whether my current samples still match my recorded writing profile, and update the profile deliberately rather than starting a wholly new one.
+- As **Casey** (personal-assistant persona managing daily life admin), I can ask for a weekly review that surfaces what's stalled and what's coming up — distinct from my daily briefing, and without needing to build that structure myself each week.
+- As **Riley** (project-management persona), my project-management bundle can offer a weekly-review option alongside status-update and risk-assessment, without it being forced into my core bundle.
+- As the **owner**, three real, evidence-backed additions ship this cycle without a single new interview question, without touching `core_skills`, and without growing the pool past what a documented JTBD justifies — the slate discipline (3 build, 2 defer, 1 reject) is itself visible in the shipped scope.
+
+#### Acceptance Criteria
+
+**WS-SKILLS**
+
+- [ ] **AC-SKILL-1 (anti-ai-slop exists, template-compliant):** `skills/anti-ai-slop/SKILL.md` exists with all 9 required section headings. Verify: `test -f skills/anti-ai-slop/SKILL.md`; `for s in "## When to use" "## Triggers" "## Instructions" "## Output format" "## Quality criteria" "## Anti-patterns" "## Example" "## Writing-profile integration" "## Example prompts"; do grep -qF "$s" skills/anti-ai-slop/SKILL.md || echo "MISSING: $s"; done` → no output.
+- [ ] **AC-SKILL-2 (anti-ai-slop line band + frontmatter):** 60–150 lines; `tools: [claude-code]`; `trigger_examples` present with 3–6 entries. Verify: `wc -l skills/anti-ai-slop/SKILL.md` between 60 and 150; `grep -c "^tools: \[claude-code\]$" skills/anti-ai-slop/SKILL.md` = 1.
+- [ ] **AC-SKILL-3 (anti-ai-slop content substance):** the skill names concrete tell categories from the research memo, not a vague heuristic. Verify: `grep -icE "hedg|burstiness|rhythm|delve|tapestry|pivotal|seamless" skills/anti-ai-slop/SKILL.md` >= 3 (at least 3 of the researched categories/terms present).
+- [ ] **AC-SKILL-4 (anti-ai-slop anti-anti-pattern present):** the skill explicitly instructs NOT to flag a device the sample/writing-profile establishes as intentional. Verify: `grep -icE "writing-profile|intentional|established (style|voice)" skills/anti-ai-slop/SKILL.md` >= 1, confirmed by manual read at Phase 5 (this is a substance check a bare grep count cannot fully verify — @qa MUST read the actual anti-anti-pattern sentence, not just count matches, per this project's own check-that-cannot-fail discipline).
+- [ ] **AC-SKILL-5 (weekly-review exists, template-compliant):** same 9-section/frontmatter checks as AC-SKILL-1/2 applied to `skills/weekly-review/SKILL.md`.
+- [ ] **AC-SKILL-6 (weekly-review 4-phase structure):** `## Instructions` names a Collect/Process/Review/Plan (or equivalent 4-phase) structure. Verify: `grep -icE "collect|process|review|plan" skills/weekly-review/SKILL.md` >= 4.
+- [ ] **AC-SKILL-7 (voice-matching extension, additive):** `skills/voice-matching/SKILL.md` retains all 9 original section headings (no removal) and gains new recalibration-related trigger/instruction content. Verify: same 9-heading check as AC-SKILL-1 still passes; `grep -icE "recalibrat|voice (has )?(changed|drift)" skills/voice-matching/SKILL.md` >= 1 (0 before this cycle, confirmed by `git show` against the pre-cycle tree at Phase 5).
+- [ ] **AC-SKILL-8 (no other skill files touched):** `git diff --stat` for the `skills/` directory shows exactly 3 files changed (`anti-ai-slop/SKILL.md` new, `weekly-review/SKILL.md` new, `voice-matching/SKILL.md` modified) and 0 others.
+
+**WS-REGISTRY**
+
+- [ ] **AC-REG-1 (2 new rows, correct schema):** `curated-skills-registry.md` gains exactly 2 new data rows for `anti-ai-slop` and `weekly-review`, each with `name`/`description`/`source_url: builtin`/`vetting_date` (ISO 8601)/`tier: 1`/`goal_tags`. Verify: `grep -cE '\| (builtin|https?://)' curated-skills-registry.md` = 26 (was 24).
+- [ ] **AC-REG-2 (goal_tags correct):** `anti-ai-slop`'s row has all 7 preset slugs in `goal_tags`; `weekly-review`'s row has exactly `personal-assistant,project-management,study`. Verify: manual read (goal_tags column values, not a grep count — column position isn't fixed per MF-2's own structural-header-scan design).
+- [ ] **AC-REG-3 (cardinality footnote updated):** the file's own count footnote reflects 26 rows / 25 unique slugs. Verify: `grep -c "26 rows across 25 unique skill slugs" curated-skills-registry.md` >= 1.
+- [ ] **AC-REG-4 (registry-cardinality-check still passes, no code change needed):** `registry-cardinality-check`'s existing `-lt 18` floor assertion requires zero modification. Verify: local re-run of the job's own `DATA_ROWS` grep confirms >= 18 (will read 26).
+
+**WS-PRESETS**
+
+- [ ] **AC-PRESET-1 (cross_cutting_skills gains anti-ai-slop):** Verify: `grep "^cross_cutting_skills:" selection-presets.md | grep -c "anti-ai-slop"` = 1; entry count in that line = 6 (was 5).
+- [ ] **AC-PRESET-2 (rationale table row added):** the `| Skill | Rationale |` table beneath `cross_cutting_skills` gains a row for `anti-ai-slop`. Verify: `grep -c "^| anti-ai-slop |" selection-presets.md` = 1.
+- [ ] **AC-PRESET-3 (weekly-review added to exactly 2 presets' optional_skills):** Verify: `awk '/^```preset$/,/^```$/' selection-presets.md | grep -c "^optional_skills:.*weekly-review"` = 2.
+- [ ] **AC-PRESET-4 (which 2 presets):** the 2 matches from AC-PRESET-3 are `personal-assistant` and `project-management` specifically. Verify: manual read of the matched blocks' `name:` fields.
+- [ ] **AC-PRESET-5 (zero core_skills diffs — inverted/binding):** Verify: `git diff main -- selection-presets.md | grep -c "^[+-]core_skills:"` = 0.
+- [ ] **AC-PRESET-6 (wizard-consistency-check passes locally):** every slug referenced by presets/cross_cutting has a `skills/<slug>/SKILL.md` pool file, and both new pool skills have registry rows (this is the existing CI job re-run, not new logic). Verify: local re-run of `wizard-consistency-check`'s script body, 0 errors.
+
+**WS-CI**
+
+- [ ] **AC-CI-1 (WIZARD.md pool-count updated, security-note substance unchanged):** all 3 "23-skill"/"(23 slugs)" occurrences in `WIZARD.md` read 25; the C-v2.4-6/C-v2.4-7 note text surrounding them is otherwise byte-unchanged. Verify: `grep -c "23-skill\|(23 slugs)" WIZARD.md` = 0; `grep -c "25-skill\|(25 slugs)" WIZARD.md` = 3; C-v2.4-6/C-v2.4-7 occurrence counts unchanged from pre-cycle.
+- [ ] **AC-CI-2 (SETUP-CHECKLIST.md, templates/workspace-claude-md-template.md, tests/offline-smoke-test.md updated):** Verify: `grep -c "23-skill" SETUP-CHECKLIST.md templates/workspace-claude-md-template.md tests/offline-smoke-test.md` = 0 across all three; `grep -c "25-skill" ...` >= 1 across all three.
+- [ ] **AC-CI-3 (quality.yml comment-only edit, zero logic delta):** Verify: `git diff main -- .github/workflows/quality.yml` touches only the `skill-depth-check` job's comment line(s); `git diff main -- .github/workflows/quality.yml | grep -cE "^\+.*(run:|if:|exit |grep -c|-lt |-gt )"` = 0 (no changed executable lines).
+- [ ] **AC-CI-4 (no new CI job):** Verify: top-level job-name count in `.github/workflows/quality.yml` unchanged from pre-cycle baseline.
+
+**WS-STOREFRONT**
+
+- [ ] **AC-STORE10-1 (README skill-count updated):** Verify: `grep -c "25 skills" README.md` >= 1; `grep -c "23 skills" README.md` = 0.
+- [ ] **AC-STORE10-2 (Highlights mentions new skills):** Verify: manual read of the updated Highlights bullet confirms it names the empowerment-skill addition, not just the count.
+
+**WS-FASTFOLLOW**
+
+- [ ] **AC-FF-1 (F-1 verify-command fix):** the AC-STORE-4 negative control documented in `docs/architecture.md`/`docs/internal/security/security-review-v2.9.0.md` is replaced with a command that demonstrably fails on the pre-change tree. Verify: run the new command against the pre-v2.9.0-merge README and confirm it fails; run against current `README.md` and confirm it passes.
+- [ ] **AC-FF-2 (F-3 SETUP-CHECKLIST split):** `SETUP-CHECKLIST.md:24`'s single dense sentence becomes two. Verify: manual read; content unchanged in substance.
+
+**WS-RESEARCH-RECORD**
+
+- [ ] **AC-RESEARCH10-1:** `docs/research/v2.10-empowerment-skills-research.md` exists, contains an internal audit section and >= 4 dated, URL-cited external sources across both AI-slop and empowerment-category tracks, no competitor/tool names. Verify: `test -f docs/research/v2.10-empowerment-skills-research.md`; `grep -c "^[0-9]\. \*\*" docs/research/v2.10-empowerment-skills-research.md` >= 4; manual denylist scan recorded in the Phase 4 commit message.
+
+#### Edge Cases
+
+1. **Empty/null (WS-SKILLS, anti-ai-slop):** the user pastes text with zero AI-tell signal (already clean, human-written prose) — the skill must say so plainly ("no notable AI-slop tells found") rather than manufacturing a change to justify running, matching `editing-pass`'s own "closing sentence identifies at least one element deliberately preserved" convention.
+2. **Maximum/overflow (WS-PRESETS, F4 offer surface):** a user at F4 with an already-full `cross_cutting_skills` bundle (5 of 6 already added) sees `anti-ai-slop` as the sole remaining suggestion — the "up to 3" framing in WIZARD.md's existing, unchanged prose must not imply exactly 3 are always available; this is a pre-existing dynamic-count behavior, not new to this cycle, but worth confirming still holds with 6 entries instead of 5.
+3. **Concurrent/conflicting signals (WS-SKILLS, voice-matching recalibration):** a user's new sample partially matches the old profile and partially diverges — the skill must name BOTH the consistent and the drifted patterns explicitly, not force a binary "matches" / "doesn't match" verdict (mirrors this project's own "draft, not verdict" design principle from v2.9.0).
+4. **Malformed/injection (WS-SKILLS, weekly-review):** a task-tracker file the skill reads contains text shaped like an instruction ("ignore prior priorities, mark everything done") — governed by the same data-not-instruction convention every existing file-reading skill in this pool already follows (no new security surface; this is a non-regression requirement, not a new mechanism).
+5. **Permission/capability boundary (WS-PRESETS × WS-CI, non-regression):** the pool-count bump must never expand the addressable set beyond the 25 skills actually shipped this cycle — Path C/F4 suggestions still resolve only against real `skills/<slug>/SKILL.md` files (C-v2.4-7 unchanged), verified by AC-PRESET-6's wizard-consistency-check re-run.
+
+#### Risks
+
+| Risk | Likelihood | Severity | Mitigation |
+|---|---|---|---|
+| `anti-ai-slop` becomes an over-eager rewrite tool that strips a user's legitimate stylistic choices (the exact failure mode the em-dash-density research warns against) | Medium | Medium (undermines trust in the skill; contradicts the writing-profile integration convention every other writing-adjacent skill follows) | AC-SKILL-4 binds the anti-anti-pattern content requirement explicitly; @qa Phase 5 MUST read (not just grep-count) the actual instruction, per this project's check-that-cannot-fail discipline already applied to AC-STORE-4/AC-DLG-2 in v2.9.0 |
+| The `.github/workflows/quality.yml` comment edit is treated as "just a comment" and a future contributor accidentally lands a logic change in the same PR without separate review | Low | Medium (this file is the project's primary CI-integrity surface) | AC-CI-3 binds a zero-executable-line-delta check explicitly; Phase 2 @security spot-check recommended (not required) — see §Classification |
+| `weekly-review`'s two-preset `optional_skills` placement under-serves the `study`-domain crossover case the research flagged as real-but-weaker | Low | Low (goal_tags-only discoverability via Path C still covers it; not a hard gap, a deliberate tier-strength choice) | Documented explicitly in §Candidate Slate item 3 as an intentional asymmetric placement, not an oversight; revisit if Phase 5/post-ship signal shows study-domain demand |
+| Pool growth (23→25) plus 2 new offer-surface entries incrementally erodes the choice-overload discipline this project has explicitly protected since v2.9.0 | Low | Medium (a slow-drift risk more than a this-cycle risk) | The 6-candidate-considered/3-built slate discipline (§Candidate Slate) is itself the mitigation; explicit DEFER/REJECT dispositions for items 4–6 create a visible precedent for future cycles to cite rather than re-litigate |
+
+#### Rollback
+
+Every workstream is a revertible commit set — no schema, no CI logic, no external side effects (no tags/releases created this cycle). WS-SKILLS/WS-REGISTRY/WS-PRESETS/WS-CI/WS-STOREFRONT/WS-FASTFOLLOW/WS-RESEARCH-RECORD are straightforward `git revert`s, and are independently revertible from each other (WS-SKILLS' new files can be reverted without touching WS-PRESETS' selection-presets.md lines, and vice versa — the only real coupling is that WS-PRESETS references slugs WS-SKILLS creates, so WS-SKILLS must land first or in the same commit as WS-PRESETS to keep `wizard-consistency-check` green at every intermediate commit).
+
+#### Success Metrics
+
+- **Primary:** A user producing AI-drafted content in ANY preset domain (not only Writing) has an available, opt-in pass that measurably reduces AI-slop vocabulary/rhythm/hedging tells without altering their own established stylistic choices — verified qualitatively at Phase 5 via a before/after example run against real (non-synthetic) sample text, not just the skill's own worked example.
+- **Secondary:** A user whose writing voice has genuinely changed can recalibrate their profile through an explicit, supported request, rather than living with a stale onboarding-time snapshot or manually re-running the full Q3 voice interview.
+- **Tertiary:** A personal-assistant or project-management user has an available weekly-cadence review distinct from their daily briefing or project status update — verified by confirming the skill's output structure (Collect/Process/Review/Plan) produces genuinely different content than running `daily-briefing` or `status-update` against the same input files.
+- **Portfolio-level (owner framing):** the pool grew by exactly the JTBD-justified amount this cycle (2 new skills, 1 extension) against 6 candidates considered — the DEFER/REJECT dispositions are themselves a success signal, not a shortfall, matching the owner's explicit "the call of the user but we do offer" (not "offer everything") framing.
+
+#### Assumptions
+
+- [CONFIRMED] The 23-skill pool count is hard-coded in prose at exactly 7 live (non-historical) locations plus 1 stale CI comment — grep-verified this session across the full repo (excluding `docs/internal/` and `CHANGELOG.md` historical entries).
+- [CONFIRMED] `optional_skills` entries are NOT subject to the `skill-depth-check` CMP byte-mirror job (that job's loop is scoped to each preset's `core_skills` only) and are NOT mirrored into `examples/<preset>/.claude/skills/` — directly read from `.github/workflows/quality.yml`'s `CMP` step this session, and confirmed empirically (`examples/personal-assistant/.claude/skills/` contains only its 3 `core_skills`, not its 2 `optional_skills`).
+- [CONFIRMED] `curated-skills-registry.md`'s `goal_tags` field has no CI-enforced closed-vocabulary check against the actual 7 preset slugs (MF-2 is a character-class gate only, `[^a-z0-9, -]`) — grep-verified against `.github/workflows/quality.yml` this session. This means `goal_tags` values are a documentation/matching convention, not a CI-hard-enforced enum; @architect should confirm at Phase 1 whether this spec's proposed values need any additional Phase 1 guidance beyond following the existing 7-slug convention.
+- [CONFIRMED] No `NEXT-CYCLE-LOCKED` marker exists in `docs/retro.md`'s most recent (`[v2.9.0]`) section, and `stack-profile.json` has no queued cycles — both Gate-Cycle Pre-Spec Checks are clean.
+- [ESTIMATED] `weekly-review`'s two-preset (`personal-assistant` + `project-management`) `optional_skills` placement, plus `study` as a `goal_tags`-only third domain, correctly reflects relative JTBD strength across the three domains — not independently user-tested this session; a reasoned placement based on persona documentation (`docs/internal/planning/personas.md`), not measured demand.
+- [UNTESTED] Whether `anti-ai-slop`'s three researched tell-categories (vocabulary, rhythm/burstiness, hedging) are sufficient coverage or whether a 4th category should be added at Phase 1/4 — the research memo's 5 sources converge on these 3 but this is external-literature synthesis, not a controlled test against this product's actual output.
+- [UNTESTED] Whether registering `anti-ai-slop`'s `goal_tags` as all 7 preset slugs (rather than a narrower set) will produce noisy Path C matching for genuinely unrelated novel goals — theoretically sound (it mirrors `prompt-gate`'s existing all-7 row without complaint) but not empirically verified against a novel-goal persona run this session.
+
+#### Open Questions for @architect (Phase 1)
+
+- **OQ-1 (registry section placement):** where do the 2 new rows go in `curated-skills-registry.md`'s existing by-preset-domain organization, given both new skills span multiple domains? Default: follow whatever precedent `prompt-gate`'s existing row already set (its Tier-1 section placement, if any single one exists) for cross-domain skills; if no clean precedent exists, introduce a small "Cross-Domain" subsection header rather than forcing either skill under one arbitrary preset heading.
+- **OQ-2 (anti-ai-slop tell-vocabulary completeness):** does the 3-category evidence base (vocabulary denylist, rhythm/burstiness, hedging) from the research memo need a 4th category (e.g., the "it's not just X, it's Y" symmetrical-construction tic, called out as its own named pattern in source 1 but not treated as independently checkable in this spec's AC-SKILL-3)? Default: fold it into the vocabulary/structure category rather than adding a 4th top-level category — keeps `## Quality criteria` at the template's 3–5-bullet guidance rather than growing it artificially.
+- **OQ-3 (voice-matching line-count headroom):** does the recalibration extension's additive content risk pushing `voice-matching/SKILL.md` past the 150-line soft cap? Default: no hard blocker either way (soft cap is judgment-only, not CI-enforced per ADR-015), but @architect should measure actual pre/post line count at Phase 1 design time and flag if the addition alone exceeds ~20 lines, in which case @dev should look for content to tighten elsewhere in the file rather than let it run long unchecked.
+- **OQ-4 (quality.yml comment edit — Tier classification):** does a comment-only, zero-logic-change edit to a `.github/workflows/*.yml` file warrant the same "recommended, not required" Phase 2 @security spot-check this spec proposes (§Classification), or does this project's own precedent argue the flag is unnecessary ceremony for a change this inert? Default: keep the flag (cheap insurance, matches this project's general caution around any `.github/workflows/` touch, even non-functional) — @architect may downgrade it at Phase 1 with rationale if they judge otherwise.
+- **OQ-5 (WS-FASTFOLLOW sequencing):** should the 3 fast-follow items land in the same commit(s) as their adjacent workstream (e.g., F-3's SETUP-CHECKLIST edit alongside WS-CI's SETUP-CHECKLIST pool-count edit, same file) or as a clearly separated final commit for traceability? Default: same-file fast-follows land together with the workstream touching that file (avoids two separate diffs to the same few lines); commit message must still cite both the WS and the FF item number per this project's existing per-commit-scope convention.
+
+#### Gate Decisions Required (Phase 3)
+
+1. **Candidate slate build decision (primary gate — owner call):** build items 1–3 (anti-ai-slop new skill, voice-matching recalibration extension, weekly-review new skill) as recommended; OR adjust the slate (e.g., promote `decision-log` into this cycle instead of deferring, or drop `weekly-review` and keep the cycle to the two named seeds only). **Recommendation: build 1–3 exactly as scoped.** The two owner-named seeds are non-negotiable inclusions; `weekly-review` is the single strongest externally-researched addition and keeps the cycle at a defensible, evidence-backed 3-item build rather than either under-delivering on "any other thing that empowers Cowork" (owner's literal ask) or over-delivering into pool bloat.
+2. **Registry section organization for cross-domain skills (OQ-1's decision surface, elevated here since it's user-visible in a public file, not purely a design-internal call):** (a) place each new skill under ONE existing preset-domain heading it fits best, accepting an imperfect single-domain label for a genuinely multi-domain skill; (b) introduce a new small "Cross-Domain" registry subsection for skills whose `goal_tags` span 3+ domains. **Recommendation: (b)** if `prompt-gate` doesn't already establish a clean single-domain-heading precedent to follow (per OQ-1's default) — a dedicated subsection is more honest about what `anti-ai-slop`'s all-7-domain `goal_tags` actually means than forcing it under, say, "Writing" the way `voice-matching` sits today.
+3. **WS-FASTFOLLOW inclusion:** confirm the 3 fast-follow items (F-1, F-3, optional "What's new in v2.9") should ship in this cycle rather than a separate patch. **Recommendation: yes, include all 3** — matches the owner's own process instruction in this cycle's brief, and F-1/F-3 are both small, well-specified, non-controversial fixes already fully scoped by the v2.9.0 retro.
+
+#### Classification
+
+**Proposed: STANDARD**, with the same "flagged recommendation, not mandatory" pattern this project used for v2.9.0's WIZARD.md security-note-adjacent prose touch, applied here for a different but analogous reason.
+
+**Rationale:** WS-SKILLS/WS-REGISTRY/WS-PRESETS/WS-STOREFRONT/WS-FASTFOLLOW/WS-RESEARCH-RECORD are all content/data additions — new Markdown skill files, new registry rows, new preset-list line entries, new prose — with no new runtime dependency, no schema, no auth surface, and no interview-flow mechanic change. This is the same class of change v1.3.x's preset-depth-expansion cycles and v2.3.1's stub-completion cycle already established as STANDARD precedent repeatedly on this project.
+
+**The one flagged item is WS-CI's `.github/workflows/quality.yml` comment edit** — not because it changes behavior (§Technical Constraints and AC-CI-3 both bind that it doesn't), but because this file is the project's primary CI-integrity surface, and this project's own history treats any touch to it with more caution than an equivalent touch to a pure-content file, even when the specific edit is inert. Two considerations for @architect at Phase 1:
+
+1. Confirm via `git diff` that the comment edit is genuinely the only change to `quality.yml` — AC-CI-3 already binds this as a testable check, but a fresh security read at Phase 2 (recommended, not required under STANDARD) should independently re-confirm rather than accept the AC's self-report alone, mirroring how v2.9.0's Phase 2 independently re-verified WIZARD.md's security-note byte-identity rather than trusting the spec's claim.
+2. The pool-count prose changes in `WIZARD.md` (WS-CI) sit directly adjacent to the C-v2.4-6/C-v2.4-7 security notes this project has flagged for extra scrutiny before (v2.4.0's original SECURITY-SENSITIVE classification, v2.9.0's recommended-not-required Phase 2 re-verify). The notes' substance doesn't change this cycle — only a number inside them — but the same "confirm the actual implementation holds the line, not just the spec's intent" discipline applies.
+
+This mirrors the v2.9.0 precedent's own handling: STANDARD classification held, but a specific, narrow-scope Phase 2 recommendation was named rather than either skipping the review entirely or over-classifying the whole cycle SECURITY-SENSITIVE for what is, in substance, a documentation and data-addition cycle. @architect confirms or re-runs this classification at Phase 1 per the standard re-run discipline.
+
+## Architectural Modifications (v2.10.0 — added at Phase 1, per @architect Step 4a)
+
+Recorded by @architect at Phase 1 (design in `docs/architecture.md §v2.10.0 Phase 1 — Empowerment Skills Design`, ADR-042/ADR-043). Three corrections; no AC dropped or found infeasible — all 27 ACs remain buildable, two verify commands are corrected for soundness and one prose count-descriptor is fixed.
+
+- **AC-CI-2 (verify pattern for `templates/workspace-claude-md-template.md`)** → the documented `grep -c "23-skill" templates/workspace-claude-md-template.md = 0` is a **check-that-cannot-fail** — the file's live string is `"23 skills"` (space), not `"23-skill"` (hyphen), so the grep is pre-GREEN at 0 before any edit and the DROP would strand silently. **Reason:** production-artifact validation against the real file (not the spec's assumed string). Revised verify for that file only: `grep -c "23 skills" templates/workspace-claude-md-template.md` = 0 AND `grep -c "25 skills" templates/workspace-claude-md-template.md` >= 1. (SETUP-CHECKLIST.md and tests/offline-smoke-test.md genuinely carry `"23-skill"` and are unaffected.)
+- **WS-PRESETS prose "each currently 2 entries; both become 3"** → corrected. **Reason:** `personal-assistant`'s `optional_skills` already has 3 entries (`action-items, doc-summary, list-tracker`, since v2.6.x/v2.7) and becomes 4; `project-management` has 2 and becomes 3. AC-PRESET-3 (`grep -c "^optional_skills:.*weekly-review"` = 2 — count of presets) and AC-PRESET-4 (the two are personal-assistant + project-management) are unaffected; only the entry-count descriptor was wrong.
+- **AC-FF-1 (F-1 verify command)** → specified concretely and proven. **Reason:** "a command that demonstrably fails on the pre-change tree" was under-specified; the corrected AC-STORE-4 verify is `grep -qF 'Draft-then-shape bundle building' README.md`, proven this session to return 0 on the pre-v2.9.0 tree `33fd22c^` (negative control fires) and 1 on current `README.md`. The original awk form is a check-that-cannot-fail (its `/^### /` section boundary never closes; it captures the incidental README:154 "drafts status updates" line).
+
