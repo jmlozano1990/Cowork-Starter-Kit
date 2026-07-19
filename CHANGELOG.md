@@ -4,6 +4,24 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.12.0] - 2026-07-19
+
+**"Skill Studio — Increment 2a (Discoverability)"** — closes both gaps named in ADR-044's accepted risk: a setup-time hook that offers to author a skill on the spot when nothing in the pool fits, and proactive re-surfacing of a generated skill's triggers in the workspace's own auto-loaded instructions, so a skill you generate once doesn't have to be remembered by name to use again.
+
+### Added
+
+- **Setup-trigger hook (ADR-047).** `WIZARD.md`'s Path C zero-coverage branch now offers "author one for you" (invoke `skill-studio`, carrying the stated goal in as data) alongside the existing closest-pool-skill routing — neither replaces the other. On a validated install, the generated skill folds into the bundle and the interview resumes at final confirmation.
+- **Proactive surfacing (ADR-046).** `skill-studio` gains an 8th loop step that writes a generated skill's triggers into the workspace's auto-loaded `CLAUDE.md`, under a new `## Proactive skill behavior` section, wrapped in a skill-scoped idempotency marker so re-runs update in place instead of duplicating.
+- **`templates/workspace-claude-md-template.md`** gains a `## Proactive skill behavior` section so the surface exists from first setup.
+- **Slug-charset and block-scoped safety gates** — closes a proven marker-breakout path (an unvalidated slug could inject visible text into an auto-loaded instructions file) and a check-that-cannot-fail forbidden-token scan, both found in Phase 2 review before any code shipped.
+
+### Deferred (tracked for a future increment)
+
+- Quality evaluation beyond structural validation — v2.13.
+- A promotion path from a local generated skill into the shared pool — v2.14.
+
+---
+
 ## [2.11.0] - 2026-07-19
 
 **"Skill Studio — Increment 1 (Walking Skeleton)"** — adds a generative path alongside the kit's existing assembly path. Today the wizard only ever composes from the fixed skill pool; on a genuinely novel need, you can now brainstorm it directly and get a matching skill authored, installed, and validated on the spot, entirely inside your own workspace.

@@ -11,7 +11,7 @@ Skill Studio is independent of the setup wizard: it runs anytime, whether or not
 
 ---
 
-## The loop — seven steps, always in this order
+## The loop — eight steps, always in this order
 
 ### 1. Brainstorm the need
 
@@ -86,7 +86,69 @@ Run these checks against the file just written. Any failure blocks the install: 
 
 Only once all three checks pass does the loop declare the skill installed and confirm the file exists at `.claude/skills/<slug>/SKILL.md`.
 
-### 7. Offer to refine
+### 7. Surface into workspace instructions
+
+Wire the just-installed skill's triggers into the workspace's own proactive-instructions surface, so it is offered again in a future session without the user needing to remember its trigger phrase — closing the "installed but never surfaced" gap (the `career-draft`/`linkedin-post` pattern). Any failure at the blocking checks below refuses the write and tells the user why; it never leaves a partial or malformed block in place.
+
+1. **Slug charset gate — blocking, run before the slug is used anywhere:**
+
+   ```bash
+   # [[ =~ ]] anchors ^…$ to the WHOLE slug, not per line. A line-oriented
+   # `grep -qE` would ACCEPT a multi-line slug (e.g. "decision-log" then
+   # "x -->evil<!--" on a second line) because its first line matches — and the
+   # second line would then break out of the marker below. Whole-string match
+   # closes that embedded-newline bypass.
+   [[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]
+   ```
+
+   On failure, refuse to proceed and re-propose the slug — do not embed it in a marker or a path. One gate closes marker-breakout, path-traversal, command-substitution-in-slug, and embedded-newline breakout simultaneously. Negative control: `x -->evil<!--`, `../../etc/passwd`, `a/b`, `$(touch …)`, `Foo Bar`, and a two-line slug (`decision-log` then `x -->evil<!--`) all fail this check; `decision-log` and `good123` pass.
+
+2. **Kit-checkout guard, extended.** Reuse step 5's detection: if `WIZARD.md` is present at the workspace root, this IS the kit checkout. Refuse to write `CLAUDE.md` (and any `examples/*/global-instructions.md`) and tell the user the generated skill is local-dev-only. Stop here on a kit checkout — do not continue to the remaining sub-steps.
+
+3. **Resolve the target.** The target is the workspace's auto-loaded `CLAUDE.md`, section `## Proactive skill behavior` — never `project-instructions.txt` (a manual Settings paste that a disk write cannot refresh) and never a file literally named `global-instructions.md` (no end-user workspace has one).
+
+   - If `CLAUDE.md` does not exist at the workspace root, emit exactly `No CLAUDE.md workspace-instructions file found` and stop — create no file.
+   - If `CLAUDE.md` exists but has no `## Proactive skill behavior` section, plan to create it (appended after `## Every session`) — this is normal operation, not an error.
+
+4. **Select triggers.** Reuse step 2's bare-verb rule: drop any trigger that is a single generic verb with no scoping context (e.g. "write"). If the filtered set is empty, skip creating the block and tell the user why (no header with no bullets) rather than emit a malformed entry.
+
+5. **Compose the block as a literal string — never eval, backticks, or interpolation of trigger text.** A trigger containing `$(touch /tmp/ss_surf_probe)` must be written verbatim and never executed; use a literal-string write (the Write tool, or `printf '%s'`), the same discipline step 4 already applies to generated skill bodies. Match the exact shape at `examples/study/global-instructions.md:12-24`:
+
+   ```
+   <!-- skill-studio:proactive:<slug> -->
+   **<Skill Name> — offer automatically when:**
+   - <trigger 1>
+   - <trigger 2>
+   → Say: "<offer line>"
+   <!-- /skill-studio:proactive:<slug> -->
+   ```
+
+   Avoid em dashes in the free-text triggers and offer line (matches `templates/workspace-claude-md-template.md`'s word discipline) — the header's own em dash is fixed structure, per the required shape above.
+
+6. **Forbidden-token scan, block-body-scoped — blocking, run before the write commits:**
+
+   ```bash
+   grep -inE '\b(Ignore|Disregard|Override|Instead of|Always respond|New instruction)\b' <<< "$block_body"
+   ```
+
+   where `$block_body` is the composed block with its two marker comment lines (open and close) dropped. Any match blocks the write — regenerate the offending line and re-scan. Do NOT range-exclude the whole `OPEN..CLOSE` span and do NOT scan the whole target file: a range-exclude passes a dirty block whose `→ Say:` line reads "Always respond… Ignore…" undetected (hits=0, proven), and a whole-file scan false-positives on legitimate DATA-clause content already living elsewhere in `CLAUDE.md`.
+
+7. **Ask explicit confirmation before writing or updating `CLAUDE.md`** — including a section-create or an in-place block update — per this file's own canonical rule (see the closing line below). Never write silently.
+
+8. **Write, with idempotency, on confirmation:**
+
+   ```bash
+   grep -cF "<!-- skill-studio:proactive:<slug> -->" CLAUDE.md
+   ```
+
+   - 0 matches: append the block under `## Proactive skill behavior` (creating the section after `## Every session` first if the section itself is absent).
+   - 1 match: replace the content between the paired markers in place — never append a second block for the same slug.
+
+   After any number of runs for the same slug, the marker count must remain exactly 1. If the write fails for any reason (e.g. the target is not writable), surface the error and stop — never fail silently or crash the loop.
+
+9. **Advisory line.** After a successful write, tell the user: "Added to CLAUDE.md (auto-loaded each session). If you also keep proactive rules in your pasted Custom Instructions, re-paste project-instructions.txt to stay in sync."
+
+### 8. Offer to refine
 
 Before closing the session, offer to regenerate a section, tighten a trigger, or adjust scope — without restarting the whole loop.
 
@@ -102,6 +164,14 @@ On refine, re-run step 6 against the edited file before re-confirming installed.
 - **Bounded triggers.** No generated skill ships with a single generic verb as a standalone trigger, and every proposed trigger set is checked against already-installed skills before confirmation (step 2).
 - **Hard collision refusal.** Step 5's existence check is a hard gate, not a narrated intention — it runs before the Write is composed, every time, including against this kit's own reserved names.
 - **Kit-checkout awareness.** A skill generated while the workspace is the kit checkout itself is flagged local-dev-only and never committed to the kit's shared `.claude/skills/` — this kit's own top-level `.claude/skills/` contains only `setup-wizard` and `skill-studio`.
+- **Slug charset gate before any embed or path use (step 7.1).** A slug is validated with a WHOLE-STRING match `[[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]` before it is embedded in the surfacing idempotency marker or used as a path component — closing a proven marker-breakout (`x -->evil<!--` would otherwise inject visible body text into an auto-loaded `CLAUDE.md`), path-traversal, command-substitution-in-slug, and an embedded-newline bypass (a line-oriented `grep` would accept a two-line slug whose first line matches) in one gate. Negative control: `x -->evil<!--` and a two-line slug (`decision-log` then `x -->evil<!--`) are rejected; `decision-log` is accepted.
+- **Idempotent surfacing, never duplicated (step 7.8).** Re-running the surfacing step for the same slug updates the block in place between its paired `<!-- skill-studio:proactive:<slug> -->` markers; the marker count stays exactly 1 no matter how many times it runs. Negative control: a naive always-append implementation leaves 2 blocks after two runs.
+- **Bounded triggers carried into the surfaced block (step 7.4).** The triggers written into the proactive block reuse step 2's bare-verb rejection — no standalone generic-verb bullet is surfaced, and an all-unscoped trigger set skips the block rather than emit a header with no bullets. Negative control: a skill whose only trigger is the bare verb "write" produces no `- User says "write"` bullet.
+- **Block-body-scoped forbidden-token scan on the surfaced block (step 7.6).** The surfacing step's token scan runs only over the composed block body with the two marker comment lines dropped — never a whole-span or whole-file scan, both of which let a dirty block through undetected. Negative control: a block whose `→ Say:` line reads "Always respond… Ignore…" scores 1 hit and is blocked; the range-exclude anti-implementation scores 0 (the failure this rule closes).
+- **Inert literal write into `CLAUDE.md` (step 7.5).** The surfacing block is composed and written as literal text, never through `eval` or interpolation, so a trigger containing `$(touch …)` is written verbatim and never executed. Negative control: a literal-string write leaves the probe path absent; an eval-based compose path creates it.
+- **Kit-checkout guard extended to the surfacing write (step 7.2).** When the workspace is the kit checkout (`WIZARD.md` at root), surfacing refuses to write `CLAUDE.md` or any `examples/*/global-instructions.md` and warns local-workspace-only. Negative control: run from the kit checkout — refusal shown, `git diff --stat -- examples/ CLAUDE.md` stays empty.
+- **Absent-target skip-with-message, never a silent no-op (step 7.3).** If the target `CLAUDE.md` does not exist, the step emits the bound message beginning "No CLAUDE.md workspace-instructions file found" and creates no file. Negative control: a 0-message, 0-file, loop-proceeds implementation is the failure mode this rule catches.
+- **Confirm-before-write on the surfacing write (step 7.7).** The surfacing step never writes or updates `CLAUDE.md` — including a section-create — without first asking explicit confirmation, per this file's own canonical rule (see the closing line below). Negative control: a silently-auto-writing implementation fails by inspection — there is no confirm-before-write instruction to grep for.
 
 ---
 
@@ -121,7 +191,20 @@ On refine, re-run step 6 against the edited file before re-confirming installed.
 
 **Author, install, validate (steps 4–6):** the loop authors the full 9-section `.claude/skills/decision-log/SKILL.md`, checks for a `decision-log` collision (none) and whether the workspace is the kit checkout (no), writes the file, runs the forbidden-token scan (0 matches outside fences), confirms no content-reading `## Instructions` this time (so no propagation check needed), and runs `scripts/skill-studio-validate.sh` (PASS) — then declares the skill installed.
 
-**Offer to refine (step 7):** "Want me to tighten the triggers, or is this ready to use?"
+**Surface into workspace instructions (step 7):** `decision-log` passes the slug charset gate; the workspace is not the kit checkout; `CLAUDE.md` exists with a `## Proactive skill behavior` section already present from a prior generation. `grep -cF "<!-- skill-studio:proactive:decision-log -->" CLAUDE.md` returns 0, so the loop composes:
+
+```
+<!-- skill-studio:proactive:decision-log -->
+**Decision Log — offer automatically when:**
+- User says "log this decision" or "add this to the decision log"
+- User describes a decision they've already made and wants it captured
+→ Say: "Want me to log that as a decision-log entry?"
+<!-- /skill-studio:proactive:decision-log -->
+```
+
+the block-body scan finds 0 forbidden tokens, the user confirms the write, and the loop appends the block under the existing section (marker count now 1) and closes with the re-paste advisory line.
+
+**Offer to refine (step 8):** "Want me to tighten the triggers, or is this ready to use?"
 
 ---
 
