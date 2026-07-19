@@ -2,6 +2,82 @@
 
 ---
 
+## [v2.12.0] - 2026-07-19 — Skill Studio (Increment 2a · Discoverability)
+
+**Date:** 2026-07-19
+**Classification:** STANDARD + MANDATORY Phase-2 hard gate — proposed at Phase 0 (@pm, generator/instruction-surface capability: skill-studio gains a NEW write to the workspace's auto-loaded `CLAUDE.md`, not just a skill folder), confirmed at Phase 1 (@architect, ADR-046 surfacing target + ADR-047 hook mechanics, both with §Maturation Path), re-confirmed PASS WITH WARNINGS at Phase 2 (@security, 0 CRITICAL / 6 WARNING / 3 INFO, mandatory hard gate independently re-derived), and put through a genuine two-pass Phase 5 (@qa REJECTED the first tree, then APPROVED the fix). Not escalated to SECURITY-SENSITIVE (no CI/workflow/registry/schema/auth surface — confirmed by git-diff scope at every phase). External project — no Council Tier-A surface, no Guard Change Summary required.
+**Mode:** full pipeline. Scope = the highest-value PAIR of Skill Studio Increment 2 (setup-trigger hook, ADR-047 + proactive surfacing, ADR-046); eval-loop (→v2.13) and promote-to-pool (→v2.14) explicitly OUT, held from the v2.11.0 retro's own carry-forward list. Binding cycle directive (set at Phase 0, in direct response to patterns.md WATCH 2/3): bind every safety/verification clause as an executable check with a firing negative control **from the start**, to pre-empt a 3rd-instance promotion to BINDING. Phase 0/1/2 docs (spec append, ADR-046/047, security-review-v2.12.0.md) were authored author-and-return and landed in the SAME commit as Phase 4 implementation (`5406cb9`) rather than as separate main commits — a visible side effect of every agent this cycle (not just @dev) running pin-inheritance-guard-blocked (§8, Pattern #3).
+**Rework rate:** **~5% (23/451 lines changed — NOT 0%, and it is the healthy case, not a regression).** Phase-4 binding SHA `5406cb9` is 451 lines across 9 files. One legitimate post-QA security-fix commit, `214393b` (18 insertions / 5 deletions across 3 files), closes QA-1 — a genuine BLOCKER the independent @qa gate found and every earlier pass (Phase 2 design, Phase 4 implementation, the orchestrator's own Phase-4 re-verify) had missed. Contrast v2.11.0's 0%: that cycle had nothing to catch at Phase 5. This cycle had something to catch, and the gate caught it — the rework is the pipeline's own proof of function, not evidence of a sloppier build.
+**Cycle SHAs:** Phase 0 spec append → Phase 1 design (ADR-046/047 + WS-PHASE1 AC-P1-1..5) → Phase 2 security review (`docs/internal/security/security-review-v2.12.0.md`, 0 CRIT/6 WARN/3 INFO, S1–S2 bound MUST-FIX, S3–S7 MUST-VERIFY) — all three authored author-and-return and applied together, landing in a single Phase 4 commit alongside implementation: **`5406cb9`** (2026-07-19T15:19:14Z, 9 files, +444/-7). @qa Phase 5 **REJECTED** `5406cb9` on QA-1 (the AC-SEC-S1 slug gate's embedded-newline bypass). Orchestrator fix **`214393b`** (3 files, +18/-5) — whole-string `[[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]` replacing the line-oriented `grep -qE '^…$'`, plus 2 safety bullets (QA-2) and an AC-P1-5 accuracy correction (QA-3) — re-verified against @qa's own fixture. @qa **RE-REVIEW APPROVED** `214393b`. PR #71: **50 pass / 2 skip / 0 fail** (no shields.io flake this run). Squash-merged `ccd2180`; tag `v2.12.0` pushed; Release "Skill Studio (Increment 2a · Discoverability)" published Latest.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings | Severity |
+|-------|-------|----------|----------|
+| 0. Requirements | @pm | 0 blocking | 25 ACs / 4 workstreams, every WS-SAFETY AC pre-bound with a positive-check + firing negative-control per the cycle directive; 5 KDQs framed. |
+| 1. Design | @architect | 0 blocking | ADR-046 + ADR-047 (both §Maturation Path) + 2 index rows + 5 AC amendments + WS-PHASE1 AC-P1-1..5. Orchestrator re-verify caught an @architect imprecision (root `CLAUDE.md` has dedicated CI jobs the cycle doesn't touch — AC-SURF-5 sharpened). |
+| 2. Security Review | @security | 0 CRIT / 6 WARN / 3 INFO | S1 (slug-marker breakout — the sharp finding) + S2 (block-body scan check-that-cannot-fail) bound blocking MUST-FIX; S3–S7 MUST-VERIFY with negative controls. **Honest gap:** the S1 gate @security proved-firing was tested only against SINGLE-LINE fixtures — it did not probe the tool's own per-line anchor semantics, the class QA-1 later exploited. A strong review that closed the surface it named and missed the sub-case inside the mechanism it specified. |
+| 3. User Gate | User | 0 | "Approve + include AC-P1-4." Branch `release/v2.12.0` cut from `9f08af7`. |
+| 4. Implementation | @dev | 0 (1 found downstream) | Single commit `5406cb9`. All S1–S7 shipped as real bash. AC-P1-4 Step-7a population DEFERRED (would widen the AC-SEC-S7 non-regression envelope). **Orchestrator's independent Phase-4 re-verify ALSO ran the S1 gate against single-line fixtures and ALSO missed the embedded-newline case** — the 2nd of 3 passes that missed QA-1. |
+| 5. Test (QA-1 found) | @qa | **1 BLOCKER (caught)** | Built its OWN fresh fixtures rather than re-running the known set — the discipline the two prior passes structurally could not apply. Found the two-line slug bypass → marker breakout into auto-loaded `CLAUDE.md`. **REJECTED `5406cb9`.** |
+| 5. Test (re-review) | @qa | 0 / 0 / 2 INFO (closed) | Fix `214393b` re-reviewed against @qa's exact fixture + full matrix — all reject; legit accept. AC-SAFE-2 corruption now structurally unreachable. QA-2 + QA-3 closed. markdownlint 0; diff confined to 3 files. **APPROVED.** |
+| Merge | Orch + User | 0 | 50 pass / 2 skip / 0 fail; "Merge now (squash)." `ccd2180`; Release Latest. |
+
+**Net-new: 0 CRITICAL, 1 BLOCKER (caught+fixed pre-merge), 0 ISSUE, 2 INFO (closed).** The headline is that the BLOCKER survived two independent passes before the third, fresh-fixture pass caught it (§9).
+
+### 2. AC Difficulty
+
+**AC-SEC-S1 (slug charset gate) — the hardest AC of the cycle and the only one that shipped wrong on its first two attempts.** Specified + proven-firing at Phase 2, re-verified at Phase 4 with the same control shape, found insufficient at Phase 5 only because @qa built an untested payload class (embedded newline). Closed on the 2nd try, re-verified a 3rd time against the exact breaking fixture + a full matrix. Every other Hard-by-design item (S2 block-scan, S3 inertness, S4 kit-checkout, S6 collision) resolved first-try. AC-P1-4 = Not-Verified/DEFERRED (sound scope call). AC-P1-5 = shipped with an overclaim, corrected same-pass (QA-3). Difficulty concentrated entirely in one AC: "a whole-string invariant, gated with a line-oriented tool, looks closed until someone tests a payload shape nobody had tried yet."
+
+### 3. Token Cost
+
+opus: @security Phase 2 + the two-pass @qa gate (reject + re-review) — heaviest driver, the direct cost of the independent gate doing its job. sonnet: @pm/@architect/@dev + orchestrator re-verify + the fix commit. haiku: 0. Per-cycle `metrics.json` aggregation remains unreliable (known `model:"unknown"` gap).
+
+### 4. Phase Durations
+
+Phase-0-open → merge wall clock: **~1h 52m** (13:51:35Z → 15:43:23Z). No phase a >2× outlier even with reject/fix/re-review compounded into the ~21-min Phase 5 window.
+
+### 5. Phases Abbreviated
+
+**None — full pipeline, mandatory Phase-2 hard gate, genuine two-pass Phase 5.** @ux folded into @qa (generator instructions, not end-user UI). **`/refresh-public claude-cowork-config`** (MINOR bump) not confirmed run — carried forward (§9), same open item v2.11.0 carried.
+
+### 6. Rework Rate and Causes
+
+**~5% (23/451 Phase-4 lines) — the correct, healthy outcome, not a defect.** The single post-QA commit exists because the independent gate found a real, exploitable bypass two earlier good-faith passes missed (both tested single-line fixtures; QA-1 exploited per-line tool semantics). The fix was small (one tool swapped for a whole-string one) precisely because @qa's finding was specific.
+
+### 7. Issues Prevented
+
+**qa_issues_prevented: blocker=1 (caught+fixed), issue=0, info=2 (closed).** The prevention story kept distinct from the tally: without the independent Phase-5 gate, `5406cb9` — a tree that had passed a MANDATORY Phase-2 hard-gate review AND the orchestrator's own re-verify — would have shipped with a proven live path to inject arbitrary visible text into a user's auto-loaded `CLAUDE.md`. Not a residue-class gap; a mechanical, deterministic bypass in a gate believed closed by two prior passes. The strongest data point yet for why the Phase-5 gate must build its own fixtures.
+
+### 8. Pattern Detection
+
+**#1 — safety-clause-in-generator-prose: NOT tripped, held WATCH 2/3.** Pre-empted by the Phase-0 binding directive; every WS-SAFETY AC shipped executable-with-firing-control from the start (@security's review confirms "WATCH-2/3 is NOT tripped"). Clean, deliberate pre-emption — do not increment, do not reset.
+**#2 — NEW: a line-oriented tool used to implement a whole-string invariant is a check-that-cannot-fail in disguise (WATCH 1/3).** `grep -E '^…$'` anchors per line, not whole-string; a two-line slug passes on its first line then breaks out of the marker. Distinct from `Check-That-Cannot-Fail` (there the check was never proven red; here it went red against every fixture that existed). Only a novel payload class — not re-running known fixtures — exposed it. Fix: whole-string `[[ =~ ]]`.
+**#3 — pin-inheritance guard gap: 6th consecutive cowork cycle, WIDENED to full fail-closed.** Every agent (@pm/@architect/@security/@dev/@qa) ran author-and-return, guard-blocked. The compensating control this forces (orchestrator-applies + independent re-verify + the fully-independent @qa gate) is exactly what caught QA-1 — the workaround is load-bearing, which makes fixing the underlying gap MORE urgent. Still CRITICAL, Council-side, top `/self-improve` candidate (root-resolution must honor the registered-project path / `COUNCIL_ACTIVE_PROJECT`, not `git rev-parse --show-toplevel`, from a worktree).
+**#4 — scope discipline held (healthy).** Shipped exactly the scoped pair; AC-P1-4 population deferred for a stated, verifiable reason, not silently dropped; eval-loop + promote-to-pool stayed out.
+
+### 9. Retrospective Verdict
+
+**HEALTHY-WITH-NOTES.**
+
+On the product: both capabilities are sound and scoped correctly, every safety clause shipped executable-with-a-firing-control from the start (the Phase-0 directive worked), AC-P1-4's deferral was defensible, and both INFO items were closed in the same fix pass.
+
+On process, credit and caveat that must not cancel into an unqualified "healthy": the credit is that the independent @qa gate did exactly what an independent gate is for — it built fresh fixtures rather than trusting the ones the design/implementation passes had validated against, and that discipline alone surfaced a live, mechanical bypass into a user's auto-loaded `CLAUDE.md`; the reject was clean, the fix small and precise, the re-review rigorous. The caveat is that the pipeline needed to work that hard: QA-1 is not a case where one gate caught what no one looked at — a MANDATORY Phase-2 hard-gate review specified and proved a control firing, and the orchestrator's own independent Phase-4 re-verify ran that same control and also missed it. Two structured, good-faith passes with real negative controls both missed a bypass class inside the very mechanism (`grep -E`'s line-anchoring) they relied on. Combined with Pattern #3's widening pin-inheritance gap, the honest read: the loop closed correctly, but on the third attempt, and the project is currently depending on that third attempt happening reliably every time.
+
+**Hardest AC: AC-SEC-S1** — three independent passes, two commits, to genuinely close.
+
+**Carry-forwards OUT of this cycle** (all cheap, none blocking, none reopening the APPROVED verdict):
+1. Skill Studio eval-loop → **v2.13** (absorbs prior F1/F2 + this cycle's AC-SEC-S5 honest-limit + the external-link-check resilience fix, since v2.13 already touches CI-adjacent surface).
+2. Promote-to-shared-pool → **v2.14**.
+3. **AC-P1-4** Step-7a dynamic-population (deferred half) — pick up whenever a cycle already touches the WIZARD.md Path C hunk.
+4. **CRITICAL, Council-side (NOT a `claude-cowork-config` carry-forward):** the pin-inheritance guard gap (§8, Pattern #3) — 6th consecutive, this cycle its strongest evidentiary case. Top `/self-improve` candidate.
+5. **`/refresh-public claude-cowork-config`** — minor-bump public-artifact audit, post-merge; confirm whether it ran in the interim before re-carrying a 3rd time.
+6. **Completeness fix-forward:** no standalone `docs/internal/qa/qa-report-v2.12.0.md` was produced by the guard-blocked @qa; the orchestrator filed one at retro time so the artifact-per-version convention holds.
+
+---
+
 ## [v2.11.0] - 2026-07-19 — Skill Studio (Increment 1 · Walking Skeleton)
 
 **Date:** 2026-07-19
