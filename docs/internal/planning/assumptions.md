@@ -653,3 +653,51 @@ _Added: 2026-07-06T00:00:00Z — 16-agent swarm campaign (docs/research/v2.7-use
 - **A5 REFRAMED:** the platform itself now natively prompts before deletions and uses plan-approval for batch destructive ops. The kit's verbatim safety rule remains as defense-in-depth, not the only line.
 - **A1 DOWNGRADED from CRITICAL:** practical Project custom-instructions limit ≈8,000 chars (~2,000 words) per third-party testing — 4-5x headroom over the kit's 350-word target. The 400-word CI cap is retained as prompt-quality discipline (ADR-011), not a truncation guard.
 - **Offline nuances (extends A-v2.6.2-1):** network-egress setting changes apply only to NEW sessions (troubleshooting: restart the session after changing it); web search/fetch is governed separately from egress.
+
+---
+
+## v2.15.0 Assumptions (Cowork Evolution Program — Loop 1, Increment 1 · Notice & Record)
+
+_Added: 2026-07-20T00:00:00Z — Phase 0 `/spec`, per `docs/research/cowork-evolution-discovery-brief.md` §3/§9/§10. These are the highest-stakes bets this increment's Phase 0.D/Phase 1 should re-examine, not a full restatement of `docs/spec.md`'s own compact "Assumptions [confidence]" section — see that section for the complete list._
+
+### A-v2.15-1 — Per-session, per-friction-signature threshold counting will feel calibrated, not eager or absent (KDQ-7)
+
+**ID:** A-v2.15-1
+**Confidence:** [ESTIMATED]
+**Assumption:** Counting a friction's occurrence at most once per Cowork session (never once per correction within a single sitting), and resetting only on a terminal `PROPOSED-*` disposition rather than any time-window decay, will produce a "3rd repeat" trigger that neither fires too eagerly (multiple corrections in one conversation shouldn't feel like 3 separate warnings) nor too rarely (a real recurring friction across 3 distinct sessions should reliably surface).
+**Risk:** If real usage shows the per-session unit is wrong in either direction — e.g., users correct the same thing 3 times in ONE long session and expect a proposal then, not across 3 future sessions — the trigger will feel either unresponsive or, if loosened, too chatty. Mitigation: the semantics are bound at Phase 0 specifically so they're testable and revisable as one clearly-named unit (AC-THRESH-1/3), not scattered across ad-hoc implementation choices Phase 1 or Phase 4 might otherwise make independently.
+**Test plan:** AC-THRESH-1's negative control (3 corrections in one session → 1/3, not 3/3) is a design-time fixture proof, not a real-usage validation. Real validation requires a retro callback after this increment has been used across several actual weeks — falsified by user reports that the trigger feels wrong in either direction.
+**In-scope this cycle:** YES — the counting unit is bound as a Phase 0 decision (WS-THRESHOLD); the fuzzy-matching/session-boundary-detection plumbing is delegated to Phase 1 (AQ-16).
+
+---
+
+### A-v2.15-2 — A single `context/memory-of-use.md` file is sufficient; memory and the promotion ledger do not need separate files
+
+**ID:** A-v2.15-2
+**Confidence:** [UNTESTED]
+**Assumption:** One file, holding both raw friction notes and the WATCH-style promotion-state table, is simpler and sufficient at this increment's scale — mirroring `context/writing-profile.md`'s single-file convention rather than introducing a second new context file.
+**Risk:** If ledger volume grows large in heavy-use workspaces, a single file mixing narrative notes and structured promotion state could become harder to scan than two purpose-separated files (a raw log vs. a compact status table). Mitigation: AC-MEM-5's archive rule bounds the active section's size regardless; if this proves insufficient, splitting into two files is a small, backward-compatible follow-up (no schema migration risk, since the promotion-state rows are already a self-contained table).
+**Test plan:** Falsified by: a real workspace's `context/memory-of-use.md` becoming difficult to scan even after AC-MEM-5's archiving takes effect. Not measurable until the file has accumulated real entries over multiple cycles.
+**In-scope this cycle:** YES for the decision (AC-MEM-1); Phase 1 (AQ-20) may revisit if a concrete separation-of-concerns reason surfaces during design.
+
+---
+
+### A-v2.15-3 — Reusing ADR-049's observe-at-intent mechanism at a third, genuinely distinct call site is a valid generalization, not a forced fit
+
+**ID:** A-v2.15-3
+**Confidence:** [UNTESTED]
+**Assumption:** The narration/attempt-vs-refusal containment strategy ADR-049 established for `WS-EVALSAFE` (skill generation) and reused at v2.14.0's `AC-SAFETY-5` (skill promotion, same call site) generalizes cleanly to a third, different problem: proving a ledger-embedded adversarial payload cannot silently skip the PROPOSE confirmation gate. Unlike v2.14.0's reuse (same call site, not counted toward `docs/patterns.md`'s "Observe-at-intent" pattern's own 3rd-instance promotion bar), this is a different containment problem (data-not-instruction for user-authored ledger content, not behavioral grading of a generated skill).
+**Risk:** If `@security`/`@architect` at Phase 0.D or Phase 1 judge this is actually the SAME shape as the prior two instances rather than a genuinely distinct problem, it would not count toward promoting that pattern to a standing discipline — a judgment call, not a mechanical fact.
+**Test plan:** Resolved at Phase 0.D deliberation (the same joint architect+security review that has caught this pattern's prior instances) or, failing that, at the Phase 8 retro for this cycle. Falsified if a fresh, independent read concludes AC-SAFEKDQ3-2 is not meaningfully different from the two prior call sites.
+**In-scope this cycle:** YES — flagged explicitly in `docs/spec.md`'s Open Questions and Assumptions so it is not silently missed at Phase 0.D or the Phase 8 retro.
+
+---
+
+### A-v2.15-4 — A propose-only loop (no apply) is valuable enough on its own to ship as a standalone release
+
+**ID:** A-v2.15-4
+**Confidence:** [UNTESTED]
+**Assumption:** Telling a user exactly what their workspace thinks should change, and exactly where, without applying it, is useful enough to ship now — mirroring Skill Studio's own Increment 1 precedent (structural validation shipped before the quality-grading and promotion increments that made it fully useful).
+**Risk:** If real users find a notice-only loop frustratingly incomplete (the workspace correctly diagnoses a recurring friction but the user still has to make the edit by hand every time), adoption or perceived value could be low until the apply+verify increment ships. Mitigation: none needed structurally — this is an intentional, disclosed scope boundary (Non-Goals), not a hidden gap — but it is worth an honest retro callback rather than assuming the propose-only slice lands well.
+**Test plan:** Falsified by: real user feedback after this ships describing the propose-only loop as not worth the interruption. Not measurable until it ships and gets used across a few real weekly-review cycles.
+**In-scope this cycle:** YES for the scope decision itself (owner-locked per the task brief); the adoption question is explicitly deferred to a post-ship retro callback, not resolved here.
