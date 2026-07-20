@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.14.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.15.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -178,6 +178,26 @@ All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
+## What's new in v2.15
+
+A personal mini-Council starts noticing its own use: when you correct the same thing, or get asked the same question, on three separate days — or a weekly review turns up a recurring friction — your workspace writes it down in one plain file (`context/memory-of-use.md`) and shows you a plain-language proposal: here's what I noticed, here's the exact change I'd suggest, you decide. This release notices and proposes only; it never touches its own instructions. The safety model is structural, not just promised — the proposal flow has no code path that can write to a `CLAUDE.md` or a skill file, an adversarial-looking note is read as data and flagged, never obeyed, and nothing is ever marked confirmed without your explicit yes.
+
+## What's new in v2.14
+
+"Skill Studio — Increment 2c (Promote-to-Pool)" closes the promotion path: a locally-generated skill that's earned it — passed both quality and safety grading fresh, re-run at promotion time, never a stored result — can graduate from your own workspace's `.claude/skills/` into the shared curated pool via a PR-gated ceremony (`PROMOTE.md`) that never writes the pool directly, even from a maintainer's own checkout. This release ships the ceremony only; no skill is promoted yet.
+
+## What's new in v2.13
+
+"Skill Studio — Increment 2b (Eval-Loop)" adds a Grade step to the generation loop: a new skill is checked on two axes before it's ever called "installed" — does it actually help (a baseline-vs-with-skill comparison) and does it behave safely under adversarial pressure (staged tests graded on attempt vs. refusal, with no destructive action ever actually executed). A skill that fails either axis is refined or discarded, never installed silently.
+
+## What's new in v2.12
+
+"Skill Studio — Increment 2a (Discoverability)" closes the gap between generating a skill and remembering it exists: the setup wizard now offers to author one on the spot when nothing in the pool fits your goal, and every generated skill writes its own triggers into your workspace's instructions, so Cowork reaches for it proactively later without you having to recall its name.
+
+## What's new in v2.11
+
+"Skill Studio — Increment 1 (Walking Skeleton)" adds a second path alongside the wizard's usual pool assembly: when a need doesn't match any of the 25 pool skills, `skill-studio` runs a full brainstorm → author → install → validate loop entirely inside your own workspace, on the spot, no internet required.
+
 ## What's new in v2.10
 
 Two new pool skills close real gaps: `anti-ai-slop` is an opt-in authenticity pass that flags AI-tell vocabulary, uniform rhythm, and empty hedging in any drafted content, without touching a writer's own established style; `weekly-review` runs a periodic Collect → Process → Review → Plan pass across your own files, distinct from the daily briefing or a project status update. `voice-matching` also gains an explicit recalibration path — check whether your voice has drifted and update your profile deliberately, instead of living with a stale onboarding snapshot. All three are offered, never forced, through the existing bundle-customization and full-pool-suggestion flows — no new interview questions, no `core_skills` changes. The pool grows to 25 skills.
@@ -198,7 +218,7 @@ Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries b
 
 **Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
-**Also next up:** A personal mini-Council inside your own workspace — noticing what's working and what isn't over time, and proposing a fix you confirm before anything changes.
+**Also next up:** Teaching that mini-Council to actually make the change it proposes — gated by a fresh verifier pass and never without your explicit yes.
 
 ---
 

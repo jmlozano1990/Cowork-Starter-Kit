@@ -4,6 +4,27 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.15.0] - 2026-07-20
+
+**"Mini-Council — Loop 1, Increment 1 (Notice & Record)"** — opens Loop 1 of the Cowork Evolution Program: a personal, workspace-local memory of its own use, and a periodic + threshold-triggered loop that can propose a self-improvement in plain language. This increment notices, records, and proposes only — it never applies a self-modification. The apply step is a later, separate increment.
+
+### Added
+
+- **`context/memory-of-use.md` (ADR-053) — the workspace memory-of-use ledger.** A single, lazily-created file (never scaffolded empty into a new workspace) holding a 6-column markdown table (`Entry | Status | Occurrences | Note | First noticed | Last updated`), a verbatim data-not-instruction header contract, and a bounded `## Archive` section for entries in a terminal state. This release ships the canonical convention/example only; a real workspace's own copy is created the first time a note-worthy friction actually occurs.
+- **Per-calendar-day threshold counting (ADR-054).** A friction signature's `Occurrences` counter increments at most once per calendar day, measured by the ledger's own `Last updated` field — deterministically checkable, and proven able to genuinely fail its own negative control (same-day repeats stay put; a distinct day increments). Three distinct days promotes an entry through `NOTICED (1/3)` → `WATCH (2/3)` → `READY-TO-PROPOSE (3/3)`, a one-time terminal trigger, never a repeating counter.
+- **`skills/weekly-review/SKILL.md` — new "Surface" step.** The existing Collect → Process → Review → Plan pass gains a 5th step: it checks the ledger for anything this week's pass surfaced, writes or updates an entry, and — if that update reaches `3/3` — runs the proposal immediately, in the same pass, rather than waiting for next week. The 4 existing steps are unchanged.
+- **The PROPOSE surface (two-layer data-not-instruction control, ADR-055).** Reaching `3/3` — from the weekly pass or noticed mid-session — surfaces a plain-language proposal in the repo's existing four-part shape (What changed / What could break / What's protected / What to verify). Before any ledger text is quoted into that proposal, it is re-scanned with the same forbidden-token recipe this repo already uses (`CONTRIBUTING.md:129`); any match is flagged inline, never obeyed. The one hard boundary: this increment never writes to any `CLAUDE.md` or `SKILL.md`, under any response — the only file it can write is the ledger itself, and marking an entry confirmed always requires an explicit yes.
+- **`templates/workspace-claude-md-template.md`** gains a small, fixed-size (non-scaling) `## Noticing friction` pointer instructing the session to note a repeated correction to the ledger, creating it if absent, without interrupting to announce it.
+- **`TRUST.md`** names a fourth threat class — a self-modifying local instruction surface — and states what this kit does about it: no write channel to any instruction file, explicit confirmation required, and a mandatory, permanent security review for every Loop 1 increment regardless of blast radius.
+
+### Deferred (tracked for a future increment)
+
+- The apply step and its verifier gate (KDQ-2) — turning a confirmed proposal into an actual file change, safely. This increment stops before it on purpose.
+- Confirmation-fatigue/batching (KDQ-8) if PROPOSE fires often in practice.
+- Loop 3 — the community two-tier submission tier.
+
+---
+
 ## [2.14.0] - 2026-07-20
 
 **"Skill Studio — Increment 2c (Promote-to-Pool)"** — closes the promotion path named as Deferred in both `[2.12.0]` and `[2.13.0]`: a locally-generated skill that has earned it (passed both v2.13 grading axes, in a fresh re-run at promotion time) can now graduate from a workspace's own `.claude/skills/` into the shared curated pool. This release ships the ceremony only — no skill is promoted this release, and `skills/`, `curated-skills-registry.md`, `.claude/skills/`, and `selection-presets.md` are all byte-unchanged.
