@@ -14,3 +14,9 @@ THIRD-PARTY-NOTICES.md             @msitarzewski
 .github/workflows/sync-agency.yml  @msitarzewski
 .github/workflows/quality.yml      @msitarzewski
 docs/security/                     @msitarzewski
+
+# Curated pool distribution surface — v2.14.0 PROMOTE.md ceremony (ADR-051/AC-PROMOTE-4).
+# Reinforces the PR-gate for a maintainer-in-kit-checkout promotion (write-access case);
+# a non-maintainer promoter is already gated by GitHub's permission model regardless.
+skills/                              @jmlozano1990
+curated-skills-registry.md          @jmlozano1990

@@ -4,6 +4,22 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.14.0] - 2026-07-20
+
+**"Skill Studio — Increment 2c (Promote-to-Pool)"** — closes the promotion path named as Deferred in both `[2.12.0]` and `[2.13.0]`: a locally-generated skill that has earned it (passed both v2.13 grading axes, in a fresh re-run at promotion time) can now graduate from a workspace's own `.claude/skills/` into the shared curated pool. This release ships the ceremony only — no skill is promoted this release, and `skills/`, `curated-skills-registry.md`, `.claude/skills/`, and `selection-presets.md` are all byte-unchanged.
+
+### Added
+
+- **`PROMOTE.md` (ADR-051) — the promote-to-pool ceremony.** A documented, explicitly-invoked procedure (not a meta-skill, not a new step in `skill-studio`'s loop) that turns a graded local skill into a PR-gated Tier 1 pool addition. The eligibility gate, in order: a real `## Example` present; a **fresh** re-run of both WS-EVAL and WS-EVALSAFE grading at promotion time (never a stored result); an independent forbidden-token re-scan; collision and reserved-name refusal; a personal-data confirmation that renders the entire nine-section body about to become public, not a sample; and a plain-language confirmation in the repo's existing four-part Guard Change Summary shape. Only after all of that does the ceremony open a pull request — it never writes the pool directly, including from a maintainer's own write-access checkout. Write targets are exactly `skills/<slug>/SKILL.md` and a Tier 1 `curated-skills-registry.md` row, with a self-referential pinned-commit `source_url`; the PR reuses CONTRIBUTING.md's existing 4-pattern scan and DCO sign-off, adding zero new CI machinery.
+- **`.github/CODEOWNERS`** now covers `skills/` and `curated-skills-registry.md`, reinforcing the promotion PR-gate for a maintainer-in-kit-checkout (write-access) promoter. A non-maintainer promoter was already structurally gated by GitHub's own permission model; this closes the analogous gap for the maintainer's own convention-based gate.
+- **`TRUST.md`** gains a scoped ingress note describing the new promotion path and its gate (PR review, fresh re-grade, forbidden-token re-scan, body confirmation) — a disclosure of a new way the pool can grow, not a claim that the review bar itself changed.
+
+### Deferred (tracked for a future increment)
+
+- Loop 1 — a personal mini-Council in the workspace (memory-of-use, periodic self-review, user-confirmed self-modification). No owner greenlight yet; this closes out Loop 2 (generate → grade → promote) of the 3-loop program.
+
+---
+
 ## [2.13.0] - 2026-07-19
 
 **"Skill Studio — Increment 2b (Eval-Loop)"** — closes ADR-044's deferred with/without quality benchmark and v2.12.0's AC-SEC-S5 honest limit ("grep proves the instruction is present, not that the LLM honors it every run — that quantitative guarantee is the deferred v2.13 eval loop"), plus two already-scoped CI hardening items that ride along because this cycle already touches CI.

@@ -4,7 +4,7 @@ Plain-language answer to the question a security-conscious evaluator actually as
 
 ## What this kit is (and isn't)
 
-Cowork Starter Kit is a Markdown/YAML/Bash configuration bundle — an onboarding wizard, 23 pool skills, and 7 example presets — that Claude Cowork reads as instructions. It is **not** a plugin marketplace, a code-execution sandbox, or a network service. There is no server, no telemetry, no account. Everything it does happens inside your own Cowork session, against files in your own workspace.
+Cowork Starter Kit is a Markdown/YAML/Bash configuration bundle — an onboarding wizard, 25 pool skills, and 7 example presets — that Claude Cowork reads as instructions. It is **not** a plugin marketplace, a code-execution sandbox, or a network service. There is no server, no telemetry, no account. Everything it does happens inside your own Cowork session, against files in your own workspace.
 
 ## What could go wrong with an AI-agent starter kit
 
@@ -22,6 +22,7 @@ Three realistic threats, in the order a new adopter should worry about them:
 - **A ≤400-word bootstrap ceiling (ADR-011).** `CLAUDE.md`, the file Cowork auto-loads, is capped and CI-enforced — a structural limit on how much instruction surface exists before you've even started the interview.
 - **Data-locality defaults (ADR-019).** Sensitive categories (financial amounts, health info, credentials) are paste-only by convention in the presets that touch them — never sent to a connector by default.
 - **Human review before merge.** The `/sync-agency` workflow that pulls in upstream updates opens a PR, runs an 8-pattern content scan, and enforces a 24-hour soak before two humans can approve — nothing from upstream reaches a release without that gate.
+- **Promotion ingress is PR-gated too (new).** The curated pool can now also grow from a skill a user built and proved in their own workspace with `skill-studio`, via a documented [`PROMOTE.md`](PROMOTE.md) ceremony — never a direct write. Before a promotion PR can even be opened, the ceremony re-runs the skill's quality and safety grading fresh (never trusting an older result), re-scans it for forbidden tokens, and surfaces the entire body text to the promoter for an explicit "confirm nothing private is in here" check. The PR itself is then reviewed the same way any other curated-pool addition is — this is a new *ingress path* into the pool, not a new *tier* or a weaker bar than any other Tier 1 skill clears. (This is scoped to the ingress path only; it is not a claim that a self-modifying local instruction surface — Skill Studio's broader generative capability — is a fourth threat class on this page. That's a separate, larger question, tracked for whenever this kit's Loop 1 self-modification work ships.)
 - **Everything is reviewable.** No compiled artifacts, no obfuscation — the entire kit is Markdown, YAML, and Bash you can read before you run it.
 
 ## Third-party evidence
