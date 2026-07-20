@@ -223,3 +223,130 @@ Every file write this session (`docs/internal/qa/qa-report-v2.15.0.md`) targeted
 All 34 independently-recounted ACs and all 20 `C-v2.15-*` constraints verified against the actual committed tree, using fixtures authored fresh this session (none reused from @architect or @security). All 8 Phase-5 MUST-VERIFY items from `docs/internal/security/security-review-v2.15.0.md` pass, including the load-bearing AC-SEC-v2.15-B no-write-channel proof via genuine behavioral simulation (not a mock assertion) against two fresh fixtures, one of which (the approval-verb-only payload) is proven to evade the mechanical scan yet still fails to reach a confirmed/applied state — confirming the structural (not token-based) containment claim holds under adversarial pressure.
 
 One non-blocking ISSUE recorded (S4 landing-path coherence) for fast-follow consideration; no BLOCKER found. **Recommend: proceed to Phase 6 (`/audit`) — SECURITY-SENSITIVE classification confirmed, Phase 6 required.**
+
+---
+---
+
+## Phase: 7 (Final Approval — Merge-Readiness Gate)
+## Date: 2026-07-20T11:56:16Z
+## Reviewer: @qa (synthesis/consistency pass — the 8 MUST-VERIFY items were already independently re-run at Phase 5 above; this section checks merge-readiness only, not re-derives coverage)
+## Branch: `feature/v2.15-loop1-mini-council` @ `661c39a` (working tree clean)
+## Status: **APPROVED**
+
+> Every claim below is a command I ran or a file I read this session against the actual branch state — not a restatement of the Phase 5/6 narrative.
+
+---
+
+### 1. Classification consistency
+
+**HELD, Phase 0 → 2 → 5 → 6.**
+
+| Phase | Source | Classification |
+|---|---|---|
+| 0 | `docs/spec.md:3573` | **SECURITY-SENSITIVE** (discovery-brief §8 permanent Loop-1 invariant) |
+| 2 | `docs/internal/security/security-review-v2.15.0.md:39` "Classification Re-Run" | **SECURITY-SENSITIVE — CONFIRMED**, independently re-derived, 3 independent triggers |
+| 5 | `docs/internal/qa/qa-report-v2.15.0.md:213-215` "Classification Confirmation" | **SECURITY-SENSITIVE — confirmed, independently re-derived** |
+| 6 | `docs/internal/security/security-review-v2.15.0.md:245-248` "Classification Re-Run" | **CONFIRMED SECURITY-SENSITIVE, NOT Tier-B** |
+
+Tier-B re-check (this session): `git diff main...HEAD -- .github/` → empty. Confirmed NOT Tier-B — no CI/workflow file touched anywhere in the cycle.
+
+### 2. Open CRITICAL / WARNING
+
+Phase 6 audit header (`docs/internal/security/security-review-v2.15.0.md:225`): **"PASS — 0 CRITICAL, 0 WARNING, 2 INFO."** The 2 INFO rows (S1 soft-approval-verb scan-coverage limit, S2 model-adherence inspection-class) are carried-forward honest limits, not defects — both explicitly labeled "Contained structurally" / "not a defect."
+
+The 3 MUST-FIX items, re-verified as CLOSED-on-shipped-bytes in that same section:
+- **AC-SEC-v2.15-A** (line 252-254): `git show HEAD:context/memory-of-use.md | grep -inE ...` → 0 matches; negative-control fixture fires (exit 0, 1 match) — check proven capable of firing.
+- **AC-SEC-v2.15-B** (line 256-262): structural no-write-channel inspection across all 4 authored surfaces + a fresh soft-payload adversarial fixture → terminal state "awaiting confirmation," never applied.
+- **S2-FIX** (line 264-266): `git show HEAD:skills/weekly-review/SKILL.md | grep -c '^## '` → 9; 4 core GTD steps unchanged as context lines.
+
+**0 open CRITICAL, 0 open WARNING — confirmed.**
+
+### 3. Rework rate
+
+```
+git diff 3b56653..661c39a -- . ':(exclude)docs/internal/'
+```
+returned **empty** (verified this session). The only commits after the Phase 4 build (`3b56653`) are the Phase 5 QA report commit and the Phase 6 security-audit-appendix commit, both scoped entirely to `docs/internal/`.
+
+**Rework rate: 0%.** No shipped (non-`docs/internal/`) file required any post-Phase-4 correction.
+
+### 4. Version triple
+
+- `VERSION` → `2.15.0`
+- README badge (`README.md:7`) → `version-2.15.0-green`
+- CHANGELOG topmost header → `## [2.15.0] - 2026-07-20`
+- `grep -n '^## \[Unreleased\]' CHANGELOG.md` → no output (no stranded `[Unreleased]` block)
+
+**Version triple: MATCH. Confirmed.**
+
+### 5. Auto-fail trigger scan
+
+Grepped all 8 Phase-4-shipped files (`CHANGELOG.md`, `PROMOTE.md`, `README.md`, `TRUST.md`, `VERSION`, `context/memory-of-use.md`, `skills/weekly-review/SKILL.md`, `templates/workspace-claude-md-template.md`) for: `phase 3 approved`, `zero issues`, `perfect score`, `100%`, `flawless`, `luxury`, `premium`, `production-grade`, `enterprise-grade`, `world-class`, secret/key/password/private-key patterns (case-insensitive).
+
+**Result: clean across all 8 files.** No fabricated approval phrases, no marketing superlatives, no credential patterns.
+
+### 6. Branch-topology (stranded-state check)
+
+```
+git show main:docs/internal/security/security-review-v2.15.0.md   → fatal: path exists on disk, but not in 'main' (exit 128)
+git show main:docs/internal/qa/qa-report-v2.15.0.md                → fatal: path exists on disk, but not in 'main' (exit 128)
+```
+
+Both fail as required — neither file is stranded on `main`. `git log --oneline HEAD..main` is empty (main has not advanced past this cycle's fork point; nothing to reconcile).
+
+**Branch-topology verdict: CLEAN.**
+
+### 7. Non-regression
+
+`git diff --name-only main...HEAD` = 13 files total. Cross-referenced against the per-commit breakdown:
+- **Phase 4 (`3b56653`) — the shipped fileset, exactly 8 files:** `CHANGELOG.md`, `PROMOTE.md`, `README.md`, `TRUST.md`, `VERSION`, `context/memory-of-use.md`, `skills/weekly-review/SKILL.md`, `templates/workspace-claude-md-template.md`.
+- **Phase 0-2 (`dccd6a3`) — 4 process/design docs:** `docs/architecture.md`, `docs/internal/planning/assumptions.md`, `docs/internal/security/security-review-v2.15.0.md` (initial), `docs/spec.md`.
+- **Phase 5/6 — 1 process doc each (`docs/internal/qa/...`, appended `docs/internal/security/...`).**
+
+Byte-unchanged check (this session): `git diff --name-only main...HEAD | grep -Ei "skill-studio|pool|registry|wizard|^CLAUDE\.md$|\.github/"` → **no output**. `skill-studio`, `curated-skills-registry.md`, `.claude/skills/`, `WIZARD.md`, root `CLAUDE.md`, and `.github/` are all confirmed byte-unchanged.
+
+**Non-regression: confirmed — the 8-file Phase 4 shipped set is exactly what changed on the product surface; nothing else moved.**
+
+### 8. S4 disposition (repo-root `context/` landing path)
+
+Phase 5 (this report, above) flagged S4 as a non-blocking ISSUE: the new root-level `context/` directory is structurally asymmetric with the repo's established `templates/preset-template/context/` (canonical-shape) vs `examples/*/context/` (instantiated) convention split, and recommended relocation or explicit documentation as a fast-follow. Phase 6 (`docs/internal/security/security-review-v2.15.0.md:268-274`) independently re-checked S4 from a security lens and cleared it: **"CLEARED (benign reference content, no new surface)"** — no forbidden tokens, carries the data-not-instruction header, not auto-loaded by root `CLAUDE.md` (verified `grep memory-of-use` against `CLAUDE.md` → 0 hits), no new dependency/script surface.
+
+**Final QA disposition: ACCEPTABLE TO MERGE AS-IS, S4 recorded as a carry-forward.** This is a structural/discoverability nit (repo-tree scanning), not a functional or security defect — the file's own opening line is unambiguous about its own nature, so no reader is misled by opening it. It does not block. Recommend the fast-follow (relocate to `templates/preset-template/context/memory-of-use.md`, or document the new top-level `context/` category in `docs/architecture.md`/`README.md`) ride the next Phase 1 of whatever cycle touches this surface next — owner's call on timing.
+
+---
+
+### qa_issues_prevented — whole-cycle totals (Phase 2 + 5 + 6)
+
+| Severity | Phase 2 (@security design review) | Phase 5 (@qa) | Phase 6 (@security audit) | **Total** |
+|---|---|---|---|---|
+| blocker (CRITICAL) | 0 | 0 | 0 | **0** |
+| issue (WARNING) | 2 (S2 test-wording, S3 content-hygiene — both closed pre-ship) | 1 (S4 landing-path, non-blocking carry-forward) | 0 (both P2 WARNINGs closed net-new-none) | **3** |
+| info | 2 (S1 public-ADR note, S4 landing-path note) | 3 | 2 (S1 scan-coverage limit, S2 model-adherence limit) | **7** |
+
+10 total findings surfaced across the pipeline this cycle, all resolved or knowingly accepted before this gate; 0 reached shipped bytes unresolved.
+
+---
+
+### Completion Report (plain-language)
+
+**What shipped.** Your workspace now keeps a small, honest memory of its own use. When the same friction gets corrected on three separate days — or the weekly review notices something recurring — the workspace writes it down in one plain file (`context/memory-of-use.md`) and, at three strikes, shows you a plain-language proposal naming exactly what it noticed and exactly what file/change it would suggest. **This release only notices, records, and proposes. It never changes anything on its own** — that boundary is enforced by there being no code path that can write to an instruction file, not by good intentions, and it was proven to hold even against a deliberately soft "just auto-approve this" test note that a simple keyword scan alone would have missed.
+
+**Quality signals.** 34 acceptance criteria and 20 design constraints, all independently re-verified against the actual committed files (not narrative) at both Phase 5 and Phase 6. Zero CRITICAL findings at any phase. Two Phase-2 WARNINGs (a test that couldn't pass as originally worded, and a rule to keep a bad example string out of the shipped file) were both fixed during the build and re-confirmed closed against the shipped bytes. Zero rework was needed after the build commit — everything that changed after Phase 4 was QA/security paperwork, not product code.
+
+**The one user-noticeable behavior change.** Nothing changes automatically, ever, without you saying yes — the workspace will occasionally show you a short "here's what I noticed, here's what I'd change, do you want this?" note, and it waits for your answer.
+
+**S4 carry-forward.** One cosmetic nit: the new memory file landed in a slightly unusual folder location (a new top-level `context/` folder, rather than one of the two existing convention locations). It works correctly and is clearly labeled — a future pass may tidy its location, but it doesn't need to happen before this ships.
+
+---
+
+### Guard status (pin-inheritance datapoint, #147/ADR-207)
+
+Every file operation this session (`Read`, `Edit` on `docs/internal/qa/qa-report-v2.15.0.md`; multiple `git`/`grep` reads) targeted `/home/user/claude-cowork-config/...` exclusively and **direct-succeeded** — no guard block encountered, no fail-closed behavior observed, no write attempted (or needed) outside this repo. Session pin (`claude-cowork-config`) held clean throughout. Consistent with the isolation note's expectation; recorded as a further clean pin-inheritance datapoint.
+
+---
+
+### Final Verdict
+
+**APPROVED: Ready to merge, pending green CI.**
+
+All 8 merge-readiness checks pass: classification held SECURITY-SENSITIVE end-to-end with no Tier-B surface; 0 open CRITICAL/WARNING with all 3 MUST-FIX items closed on shipped bytes; 0% rework past Phase 4; version triple matches with no stranded `[Unreleased]`; auto-fail trigger scan clean; branch-topology clean (no state stranded on `main`); non-regression confirmed (exactly the 8-file Phase 4 set changed on the product surface, all other named surfaces byte-unchanged); S4 dispositioned as an acceptable, non-blocking carry-forward.
