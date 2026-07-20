@@ -59,7 +59,7 @@ If the generated `## Instructions` will have Cowork read pasted or user-file con
 Before composing the Write:
 
 - **Collision check.** Verify whether `.claude/skills/<slug>/` already exists — including this kit's own reserved names, `setup-wizard` and `skill-studio` — before writing anything. On any collision, refuse to overwrite and surface it to the user instead of silently replacing the folder.
-- **Kit-checkout check.** Detect whether the current workspace IS the kit checkout (`WIZARD.md` present at the workspace root — the same detection `WIZARD.md`'s own Step 7b uses). If so, warn explicitly: the skill about to be written is local-dev-only and must never be committed to the kit's own top-level `.claude/skills/`. Promoting a skill into the shared pool is a separate, deferred, manual ceremony — never a side effect of this loop.
+- **Kit-checkout check.** Detect whether the current workspace IS the kit checkout (`WIZARD.md` present at the workspace root — the same detection `WIZARD.md`'s own Step 7b uses). If so, warn explicitly: the skill about to be written is local-dev-only and must never be committed to the kit's own top-level `.claude/skills/`. Promoting a skill into the shared pool is a separate, deferred, manual ceremony — never a side effect of this loop. See `PROMOTE.md` at the repo root for the documented, PR-gated promotion ceremony (fresh WS-EVAL/WS-EVALSAFE re-grade at the promotion boundary, a personal-data confirmation of the exact public-bound body text, and a maintainer-reviewed PR).
 
 Once both checks are clear, write the authored file to `.claude/skills/<slug>/SKILL.md`, relative to the current workspace root.
 
