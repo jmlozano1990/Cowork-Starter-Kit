@@ -142,3 +142,66 @@ The Phase 4 build had already correctly incorporated all 4 Phase-2 MUST-FIXes be
 **PASS.** All 25 ACs verified (0 execution-class check unaccounted for; inspection-class ACs correctly labeled as such). All 6 Phase-5 MUST-VERIFY items reproduced GREEN against independently-authored fresh fixtures — none reused from the spec, the security review, or @dev's own examples. All 4 Phase-4 MUST-FIX items confirmed correctly applied on shipped bytes, including a live `gh api` check proving S1's honest-disclosure claim (branch protection genuinely not yet active) rather than trusting the document's own prose. Non-regression confirmed: exactly the 10 expected files changed, `quality.yml` byte-identical, `skill-studio/SKILL.md`'s 9-step loop untouched beyond one pointer sentence.
 
 **SECURITY-SENSITIVE classification held. Phase 6 `/audit` is REQUIRED before this can reach Phase 7 — no combine-path.**
+
+---
+
+# Final Approval — Phase 7
+
+## Phase: 7
+## Date: 2026-07-20T07:11:49Z
+## Verified against: `feature/v2.14-promote-to-pool` @ `90f01eb` (independently re-derived this session — not trusting the Phase 5/Phase 6 narrative)
+## Status: **PASS**
+
+> Per the Phase 7 Verdict Bias (default NEEDS_WORK; APPROVED requires explicit evidence), every claim below was re-run against the actual committed tree, not read as asserted fact from the Phase 5/6 reports. Guard note: no scope-guard block observed on any `/home/user/claude-cowork-config/...` path this session (14th consecutive clean spawn per the pin-inheritance fix, #147).
+
+## 1. Rework rate
+
+`git diff --stat 7857ac4..HEAD -- . ':(exclude)docs/internal/**'` → **EMPTY**. The only commits after the Phase-4 build SHA `7857ac4` are `0721b78` (qa: Phase 5) and `90f01eb` (sec: Phase 6 audit), both confined to `docs/internal/**` (export-ignored, non-shipping). **Rework rate: 0%** on shipped bytes.
+
+**Honest framing (not a "0 issues" claim):** one real defect WAS caught this cycle. At Phase 4, @dev's new `.github/CODEOWNERS` lines for `skills/` and `curated-skills-registry.md` pointed at `@msitarzewski` (the upstream `agency-agents` author, already owner of the pre-existing supply-chain block) instead of `@jmlozano1990` (this kit's actual maintainer). The orchestrator caught this before Phase 5 and folded the fix into the Phase-4 commit via `git commit --amend` (`b79ad43` → `7857ac4`), independently confirmed benign (local unpushed branch, content-identical diff plus the one fix, reflog-recoverable). Re-verified this session: `git show HEAD:.github/CODEOWNERS` correctly shows `skills/ @jmlozano1990` and `curated-skills-registry.md @jmlozano1990`, with the pre-existing `@msitarzewski` supply-chain rows byte-unchanged above. This is a caught-and-fixed defect, not a clean-nothing-happened cycle.
+
+## 2. Auto-fail trigger scan
+
+`grep -inE` for the CLAUDE.md auto-fail phrase set ("zero issues", "perfect score", "flawless", "100%", "luxury", "premium", "production-grade", "enterprise-grade", "world-class") against both `docs/internal/qa/qa-report-v2.14.0.md` and `docs/internal/security/security-review-v2.14.0.md`: **0 matches.** No auto-fail trigger fires.
+
+**0 CRITICAL anywhere** — confirmed by direct read of both Findings Summary tables: Phase 2 = 0 CRITICAL / 3 WARNING / 3 INFO; Phase 6 = 0 CRITICAL / 0 WARNING / 5 INFO.
+
+**Classification held SECURITY-SENSITIVE Phase 0 → Phase 2 → Phase 5 → Phase 6 → Phase 7, no downgrade at any point** (re-confirmed independently at Phase 6: "SECURITY-SENSITIVE — HELD... No STANDARD→SECURITY-SENSITIVE override needed; the signal was already correct"). Phase 6 `/audit` was REQUIRED and ran on its own commit (`90f01eb`) — no combine-path with Phase 5. **PASS.**
+
+## 3. Phase-6 MUST-FIX close-out re-confirmation
+
+Independently re-read `docs/internal/security/security-review-v2.14.0.md` §"Phase-4 MUST-FIX close-out" (lines 117–124): all 4 Phase-2 MUST-FIX items (S1 honest PR-gate disclosure, S2 all-9-section verbatim body confirmation, S3 data-not-instruction framing with a firing negative control, S4 never-direct-push covering the maintainer-in-kit-checkout case) are marked **CLOSED**, each re-verified against shipped bytes at `0721b78` with cited `PROMOTE.md` line ranges — not merely asserted. The Phase 6 audit's own S1 close-out cites a *live* `gh api repos/jmlozano1990/Cowork-Starter-Kit/branches/main/protection` check; I independently re-ran that exact call this session (§Verify below) and got the identical `404 "Branch not protected"` result, matching the honest future-tense disclosure in `PROMOTE.md`. **Net-new findings at WARNING+ from the Phase-4 build: NONE**, confirmed by both the Phase 6 audit text and my own diff re-read of `4986b2e..HEAD`.
+
+## 4. Acceptance Criteria — 25/25
+
+Re-derived the AC inventory directly from `docs/spec.md`'s v2.14.0 section (line 3354 onward, the current/last of six accumulated version sections in the append-only spec file) rather than trusting the Phase 5 report's tally: `grep -c` over the AC-ID pattern confirms **25 unique ACs** — WS-EARN (4: EARN-1..4), WS-PROVENANCE (4: PROV-1..4), WS-PROMOTE (4: PROMOTE-1..4), WS-SAFETY (5: SAFETY-1..5), WS-RELEASE (8: REL-1..8). This matches the Phase 5 report's self-corrected count (the original task brief said 21; the report explains the discrepancy is in the brief's tally, not the tree — confirmed correct by my own independent count). Each AC's PASS disposition in the Phase 5 report is backed by a named fixture, diff, or grep result, not a bare assertion. **25/25 PASS.**
+
+## 5. Leak-check
+
+Re-ran the `git archive` ground-truth test myself against the current HEAD (`90f01eb`): `git archive HEAD | tar -t | grep -c '^docs/internal/'` → **0**; explicit check for `docs/spec.md` / `docs/retro.md` in the archive listing → **0 matches**. The `docs/internal/` directory-prefix `export-ignore` rule (v2.8.0 ADR-037) plus explicit `docs/spec.md`/`docs/retro.md` lines are confirmed effective on the actual shipped tree, not merely asserted by the Phase 5/6 narrative. **Leak-check: 0.**
+
+## 6. Version triple
+
+`VERSION` = `2.14.0`; `README.md` badge = `version-2.14.0-green`; `CHANGELOG.md` topmost header = `## [2.14.0] - 2026-07-20`. All three independently re-read and matching; no stranded `[Unreleased]` header. `npx markdownlint-cli --config .markdownlint.jsonc PROMOTE.md CHANGELOG.md README.md TRUST.md docs/architecture.md` re-run this session → **exit 0, 0 issues.**
+
+## 7. Branch topology (SECURITY-SENSITIVE state-on-branch check)
+
+`git log --oneline main..HEAD -- docs/internal/qa/qa-report-v2.14.0.md docs/internal/security/security-review-v2.14.0.md` shows both files were introduced in-branch (commits `0721b78`, `90f01eb`, `60df162`); `git show main:<path>` for both files returns `fatal: ... exists on disk, but not in 'main'` — confirmed **not present on `main`**, i.e., no state-stranded-on-main. Checked for any pipeline-relevant commits landing on `main` between the branch's merge-base and current `main` tip touching `docs/internal/` or `docs/spec.md`: **none found.** The Council-side `pipeline.md`/`scratchpad.md` entries for this cycle live on Council's own `main` (`/home/user/The-Council`), which is correct and expected for an external-project cycle — those are not cowork-repo files and are outside this topology check's scope. **PASS.**
+
+## 8. Non-regression
+
+`git diff --stat 4986b2e..HEAD` (full v2.13.0-tag-to-HEAD diff): exactly 11 files — the 8 shipping files (`.claude/skills/skill-studio/SKILL.md` 1-line pointer addition, `.github/CODEOWNERS` +6, `CHANGELOG.md` +16, `PROMOTE.md` new 123 lines, `README.md` 2 lines, `TRUST.md` +3/-1, `VERSION` 1 line, `docs/architecture.md` +117) plus the 3 `docs/internal/` and `docs/spec.md` process artifacts (export-ignored, non-shipping). Independently confirmed byte-unchanged: `.github/workflows/quality.yml` (0-line diff), `skills/`, `curated-skills-registry.md`, `.claude/skills/setup-wizard/`, `selection-presets.md` (all 0-line diff). **No promoted skill ships this release — ceremony-only, exactly as designed.**
+
+## 9. qa_issues_prevented (whole v2.14.0 cycle)
+
+`blocker=0 issue=1 info=2`
+
+- **issue=1**: the CODEOWNERS mis-attribution (§1 above) — a real defect caught before it shipped, folded into the Phase-4 commit pre-Phase-5.
+- **info=2**: carried from the Phase 5 report — (a) `PROMOTE.md`'s forbidden-token scan "outside a fence/comment" exemption is prose-only, the literal grep has no such exclusion (over-inclusive/safe-side, non-blocking); (b) branch protection on `main` remains off pending post-merge maintainer action, exactly as `PROMOTE.md` honestly discloses.
+- **blocker=0**: no marker-breakout-class or CRITICAL-class finding this cycle (contrast with v2.12.0's QA-1 precedent, blocker=1). The Phase 2 hard gate's 3 WARNINGs (S1–S3) are not counted here as separate "prevented" catches — they were bound as bind­ing Phase-4 MUST-FIX ACs at design time and closed before implementation completed, which is the pipeline operating as designed rather than a near-miss catch.
+
+## Verdict
+
+**APPROVED.** Rework: 0% on shipped bytes (1 real defect caught and fixed pre-Phase-5, honestly disclosed, not a clean-nothing-happened cycle). 0 CRITICAL anywhere; no auto-fail trigger phrase present. Classification held SECURITY-SENSITIVE end-to-end, Phase 6 ran as a required standalone gate. All 4 Phase-6 MUST-FIX close-outs re-confirmed on shipped bytes, including an independently-reproduced live `gh api` branch-protection check. 25/25 ACs independently re-derived and verified. Leak-check 0. Version triple consistent, markdownlint 0. Branch topology clean — no state stranded on `main`. Non-regression confirmed: exactly the expected 8 shipping files touched, `quality.yml`/`skills/`/`curated-skills-registry.md`/`selection-presets.md` all byte-unchanged.
+
+**Merge is unblocked pending green CI.**
