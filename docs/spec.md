@@ -4025,3 +4025,99 @@ No other AC was modified, skipped, or found infeasible. New ACs added this cycle
 - **REWORK-2 (MED-HIGH — self-integrity).** Nothing protected the ledger's governing prose from the bookkeeping write channel (AC-APPLY-4a guards only the `Note` cell). Resolved (ADR-061) BY RELOCATION, not an in-place check: the `self-apply` skill is added to the AC-APPLY-3 hard deny-list (deny-first, wins over the `.claude/skills/*/SKILL.md` glob) so the apply channel can never rewrite its own rules; the ledger reverts to DATA-only (no governing prose left to corrupt). New **AC-INTEGRITY-1** with a self-modify-refusal firing control. **AC-APPLY-3 deny-list** gains `.claude/skills/self-apply/SKILL.md`.
 - **Honest limit (named, ADR-061):** "reliably present" (a WIZARD install step) and "deny-listed" (an allow/deny-list entry) are inspection-class in a prose kit, the same posture as ADR-056 Layer 2 — not a structural code gate — but strictly better than the lazily-created, self-writable file they replace (two firing controls now exist where zero did). No change to any of the 12 enumerated controls; version stays 2.16.0.
 
+---
+
+# v2.17.0 — The Steward (Auto-Cleaning) — FINAL SPEC
+
+> *ISO 15288 — System Requirements Definition.* **Classification: SECURITY-SENSITIVE** (permanent — extends the v2.16.0 apply write-channel from content edits to file relocation, a new operation class on a self-modifying substrate). Mandatory Phase-2 hard gate + mandatory Phase-6 audit, no combined path. Version **2.16.0 → 2.17.0 (minor)**. Finalized at Phase 1 (Worktree-Aware Authoring deferred the finalization from Phase 0). Source: `## Phase 0 Draft Spec — v2.17.0` + `### Phase 0.D AMENDMENTS` (both reviewers APPROVE/CONFIRMED, no blocker).
+
+**Scope (owner-locked 2026-07-21): AUTO-CLEANING ONLY.** The workspace *proposes* archive/move of a stale/superseded file — never silent — through the v2.16.0 confirm→apply→verify→rollback shape, generalized to a PATH-changing operation. **OUT (named):** living-organization (`folder-structure.md` as a maintained contract), promote-repetitive-to-Skill, true delete (move/archive only — reversible by construction), existing-workspace backfill, Loop 3.
+
+## Acceptance Criteria (18 ACs / 7 WS)
+
+### WS-DETECT — evidenced staleness/supersession detection
+
+- **AC-DETECT-1 `[EARS-REVISED]`** — WHEN a periodic pass (e.g. `weekly-review`) or an explicit request evaluates the workspace for clean-up, the Steward SHALL classify a file as an archive candidate ONLY on a measurable evidence class: **(a) explicitly-superseded** — another file's content names this file as replaced/old/deprecated by a NAMED newer file (literal reference), OR **(b) unreferenced-and-aged** — the file's literal path/basename is unreferenced by EVERY enumerated convention file (ADR-065 set) AND its mtime is older than a stated threshold. Absent a measurable evidence class, the Steward SHALL NOT propose (conservative-by-default; false-negative preferred).
+- **AC-DETECT-2** — the detection pass SHALL NEVER evaluate a deny-listed / non-move-eligible path (ADR-063) as a candidate.
+- **AC-DETECT-3** — detection is proposal-only: it SHALL produce a candidate for the WS-PROPOSE flow and SHALL NOT itself move, write, or modify any file.
+
+### WS-DENY — move-channel eligibility (positive allow-list, ADR-063)
+
+- **AC-DENY-1 `[firing neg-control]`** — a file SHALL be move-eligible ONLY IF it affirmatively satisfies the user-content predicate (a plain content file OUTSIDE `.claude/**`, OUTSIDE `context/**`, not an enumerated root convention/config file, not a root dotfile, not any `*.json`) AND its destination is the archive convention (AC-DENY-2). The default-deny-by-namespace FLOOR explicitly denies: workspace-root `CLAUDE.md`, `cowork-profile.md`, `global-instructions.md`, `folder-structure.md`, `skills-as-prompts.md`, `project-instructions.txt`, `.mcp.json` (token-bearing), `.claude/settings.json`, `.claude/settings.local.json`, all `.claude/skills/**`, all `context/*.md` profiles, `context/memory-of-use.md`, `context/.apply-backups/**`, `_setup-kit/**`, `.github/`, `CONTRIBUTING.md`, `LICENSE`, `cowork.lock.json`, `.cowork-allowlist.json`. A denied move is REFUSED visibly, never silently narrowed. **Firing control:** propose a move of each named path → visible refusal; a deny clause removed → the check goes RED.
+- **AC-DENY-2 `[firing neg-control]` (destination gating, FW-2)** — the move DESTINATION SHALL be gated against the same protected set as the source, not merely collision-checked: a move SHALL NOT create a load-bearing/auto-loaded file by relocation (`.claude/skills/<x>/SKILL.md`, `global-instructions.md`/`CLAUDE.md` where absent). Destinations are constrained to `context/.archive/<original-basename>.<UTC-timestamp>` (ADR-064). **Firing control:** propose a move whose destination lands in a load-bearing namespace → visible refusal; the destination gate clause stripped → RED.
+
+### WS-PROPOSE — never-silent two-turn confirm (SECGATE path channel, ADR-066)
+
+- **AC-PROPOSE-1** — the Steward SHALL render a two-turn confirmation whose literal `source→dest` pair is computed from the ACTUAL operation, NEVER from `Note`/detector-supplied path text; turn-2 re-renders the literal pair and requires a fresh yes.
+- **AC-PROPOSE-2** — proposals SHALL NOT be batched: each candidate gets its own full two-turn confirmation (carries AC-BATCH-1 verbatim for the path channel).
+
+### WS-APPLYMOVE — WYSIWYG-at-apply extended to path
+
+- **AC-APPLYMOVE-1** — the applied move SHALL satisfy `confirmed-paths == applied-paths`: the move written is exactly the `source→dest` pair rendered and freshly confirmed, in the same turn.
+- **AC-APPLYMOVE-2** — a destination COLLISION (dest already exists) SHALL be refused visibly (in addition to the AC-DENY-2 namespace gate).
+- **AC-APPLYMOVE-3** — true delete is OUT: the operation SHALL be a move/archive only; no unlink of the source except as the terminal step of a verified move whose bytes now live at dest.
+
+### WS-VERIFYMOVE — pre-land verification
+
+- **AC-VERIFYMOVE-1** — before a move is considered landed, the verifier SHALL confirm (a) dest exists and is byte-identical to the pre-move source (checked against the out-of-band fingerprint, ADR-062), and (b) the source path is vacated (single copy). Either failing → rollback.
+- **AC-VERIFYMOVE-2 `[firing neg-control]` `[EARS-REVISED]`** — the corruption vector is a dest that lands with bytes NOT byte-identical to the pre-move source (truncation, encoding change, partial write). WHEN the post-move dest fingerprint (length + checksum) does NOT match the recorded pre-move fingerprint, the verifier SHALL FAIL and route to rollback. **Firing control:** a truncated-dest fixture — before-run MUST exhibit the corruption; a verifier that PASSes the corrupted dest → RED.
+- **AC-VERIFYMOVE-3 `[firing neg-control]` (reference integrity, C1/FW-4, ADR-065)** — before a move lands, the verifier SHALL grep a DEFINED, ENUMERATED set of convention files (`folder-structure.md`, `skills-as-prompts.md`, `global-instructions.md`, root `CLAUDE.md`, `cowork-profile.md`, every `.claude/skills/*/SKILL.md`, every `context/*.md`) for a literal reference to the source path/basename. A live reference SHALL cause refusal at propose-time OR a verifier FAIL + rollback. The check SHALL be **READ-ONLY** — detect-and-refuse/warn only; it SHALL NEVER auto-rewrite a pointer. **Firing control:** a file referenced by an in-scope convention file is proposed → the check FIRES; a convention file removed from the set → move proceeds → RED; plus a byte-identity assertion on the pointer after the check (proves read-only).
+
+### WS-ROLLBACKMOVE — reversible restore (ADR-062)
+
+- **AC-ROLLBACKMOVE-1** — a verifier-failed move SHALL roll back using the reversible-move-log, restoring to the exact original source path without a fresh yes (the one carve-out from SECGATE — restores prior-confirmed placement, not a new operation).
+- **AC-ROLLBACKMOVE-2 `[firing neg-control]` `[EARS-REVISED]`** — "single clean terminal state" is defined as: exactly ONE copy at the original source path, ZERO at dest, byte-identical to the pre-move source (verified against the out-of-band fingerprint). WHEN rollback completes, this terminal state SHALL hold. **Firing control:** force a verifier FAIL, then assert the terminal state; a rollback leaving two copies or a non-fingerprint-matching source → RED.
+
+### WS-RELEASE — versioning + docs (Phase-4 @dev)
+
+- **AC-RELEASE-1** — `VERSION` 2.16.0 → 2.17.0; CHANGELOG `[2.17.0]` (Added: auto-cleaning; Deferred: living-organization #2, promote-to-Skill #3).
+- **AC-RELEASE-2** — README "Also next up" rewritten for PARTIAL delivery (auto-cleaning ships; #2/#3 deferred) + badge bump.
+- **AC-RELEASE-3** — `docs/roadmap.md` v2.17 row records partial-delivery.
+
+## Open Questions — RESOLVED (8 AQs)
+
+| AQ | Resolution | Where |
+|----|------------|-------|
+| AQ-1a (rollback mechanism) | Reversible-move-log (`mv dest source`) + out-of-band fingerprint; content pre-image does NOT generalize (captures bytes, a move preserves bytes/changes location). | ADR-062 |
+| AQ-1b (detection completeness) | Scoped, enumerated, read-only reference-integrity check → AC-VERIFYMOVE-3. | ADR-065 |
+| AQ-2 (detection heuristic) | Two measurable evidence classes (explicitly-superseded OR unreferenced-and-aged); conservative-by-default. | AC-DETECT-1 |
+| AQ-3 (archive convention) | `context/.archive/<basename>.<UTC-ts>`, dot-prefixed/non-auto-loaded, gitignored + Content-Excluded (W-1), reversible-reap-compatible. | ADR-064 |
+| AQ-4 (extend vs sibling) | Sibling `self-archive` skill (keeps one op TYPE per verification module, hld §7). | ADR-066 |
+| AQ-5 (dangling pointer) | Scoped enumerated literal check; prose-ref residual named as accepted limit mapped to reversibility (W-2). | ADR-065 |
+| AQ-6 (deny-list shared vs duplicated) | DISSOLVED: namespace-level default-deny floor needs no per-file lockstep with `self-apply`. | ADR-063 |
+| AQ-7 (decouple from folder-structure.md) | Confirmed decoupled: folder-structure.md is deny-listed (unmovable) and a READ-ONLY reference-check target only; no write coupling this increment. | ADR-063/065 |
+| AQ-8 (positive-allow vs deny-first) | Positive move-ALLOW-list / default-deny-by-namespace; deny-first rejected (FW-1 already failed it; forever-obligation). | ADR-063 |
+
+## Phase-2 binding gates (4 HIGH findings-in-waiting — designed-closed)
+
+- **FW-1 (deny/allow completeness incl. token-bearing `.mcp.json`)** — closed by ADR-063 positive allow-list + namespace default-deny floor (all six FW-1 paths named in AC-DENY-1).
+- **FW-2 (destination gating)** — closed by ADR-064 / AC-DENY-2 (dest gated against the protected set; constrained to `context/.archive/`).
+- **FW-3 (S1 HIGH-at-composition)** — carried at HIGH (not dropped to INFO); closed by source+dest deny-completeness (ADR-063/064) + WYSIWYG (ADR-066) + AC-VERIFYMOVE-3 read-only.
+- **FW-4 (SECGATE path channel + read-only reference check)** — closed by ADR-066 (literal computed src→dest, fresh yes) + ADR-065 (read-only, never auto-rewrite).
+- **W-1** archive non-published (gitignored + Content-Excluded); **W-2** prose-ref residual named; **W-3** reversibility does not soften deny completeness; **W-4** move-log fingerprint anchored out-of-band per ADR-059 posture.
+
+## Binding Phase-4 constraints (C-v2.17-N) — for @dev
+
+Every safety/verification AC ships as an executable check WITH a FIRING negative control (a check that cannot fail is not a check). The four firing-control buckets the design turns on are **AC-DENY-1, AC-DENY-2, AC-VERIFYMOVE-2/3, AC-ROLLBACKMOVE-2**.
+
+- **C-v2.17-1 (AC-DENY-1, firing)** — executable: propose a move of each named FW-1 + floor path → visible refusal. FIRING: remove one deny clause → the corresponding move is NOT refused → RED. Grep-verified against the enforcing `self-archive` prose, not intent.
+- **C-v2.17-2 (AC-DENY-2, firing)** — executable: propose a move whose dest is `.claude/skills/x/SKILL.md` or creates `global-instructions.md`/`CLAUDE.md`, or lands outside `context/.archive/` → visible refusal. FIRING: strip the destination gate → a load-bearing dest is created → RED.
+- **C-v2.17-3 (AC-VERIFYMOVE-2, firing)** — executable: a move landing a truncated/non-byte-identical dest → verifier FAIL → rollback. FIRING: before-run MUST show corruption; a verifier that PASSes a corrupted dest → RED.
+- **C-v2.17-4 (AC-VERIFYMOVE-3, firing)** — executable: move a file referenced by an enumerated convention file (grounded on `context/memory-of-use.md`-style pointer) → check FIRES (refuse/rollback); pointer byte-identical after (read-only). FIRING: remove a convention file from the enumerated set → move proceeds → RED.
+- **C-v2.17-5 (AC-ROLLBACKMOVE-2, firing)** — executable: force a verifier FAIL, assert exactly one copy at source, zero at dest, byte-identical to the fingerprint. FIRING: a rollback that leaves two copies or a corrupted source → RED.
+- **C-v2.17-6 (SECGATE path channel)** — executable: propose with attacker approval-text + an attacker `source→dest` pair embedded in the source context → turn-two renders the literal COMPUTED pair (not the attacker text), fresh yes required. FIRING: a render that echoes Note/detector-supplied path text → RED.
+- **C-v2.17-7 (out-of-band fingerprint integrity, W-4)** — executable: corrupt the on-disk move-log/archived bytes, attempt rollback → REFUSES (fingerprint mismatch vs transcript anchor). FIRING: a rollback that trusts an unverified/swapped archived file → RED.
+- **C-v2.17-8 (archive non-published, W-1)** — executable: `context/.archive/` is gitignored AND on the Content Exclusion list (never synced). Check: `.gitignore` entry present + `/sync` skip-list carries `context/.archive/`.
+- **C-v2.17-9 (reachability, mirrors ADR-061)** — executable: `self-archive` installs unconditionally at WIZARD Step 4 (Mode A + B); a fresh-workspace fixture proves it is present the first time a clean-up is proposed. FIRING: a Mode-B path missing the skill → the clean-up flow has no on-disk machinery → RED.
+- **C-v2.17-10 (self-integrity, mirrors ADR-061)** — executable: `self-archive` is on its own move deny-list; a proposal to archive/move `self-archive/SKILL.md` → refused. FIRING: deny entry removed → the skill can move itself → RED.
+
+## Classification Re-Run (post-OQ, per pipeline-policy §PostOQClassificationReRun)
+
+Final file list from the design plan: `.claude/skills/self-archive/SKILL.md` (new), WIZARD Step-4 install prose, `context/.archive/` convention + `.gitignore` entry, `/sync` Content-Exclusion entry, `VERSION`/`CHANGELOG.md`/`README.md`/`docs/roadmap.md` (release), `docs/spec.md`/`docs/assumptions.md`/`docs/architecture.md` (design, this phase).
+
+**Result: CONFIRMED SECURITY-SENSITIVE — no downgrade.** The cycle introduces a new self-modifying write channel (file relocation) with a deny-list, a SECGATE, and a verifier/rollback — the exact profile that made v2.16 SECURITY-SENSITIVE, now on a new operation TYPE with a strictly larger blast radius (a move can orphan pointers and create load-bearing files, which a content edit cannot). No file-list change from OQ resolution downgrades this.
+
+**`.github/workflows/` touched? NO.** No CI workflow file is in the final file list → the Tier-B (PR-only) trigger is NOT fired by workflow changes. Standard SECURITY-SENSITIVE worktree+PR ceremony applies (already on branch `feature/v2.17-steward-autoclean`).
+
+**End of v2.17.0 — The Steward (Auto-Cleaning) — FINAL SPEC.**
+

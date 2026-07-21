@@ -1,0 +1,22 @@
+# Assumptions — Claude Cowork Config
+
+> *ISO 15288 — Stakeholder Needs & Requirements Definition (assumption register).* Assumptions are UNTESTED beliefs the design rests on; each names a confidence, a test/closure path, and the blast radius if it is wrong. Created v2.17.0 "The Steward (Auto-Cleaning)".
+
+## v2.17.0 — The Steward (Auto-Cleaning)
+
+| ID | Assumption | Confidence | Test / closure path | If wrong |
+|----|------------|------------|---------------------|----------|
+| A-v2.17-1 | The v2.16 content pre-image does **not** need to generalize to a move; a reversible-move-log (`mv dest source`) + out-of-band fingerprint is the correct and sufficient rollback primitive. | Med-high (resolved by ADR-062, but the terminal-state normalization is untested against a real partial-copy failure) | Phase-5 fixture C-v2.17-5: force a verifier FAIL and assert the AC-ROLLBACKMOVE-2 terminal state (one copy at source, zero at dest, byte-identical). | Rollback could leave two copies or a corrupted source; caught by the firing control before ship. High severity if it reached a user. |
+| A-v2.17-2 | The enumerated convention-file set for the reference-integrity check (ADR-065) captures every file that carries a **literal** path reference in a live workspace. | Med (grounded on the preset-template; live user workspaces may add convention files) | Phase-5 fixture C-v2.17-4 + the grep-verification against preset-template (done Phase 1: only `memory-of-use.md:7` carries a live pointer). Revisit when v2.18 living-organization adds convention files. | A literal reference outside the set is orphaned silently; reversible via move-log, so severity is bounded. Prose refs are the named W-2 residual, not this assumption. |
+| A-v2.17-3 | Few enough clean-up candidates arise per pass that the no-batching constraint (one full turn-two confirmation each) is not burdensome. | Estimated (no telemetry) | Observe in real use; if painful, batching is a deferred FEATURE (v2.18+), never a relaxation of the per-entry confirmation. | User friction (many confirmations), never a safety failure. Low severity. |
+| A-v2.17-4 | Delete-out (move/archive only, no true delete) is sufficient value for this increment. | Estimated (owner scope-lock) | Owner acceptance at Phase 3 + real use. True delete/reap is a named future rung (ADR-064 forward-compat). | Users may want hard delete sooner; additive future work, not a safety gap. Low severity. |
+| A-v2.17-5 | The move eligibility floor stays correct without per-file lockstep maintenance against `self-apply`'s content deny-list. | High (ADR-063 makes the floor namespace-level, dissolving the lockstep dependency) | Phase-5 fixture C-v2.17-1 covers the FW-1 paths by namespace; verify a NEW load-bearing path (not individually listed) is denied by the namespace floor. | If the floor had a per-file dependency after all, a new load-bearing file could become movable; the namespace floor + positive predicate (ADR-063) is the belt-and-suspenders. Critical severity if both failed — hence two independent layers. |
+| A-v2.17-6 | The session transcript is a reliable out-of-band anchor for the move-log fingerprint in a real user session (same assumption ADR-059 already rests on for the content pre-image). | Med (inherited from ADR-059; not independently re-proven for the path channel) | Phase-6 audit observation; C-v2.17-7 exercises fingerprint-mismatch refusal. | Rollback refuses (fail-safe) rather than restoring unverified bytes — safe degradation. Bounded severity. |
+
+## Cross-references
+
+- Rollback mechanism: [ADR-062](architecture.md) (reversible-move-log + out-of-band fingerprint).
+- Move eligibility: [ADR-063](architecture.md) (positive allow-list / default-deny-by-namespace).
+- Destination + archive: [ADR-064](architecture.md) (`context/.archive/`, W-1 non-published).
+- Reference integrity: [ADR-065](architecture.md) (read-only scoped-enumerated check; W-2 residual).
+- Skill placement + SECGATE: [ADR-066](architecture.md) (sibling `self-archive`, path-channel SECGATE).
