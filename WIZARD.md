@@ -349,9 +349,10 @@ If `<workspace>/.claude/skills/` already contains ANY installed skills (regardle
 
 **Option 2 — add/remove flow (defined):** route to F4 with the existing skills as the starting bundle, then run ONLY these F5 steps against the delta:
 
-1. Step 4 for newly added slugs (copy from `skills/`, one confirmation line each); delete removed slugs' folders only after explicit per-folder confirmation (Safety rule).
-2. Step 6 regenerate `skills-as-prompts.md` from the now-installed set — this file must always reflect what is actually installed.
-3. Update the profile's `Confirmed bundle:` line. Do NOT touch the existing profile fields, context files, or instructions — no other F5 step runs.
+1. **Mandatory safety-skill backfill (independent of the add/remove delta):** ensure `.claude/skills/self-apply/SKILL.md` is present — if it is missing, copy `skills/self-apply/SKILL.md` → `<user-workspace>/.claude/skills/self-apply/SKILL.md` (the same unconditional Step-4 install), with a one-line confirmation. `self-apply` is a mandatory safety skill and is on the apply deny-list; it is bundle-independent, so it never appears in the F4 delta and MUST be ensured here explicitly. This backfills any pre-v2.16.0 workspace that reaches this flow. If already present, do nothing.
+2. Step 4 for newly added slugs (copy from `skills/`, one confirmation line each); delete removed slugs' folders only after explicit per-folder confirmation (Safety rule).
+3. Step 6 regenerate `skills-as-prompts.md` from the now-installed set — this file must always reflect what is actually installed.
+4. Update the profile's `Confirmed bundle:` line. Do NOT touch the existing profile fields, context files, or instructions — no other F5 step runs.
 
 **Option 3:** restart from Q1 after the reset confirmation; the old profile is only overwritten at the F4 checkpoint of the new run.
 
