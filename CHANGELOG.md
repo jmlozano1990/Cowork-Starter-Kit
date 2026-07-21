@@ -4,6 +4,34 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.16.0] - 2026-07-21
+
+**"Mini-Council — Loop 1, Increment 2 (Apply + Verifier-Gate)"** — closes Loop 1: a confirmed proposal from `[2.15.0]` can now actually be applied. The security posture inverts from `[2.15.0]` by design: that release's safety argument was structural (no code path could write an instruction file); this one opens a real, bounded write channel, contained by a deny-first allow-list, a two-turn literal-diff confirmation, an executable verifier, and rollback — honestly weaker than the prior structural guarantee, and stated as such.
+
+### Added
+
+- **Apply on confirmation (ADR-057).** A confirmed ledger entry gets a second, apply-specific confirmation: the literal diff is re-derived from the file's current bytes and rendered in full before the write, and the write commits exactly those rendered bytes in the same turn (`confirmed-bytes == applied-bytes`). A ledger row edited between the two confirmations surfaces in the re-rendered diff or trips the verifier and rolls back — never a silent mismatched write.
+- **A deny-first write-channel allow-list (ADR-056).** Apply-writable: `.claude/skills/*/SKILL.md`, the workspace `CLAUDE.md`, four `context/` preference files, and `global-instructions.md`. Hard-denied ahead of any allow match: the ledger `context/memory-of-use.md` itself and `context/.apply-backups/**`. Everything else — including the archived installer, root `.github/`, and `CONTRIBUTING.md` — is refused, visibly, never silently. Stated honestly as inspection-class and human-boundary containment, not a structural guarantee; the surviving structural bound is narrower — it covers only other users' workspaces and the shared upstream repo.
+- **Two confirm-before-apply controls (ADR-058).** An inline courtesy flag scans for approval-shaped language in the ledger note before it's ever rendered (distinct from, and in addition to, the existing injection-shape scan) — explicitly not load-bearing. The actual gate is two independently checkable controls: the write only ever follows immediately after a fresh confirmation, and ledger content is never treated as that confirmation, no matter how it's phrased.
+- **The verifier gate (ADR-059), reusing the `skill-studio` grader.** Before landing, an applied change is checked against a paired before/after fixture reproducing the recorded friction, and independently re-checked against the file's own pre-existing safety exercises so a coherent-looking fix can't quietly drop one. Either check failing rolls the change back.
+- **Rollback with a write-once, integrity-anchored pre-image (ADR-059).** The pre-apply bytes are saved before any write, with a fingerprint recorded in the session transcript — a surface no apply can itself rewrite — and checked against that anchor before any rollback trusts it. A swapped or corrupted backup refuses rollback rather than restoring something unverified.
+- **CLAUDE.md-specific post-apply integrity (ADR-059).** When the applied target is the workspace `CLAUDE.md`, the verifier additionally checks the 400-word ceiling and whole-string section/marker integrity — this workspace file isn't covered by the kit's own CI, so this is its only guard.
+- **No batching, checked per occurrence (ADR-060).** More than one ready entry always gets separate, full confirmations — never combined into one prompt — and the confirmation surface is checked to stay byte-identical in shape from the first occurrence to the Nth, never quietly shortened over time.
+- **`TRUST.md`** rewrites its fourth threat class and its "never quietly rewrite itself" claim to match the delivered mechanism: the workspace can now write to a bounded allow-list, gated by confirmation, verification, and rollback — weaker than the prior structural claim, stated plainly rather than left stale.
+- **Relocated `context/memory-of-use.md` → `templates/preset-template/context/memory-of-use.md` (S4).** Joins its sibling convention files (`about-me.md`, `output-format.md`, `working-rules.md`) in the established canonical-shape location; the stray root-level `context/` directory is removed. A live workspace's own copy still lives at its own root, unchanged.
+
+### Phase-5 rework — behavior-surface relocation (ADR-061)
+
+- **New mandatory skill `skills/self-apply/SKILL.md`, installed unconditionally at WIZARD Step 4 (Mode A + Mode B).** The entire apply/verify/rollback/SECGATE machinery and the ledger's schema/counting/status-vocabulary convention move out of the lazily-created `context/memory-of-use.md` body — where it had no guaranteed path to exist the first time it was needed (REWORK-1) — into this always-installed skill, and onto the AC-APPLY-3 hard deny-list ahead of the `.claude/skills/*/SKILL.md` allow glob, so the apply channel can never rewrite its own governing rules (REWORK-2). `context/memory-of-use.md` reverts to DATA-only: the data-not-instruction line, a one-line pointer to `.claude/skills/self-apply/SKILL.md`, the Ledger, and the Archive. The two bootstrap pointers (`templates/workspace-claude-md-template.md`'s "Noticing friction" section, `skills/weekly-review/SKILL.md` step 6) name that exact path instead of the prior circular "the file's own convention." New AC-REACH-1 (reachability) and AC-INTEGRITY-1 (self-integrity by relocation), each with a firing negative control.
+
+### Deferred (tracked for a future increment)
+
+- Confirmation batching as a feature (KDQ-8) — the no-batching *constraint* ships this release; the convenience feature itself does not.
+- Loop 3 — the community two-tier submission tier.
+- S7/S8 (shellcheck scandir gap; ADR-050 stray-file residual) — this release makes no `.github/workflows/quality.yml` change, so neither is triggered this cycle.
+
+---
+
 ## [2.15.0] - 2026-07-20
 
 **"Mini-Council — Loop 1, Increment 1 (Notice & Record)"** — opens Loop 1 of the Cowork Evolution Program: a personal, workspace-local memory of its own use, and a periodic + threshold-triggered loop that can propose a self-improvement in plain language. This increment notices, records, and proposes only — it never applies a self-modification. The apply step is a later, separate increment.
