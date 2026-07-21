@@ -96,3 +96,64 @@ N/A — no browser/UI surface. Behavioral/textual simulation substitutes for the
 ## Verdict
 
 **PASS-WITH-NOTES.** Recommend proceeding to Phase 6 (`@security` code audit). The one new finding (§New Finding) is not a blocker — no shipped AC is violated — but should be handed to `@security` for Phase 6 awareness (it sits squarely in the FW-1/AC-DENY-1 surface `@security`'s Phase 2 review already scrutinized) and ideally closed with the minimal prose fix before Phase 7 sign-off, or explicitly accepted as a named residual alongside W-1/W-2/W-3.
+
+---
+
+# Phase 7 — Final Approval (SECURITY-SENSITIVE gate)
+
+## Phase: 7 (Final Approval — independent re-verification, not a re-narration of Phase 5/6)
+## Date: 2026-07-21T22:30:00Z
+## Reviewer: @qa
+## Branch: `feature/v2.17-steward-autoclean` @ `95921a2` (`main..HEAD` = `95921a2`+`edd8fce`+`7cca4fc`+`a3241f9`+`720b0de`+`a7367d6`, no drift, worktree-verified this session)
+## Status: **APPROVED**
+
+### S5 closure — verified on a FRESH fixture, independent of `@dev`'s commit-message claim
+
+Built two fresh fixtures in an isolated scratch directory (not this repo's tree): a bare root-level `workspace-manifest.md` (unnamed, non-README, not among the 6 named convention files) and a nested `notes/old-draft.md`. Traced the shipped predicate in `skills/self-archive/SKILL.md` (post-`95921a2`) against each by hand:
+
+- `workspace-manifest.md` — not under `.claude/`, not under `context/`, not `*.json`, not a root dotfile, but IS a bare workspace-root `*.md` file → **DENIED at the namespace floor** (line 42), never reaching the positive predicate. **This is the exact residual @qa/@security identified at Phase 5/6 — now closed.**
+- `notes/old-draft.md` — nested under `notes/`, not root, not under `.claude/`/`context/`, not JSON, not a dotfile → passes the deny gate → **ELIGIBLE**. Confirms the floor does not over-deny nested content.
+
+`SKILL.md:42` "caught by namespace, not by an update to this list" is now TRUE — independently confirmed, not taken on the commit message's word. `docs/assumptions.md` A-v2.17-5 re-read: correctly rescoped to state the floor covers the whole root-`.md` class.
+
+### No regression from the fix
+
+The `95921a2` diff touches only `skills/self-archive/SKILL.md` (predicate prose, 3 lines) and `docs/assumptions.md` (1 line) — it does not touch `.gitignore`, `.gitattributes`, or any of the mechanisms `tests/self-archive-firing-controls.md` exercises. Re-inspected all 4 firing-control buckets (AC-DENY-1/2, AC-VERIFYMOVE-2/3, AC-ROLLBACKMOVE-2) against the diff: none of their enforcing text changed. Independently re-ran the underlying mechanisms this session: `git check-ignore -v` on `context/.archive/` and `context/.apply-backups/` both match; `.gitattributes` `export-ignore` entries present for both paths; `templates/preset-template/context/memory-of-use.md:7` still carries the live literal pointer to `self-apply/SKILL.md` used as the AC-VERIFYMOVE-3 grounding instance. All 18 spec.md ACs (`docs/spec.md:4036-4076`) re-confirmed present and mapped to shipped enforcement text; no AC was weakened or removed by the fix.
+
+### Security posture
+
+Phase 2 PASS WITH WARNINGS (0 CRITICAL, 2 WARNING [S1, S2 — both closed in Phase 4], 2 INFO) → Phase 6 PASS WITH WARNINGS (0 CRITICAL, 0 HIGH, 1 WARNING [S5 — closed by `95921a2`, confirmed above], 1 INFO [S6, roadmap wording, accepted carry]) → **at this Phase 7 gate: 0 CRITICAL, 0 HIGH-open, 0 WARNING-open.** FW-1..FW-4 re-confirmed closed at every phase gate (Phase 2 design-level, Phase 6 shipped-bytes, this Phase 7 re-verification). No new finding introduced by this pass.
+
+### CI gates (re-run this session, not re-narrated)
+
+`.github/workflows/` confirmed untouched across the full cycle (`git diff main..HEAD --name-only -- .github/workflows/` = empty) → no Tier-B ceremony required. Independently re-ran, from scratch, all 6 gates relevant to this diff: markdownlint-cli2 (`skills/self-archive/SKILL.md`, 0 issues), registry-cardinality-check (28/18, PASS), registry-url-check (PASS, all `builtin`/`https://github.com/`), wizard-consistency-check (PASS — `self-archive` correctly bundle-independent, mirrors `self-apply`), MF-3 tools-vocabulary gate (27 skills checked, PASS), skill-depth-check POOL loop (27 skills, all 9 sections + 60-line floor, PASS). Version-consistency-check independently re-derived: `VERSION`=2.17.0, README badge=2.17.0, CHANGELOG top=2.17.0 — PASS.
+
+### Release completeness
+
+`VERSION` 2.17.0; `CHANGELOG.md` `[2.17.0]` section present (Added/Deferred split); README badge 2.17.0 + "Also next up" correctly framed as partial delivery (auto-cleaning shipped, living-organization + promote-to-Skill deferred) — all independently re-read this session, not re-narrated.
+
+### Auto-fail scan
+
+Classification SECURITY-SENSITIVE, consistent Phase 0 → 7 (verified against every `## Phase N Summary` in the Council scratchpad for this cycle — no downgrade anywhere). All Phase Log timestamps for this cycle are full ISO-8601-Z (`2026-07-21T14:11:56Z` through `2026-07-21T21:30:00Z`, 20/20 rows checked) — no date-only entries. Grepped `docs/internal/qa/qa-report-v2.17.0.md`, `docs/internal/security/security-review-v2.17.0.md`, and the v2.17 `docs/spec.md` section for auto-fail trigger phrases ("zero issues" unsupported, "100%"/"perfect"/"flawless" unsupported, marketing superlatives) — zero hits in this cycle's own canonical docs. Carry-forwards: `docs/roadmap.md:31` stale "already-gated promote-to-Skill path" wording — accepted INFO carry, non-functional, doc-text only; AC-DETECT-1's 90-day mtime threshold — accepted as this increment's stated hardcoded default (both explicitly named as non-blocking by @dev/@qa/@security across Phase 4/5/6, not newly discovered here).
+
+### Rework rate (whole cycle)
+
+Phase 4 (`main..a3241f9`): 14 files, 733 insertions / 7 deletions. Post-Phase-4 rework (`a3241f9..HEAD`, excluding net-new QA/security report appends which are new artifacts, not rework): `skills/self-archive/SKILL.md` (3 lines changed) + `docs/assumptions.md` (1 line changed) = 8 changed lines (insertions+deletions) against the 733-line Phase-4 deliverable → **rework rate ≈ 1.1%** (8/733). Driven entirely by the single Phase-6 S5 finding; no other rework this cycle.
+
+### qa_issues_prevented (this cycle, aggregate)
+
+- **blocker: 0**
+- **issue: 2** (S1 `/sync`-mechanism-that-doesn't-exist, S2 latent `.apply-backups/` gitignore gap — both Phase 2, both closed in Phase 4) **+ 1** (root-`.md` namespace floor gap — found at Phase 5, escalated/adjudicated at Phase 6 as S5, closed by `95921a2`, confirmed closed here) = **3 issues prevented from shipping**
+- **info: 1** (`docs/roadmap.md:31` stale wording, accepted carry, non-blocking)
+
+### Findings Summary table presence
+
+Confirmed present in both the Phase 2 and Phase 6 sections of `docs/internal/security/security-review-v2.17.0.md` (required per Phase 7 gate — REJECT if absent). Present in both. No rejection triggered.
+
+### Worktree commit topology
+
+N/A for this repo — Council pipeline-state files (`pipeline.md`, `scratchpad.md`) live in a separate repo (The-Council), not inside `claude-cowork-config`; this cycle's Council-state writes were returned as text per the mandatory worktree-isolation fallback and persisted by the orchestrator directly (not a stranded-on-main pattern for this project's own topology).
+
+### Verdict
+
+**APPROVED — ready to merge.** All four Flip-to-APPROVED checklist items satisfied with evidence (test output above, tier evidence = config/infra dry-run + before/after diff narrative, spec-to-code cross-reference for all 18 ACs, S5 confirmed resolved on a fresh fixture independent of the fix commit's own claim). 0 CRITICAL / 0 HIGH-open / 0 WARNING-open at merge. The user makes the final merge decision after CI is confirmed green on the PR.
