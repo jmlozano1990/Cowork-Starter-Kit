@@ -4,6 +4,25 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.17.0] - 2026-07-21
+
+**"The Steward (Auto-Cleaning)"** — extends the v2.16.0 confirm→apply→verify→rollback machinery from content edits to a new operation TYPE: file relocation. A stale or superseded file can now be *proposed* for archiving (never silent, never deleted) into a local `context/.archive/`, gated by a positive move-allow-list (default-deny-by-namespace), destination gating, a read-only reference-integrity check, and a reversible-move-log rollback anchored by an out-of-band fingerprint. Scope is auto-cleaning only this increment — living-organization and promote-repetitive-to-Skill are deferred.
+
+### Added
+
+- **Sibling `self-archive` skill (ADR-066).** New mandatory, deny-listed skill `.claude/skills/self-archive/SKILL.md`, installed unconditionally at WIZARD Step 4 (Mode A + B) alongside `self-apply`, reusing its primitives by pointer rather than folding a second operation type into the same verifier module. It is on its own move deny-list — it can never archive or move itself.
+- **Positive move-ALLOW-list / default-deny-by-namespace (ADR-063).** Inverts v2.16's content deny-first posture for the move channel: a file is move-eligible ONLY IF it affirmatively satisfies the user-content predicate (outside `.claude/**`, outside `context/**`, not a named root convention/config file, not a dotfile, not `*.json`). A default-deny floor by namespace catches the six FW-1 load-bearing paths (including token-bearing `.mcp.json`) even if the predicate had a hole. Root `README.md`-class docs are also denied (owner decision at the Phase-3 gate).
+- **Destination gating + the `context/.archive/` convention (ADR-064).** A move cannot land anywhere but `context/.archive/<basename>.<UTC-timestamp>`, and the destination is checked against the same protected set as the source — a move can never CREATE a load-bearing file by relocation.
+- **Reversible-move-log + out-of-band fingerprint (ADR-062).** A move's rollback primitive is a location operation, not a content pre-image: the source/dest/fingerprint tuple is recorded in the session transcript, and rollback normalizes to a defined terminal state (one copy at source, zero at dest, byte-identical to the fingerprint) rather than a blind reverse move.
+- **Read-only, scoped-enumerated reference-integrity check (ADR-065).** Before a move lands, a literal grep across a defined convention-file set catches a source path still referenced elsewhere and refuses or rolls back — never auto-rewrites the pointer it finds.
+- **Path-channel SECGATE (ADR-066, reusing ADR-058 B1/B2).** The two-turn move confirmation always renders the literal `source → dest` pair computed from the actual operation, never from detector text or anything found inside the source file's own content.
+- **Archive non-publication (`.gitignore` + `.gitattributes export-ignore` for `context/.archive/` and `context/.apply-backups/`).** Reframed from the original design's `/sync`-based check (this kit has no such mechanism — Phase-2 finding S1) to the kit's real channel; closes a latent v2.16.0 gap where `context/.apply-backups/` was never actually gitignored (S2).
+
+### Deferred
+
+- **Living-organization** — `folder-structure.md` becoming a maintained contract the workspace keeps current (out of scope this increment, owner-locked).
+- **Promote-repetitive-to-Skill** — routing a recurring memory-of-use friction into a proposed new Skill (out of scope this increment, owner-locked).
+
 ## [2.16.0] - 2026-07-21
 
 **"Mini-Council — Loop 1, Increment 2 (Apply + Verifier-Gate)"** — closes Loop 1: a confirmed proposal from `[2.15.0]` can now actually be applied. The security posture inverts from `[2.15.0]` by design: that release's safety argument was structural (no code path could write an instruction file); this one opens a real, bounded write channel, contained by a deny-first allow-list, a two-turn literal-diff confirmation, an executable verifier, and rollback — honestly weaker than the prior structural guarantee, and stated as such.
