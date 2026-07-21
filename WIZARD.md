@@ -252,6 +252,8 @@ For each `<slug>` in the user's confirmed final bundle from F4:
 
 Repeat for all slugs in the bundle. De-duplicate: if the same slug appears in multiple presets' bundles, install it once only.
 
+**Mandatory safety skill (always installed, independent of the F4 bundle):** copy `skills/self-apply/SKILL.md` → `<user-workspace>/.claude/skills/self-apply/SKILL.md` in every workspace (Mode A and Mode B). It hosts the memory-of-use apply/verify/rollback machinery and is on the apply deny-list (never self-writable).
+
 **Skill safety note:** All skills in v2.4 are `source_url=builtin` — step 2 does not fire. The check is preserved as a runtime contract for v2.5+ when external skills may be added. If you ever install skills from other sources later, scan them first at SkillRisk.org.
 
 **Also:** Point the user to Anthropic's official pre-built document skills (PDF, PPTX, XLSX, DOCX) available in Cowork Settings > Customize > Skills — these are ready to use with no configuration.
@@ -312,7 +314,7 @@ On Yes, MOVE (never delete) into `_setup-kit/`: `WIZARD.md`, `selection-presets.
   skills-as-prompts.md
   LICENSE
   context/               <- about-me, working-rules, output-format, writing-profile
-  .claude/skills/        <- installed bundle only
+  .claude/skills/        <- installed bundle + self-apply (mandatory safety skill)
   [working folders]      <- per preset, if accepted (7c)
   _setup-kit/            <- entire installer, archived; pool + vendored library + wizard
 ```
@@ -325,7 +327,7 @@ On Yes, MOVE (never delete) into `_setup-kit/`: `WIZARD.md`, `selection-presets.
 
 After completing all steps, say (personalize the first-task invitation to their goal and installed bundle):
 
-> "Setup complete. Your workspace now contains only your files — the setup kit is archived in `_setup-kit/` (nothing was deleted). On disk: `CLAUDE.md` (your personalized workspace instructions), `project-instructions.txt` (paste into Project Settings > Custom Instructions), `cowork-profile.md`, `context/`, `connector-checklist.md`, `skills-as-prompts.md` (fallback copy of your skills), and your installed skills: [list].
+> "Setup complete. Your workspace now contains only your files — the setup kit is archived in `_setup-kit/` (nothing was deleted). On disk: `CLAUDE.md` (your personalized workspace instructions), `project-instructions.txt` (paste into Project Settings > Custom Instructions), `cowork-profile.md`, `context/`, `connector-checklist.md`, `skills-as-prompts.md` (fallback copy of your skills), your installed skills: [list], and `self-apply` (a mandatory safety skill that governs your memory-of-use ledger's apply/verify/rollback rules).
 >
 > I've set [preset output-format default, e.g. 'concise bullets'] as your default style — say 'more detail' or 'keep it brief' anytime.
 >

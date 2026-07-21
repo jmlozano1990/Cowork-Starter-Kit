@@ -28,7 +28,7 @@ Apply installed skills proactively based on context; do not wait to be asked. Sk
 
 ## Noticing friction
 
-When a correction or ask repeats, note it in `context/memory-of-use.md` (create it if absent) per that file's own convention — never interrupt just to announce it.
+When a correction or ask repeats, note it in `context/memory-of-use.md` (create it if absent) per the `self-apply` skill (`.claude/skills/self-apply/SKILL.md`) — never interrupt just to announce it.
 
 ## Skill swap
 

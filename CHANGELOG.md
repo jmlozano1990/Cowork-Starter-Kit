@@ -20,6 +20,10 @@ All notable changes to this project are documented here. This project uses [Sema
 - **`TRUST.md`** rewrites its fourth threat class and its "never quietly rewrite itself" claim to match the delivered mechanism: the workspace can now write to a bounded allow-list, gated by confirmation, verification, and rollback — weaker than the prior structural claim, stated plainly rather than left stale.
 - **Relocated `context/memory-of-use.md` → `templates/preset-template/context/memory-of-use.md` (S4).** Joins its sibling convention files (`about-me.md`, `output-format.md`, `working-rules.md`) in the established canonical-shape location; the stray root-level `context/` directory is removed. A live workspace's own copy still lives at its own root, unchanged.
 
+### Phase-5 rework — behavior-surface relocation (ADR-061)
+
+- **New mandatory skill `skills/self-apply/SKILL.md`, installed unconditionally at WIZARD Step 4 (Mode A + Mode B).** The entire apply/verify/rollback/SECGATE machinery and the ledger's schema/counting/status-vocabulary convention move out of the lazily-created `context/memory-of-use.md` body — where it had no guaranteed path to exist the first time it was needed (REWORK-1) — into this always-installed skill, and onto the AC-APPLY-3 hard deny-list ahead of the `.claude/skills/*/SKILL.md` allow glob, so the apply channel can never rewrite its own governing rules (REWORK-2). `context/memory-of-use.md` reverts to DATA-only: the data-not-instruction line, a one-line pointer to `.claude/skills/self-apply/SKILL.md`, the Ledger, and the Archive. The two bootstrap pointers (`templates/workspace-claude-md-template.md`'s "Noticing friction" section, `skills/weekly-review/SKILL.md` step 6) name that exact path instead of the prior circular "the file's own convention." New AC-REACH-1 (reachability) and AC-INTEGRITY-1 (self-integrity by relocation), each with a firing negative control.
+
 ### Deferred (tracked for a future increment)
 
 - Confirmation batching as a feature (KDQ-8) — the no-batching *constraint* ships this release; the convenience feature itself does not.
