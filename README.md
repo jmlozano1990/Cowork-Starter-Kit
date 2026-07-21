@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.15.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.16.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -178,6 +178,10 @@ All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
+## What's new in v2.16
+
+The mini-Council can now act on what it proposed. Say yes to a proposal from v2.15, and a second confirmation shows you the exact file and the exact literal change about to be made — say yes to that, and it's written, verified against the friction it was meant to fix, and automatically rolled back if the check doesn't pass. The safety model changes on purpose: v2.15's guarantee was structural (no code path could write an instruction file at all); this release opens a real, narrow write channel instead, contained by a fixed allow-list your workspace's own memory-of-use ledger is excluded from, a confirmation you read before anything lands, and a rollback if it doesn't hold up. That's honestly a weaker guarantee than v2.15's, in exchange for the workspace actually being able to help itself — see [TRUST.md](TRUST.md) for the full, undressed trade-off.
+
 ## What's new in v2.15
 
 A personal mini-Council starts noticing its own use: when you correct the same thing, or get asked the same question, on three separate days — or a weekly review turns up a recurring friction — your workspace writes it down in one plain file (`context/memory-of-use.md`) and shows you a plain-language proposal: here's what I noticed, here's the exact change I'd suggest, you decide. This release notices and proposes only; it never touches its own instructions. The safety model is structural, not just promised — the proposal flow has no code path that can write to a `CLAUDE.md` or a skill file, an adversarial-looking note is read as data and flagged, never obeyed, and nothing is ever marked confirmed without your explicit yes.
@@ -218,7 +222,7 @@ Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries b
 
 **Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
-**Also next up:** Teaching that mini-Council to actually make the change it proposes — gated by a fresh verifier pass and never without your explicit yes.
+**Also next up:** The Steward — a workspace that proposes its own tidying (never silent), keeps its folder structure to a maintained contract, and routes a recurring friction into a proposed new Skill instead of just a fixed instruction.
 
 ---
 
