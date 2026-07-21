@@ -21,6 +21,14 @@ Each entry includes:
 
 ## Tier 1 — Curated Skills
 
+### Mandatory Safety Skills
+
+These skills are installed unconditionally by the setup wizard (WIZARD.md Step 4, Mode A and Mode B) — they are infrastructure, not part of any preset's `core_skills`/`optional_skills` and not offered through F4 or Path C matching. `goal_tags` here intentionally names no preset domain, so this row cannot surface in any goal-derived draft team or bundle suggestion.
+
+| name | description | source_url | vetting_date | tier | goal_tags |
+|------|-------------|------------|--------------|------|-----------|
+| self-apply | Mandatory safety skill hosting the memory-of-use ledger's schema/counting convention and the confirmed-proposal apply/verify/rollback machinery (deny-listed — never itself an apply target). | builtin | 2026-07-21 | 1 | mandatory-infrastructure |
+
 ### Study
 
 | name | description | source_url | vetting_date | tier | goal_tags |
