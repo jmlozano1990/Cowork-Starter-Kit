@@ -32,5 +32,13 @@ docs/spec.md            export-ignore
 docs/retro.md           export-ignore
 docs/patterns.md        export-ignore
 
+# --- v2.17.0 S1/S2 — context/.archive/ and context/.apply-backups/ (belt-and-suspenders
+# on top of .gitignore): context/ itself is NOT export-ignored (v2.15 S3 — templates under
+# context/ ship to users), so these two subtrees need their own directory-prefix DROP rather
+# than inheriting anything from the parent. Neither should ever appear in a release archive
+# even if a dev/test session committed something under them by accident. ---
+context/.archive/         export-ignore
+context/.apply-backups/   export-ignore
+
 # --- Meta (self-ignore) ---
 .gitattributes          export-ignore

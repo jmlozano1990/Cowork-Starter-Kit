@@ -11,3 +11,11 @@ node_modules/
 .claude/projects/
 cycles/v1.3.*/
 skill-inputs/
+
+# v2.17.0 S1/S2 — self-archive move destinations and self-apply pre-apply backups hold
+# copies of the workspace's own content (potentially sensitive, moved-not-published data).
+# Neither is ever published; both stay local-only. context/.apply-backups/ was a latent
+# v2.16.0 gap (never actually gitignored despite the "precedent" claim in ADR-064) — closed
+# in the same pass per the S2 finding.
+context/.archive/
+context/.apply-backups/

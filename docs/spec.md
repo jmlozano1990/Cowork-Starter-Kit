@@ -4119,5 +4119,32 @@ Final file list from the design plan: `.claude/skills/self-archive/SKILL.md` (ne
 
 **`.github/workflows/` touched? NO.** No CI workflow file is in the final file list → the Tier-B (PR-only) trigger is NOT fired by workflow changes. Standard SECURITY-SENSITIVE worktree+PR ceremony applies (already on branch `feature/v2.17-steward-autoclean`).
 
+### Phase 4 Amendment — S3 README-class deny addition (owner decision at gate)
+
+At the Phase-3 gate, the owner decided (S3, security review): root-level `README.md`-class
+docs are added to the **AC-DENY-1 floor**, excluded from the positive archive-eligible
+allow-list. The original AC-DENY-1 predicate (above) named `CLAUDE.md`, `cowork-profile.md`,
+`global-instructions.md`, `folder-structure.md`, `skills-as-prompts.md`,
+`project-instructions.txt` as the enumerated root convention/config exclusions, but did not
+name `README.md` — a root-level, non-dotfile, non-`*.json` file the general predicate would
+otherwise have classified as movable user content. This amendment adds: a root-level file
+matching `README*.md` (any casing) is never move-eligible, never auto-proposed for archiving.
+Enforced in `skills/self-archive/SKILL.md` ("The move-eligibility gate" section). This is an
+append-only amendment; the original AC-DENY-1 text above is unchanged.
+
+### Phase 4 Amendment — S1/S2 reframe of C-v2.17-8 (archive non-publication mechanism)
+
+`C-v2.17-8` above (line 4110) named a `/sync` skip-list check that this kit does not have
+(S1, security review). The mechanism actually shipped this phase: workspace `.gitignore`
+excludes `context/.archive/` AND `context/.apply-backups/` (S2 — the latter was a latent,
+never-actually-ignored v2.16.0 gap, closed in the same pass); `.gitattributes export-ignore`
+covers both paths directly (`context/` itself is not export-ignored — v2.15 S3). Firing
+control (both negative-control legs) executed and recorded in
+`tests/self-archive-firing-controls.md` §1: removing the `.gitignore` line → `git check-ignore`
+no longer matches → RED; removing the `.gitattributes export-ignore` line → a force-added
+fixture reappears in `git archive HEAD | tar t` → RED. See `docs/architecture.md` ADR-064
+Erratum for the corresponding append-only architecture correction. This is an append-only
+amendment; the original `C-v2.17-8` text above is unchanged (superseded by this note).
+
 **End of v2.17.0 — The Steward (Auto-Cleaning) — FINAL SPEC.**
 

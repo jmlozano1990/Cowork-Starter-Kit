@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.16.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.17.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -178,6 +178,10 @@ All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
+## What's new in v2.17
+
+The Steward can now propose cleaning up after itself — a stale or superseded file gets a two-turn confirmation and, on your yes, moves (never deletes) into a local `context/.archive/`. It reuses v2.16's confirm→apply→verify→rollback shape, generalized to a move: an out-of-band fingerprint stands in for a content pre-image (a move preserves bytes and changes location, not the other way around), the move-eligibility gate inverts to a positive allow-list (almost nothing should be movable, so the default is deny), and a read-only reference check refuses a move that would orphan a live pointer rather than silently rewriting it. This release ships auto-cleaning only — living organization (a maintained `folder-structure.md` contract) and routing a recurring friction into a proposed new Skill are deferred to a later increment.
+
 ## What's new in v2.16
 
 The mini-Council can now act on what it proposed. Say yes to a proposal from v2.15, and a second confirmation shows you the exact file and the exact literal change about to be made — say yes to that, and it's written, verified against the friction it was meant to fix, and automatically rolled back if the check doesn't pass. The safety model changes on purpose: v2.15's guarantee was structural (no code path could write an instruction file at all); this release opens a real, narrow write channel instead, contained by a fixed allow-list your workspace's own memory-of-use ledger is excluded from, a confirmation you read before anything lands, and a rollback if it doesn't hold up. That's honestly a weaker guarantee than v2.15's, in exchange for the workspace actually being able to help itself — see [TRUST.md](TRUST.md) for the full, undressed trade-off.
@@ -222,7 +226,7 @@ Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries b
 
 **Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
 
-**Also next up:** The Steward — a workspace that proposes its own tidying (never silent), keeps its folder structure to a maintained contract, and routes a recurring friction into a proposed new Skill instead of just a fixed instruction.
+**Also next up:** The Steward's auto-cleaning half shipped in v2.17 (propose → move → verify → rollback, never silent, never a delete). Still ahead: living organization (`folder-structure.md` becomes a maintained contract the workspace keeps current) and routing a recurring friction into a proposed new Skill instead of just a fixed instruction.
 
 ---
 

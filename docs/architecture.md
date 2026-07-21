@@ -10593,4 +10593,30 @@ End of v2.16.0 Phase-5 Rework — Behavior-Surface Relocation (ADR-061).
 - **Concrete revisit triggers:** (a) v2.18 Substrate introduces a canonicalization/shared-machine layer; (b) a third self-modifying channel appears (making the pointer-reuse pattern strain); (c) any audit finding that the two skills' shared discipline drifted.
 - **Risk knowingly accepted:** the two skills share discipline by prose pointer, not a structurally-shared module, so a future edit could drift them; accepted because the namespace-level deny floor (ADR-063) removes the highest-drift-risk surface (per-file lists), and both skills are inspection-class + deny-listed identically.
 
+## ADR-064 Erratum (Phase 4, appended — corrects 2 false prose claims; append-only, original ADR-064 text above is unchanged)
+
+Phase-2 security review (S1, S2) found two claims in ADR-064's original prose (above) did not
+hold against the actual committed tree, and both are corrected here rather than by editing the
+original text:
+
+1. **The `/sync` claim (S1).** ADR-064's W-1 clause and spec.md's original `C-v2.17-8` pointed the
+   non-publication check at a `/sync` skip-list — but this cowork kit has no such mechanism (the
+   only "sync" is `/sync-agency`, an unrelated upstream→kit CI pull, never a publish channel for
+   user content). The check-that-cannot-fail anti-pattern this repo already binds against applies
+   directly: a check aimed at a non-existent mechanism cannot catch a real leak. The REAL
+   mechanism, reframed and shipped this phase: workspace `.gitignore` (`context/.archive/`,
+   `context/.apply-backups/`) + `.gitattributes export-ignore` for the same two paths (`context/`
+   itself is not export-ignored — v2.15 S3 — so these need their own directory-prefix DROP). See
+   `tests/self-archive-firing-controls.md` §1 for the firing-control demonstration.
+2. **The "`context/.apply-backups/` precedent" claim (S2).** ADR-064's original prose said the
+   dot-prefixed archive convention "mirrors the existing `context/.apply-backups/` precedent" —
+   but `context/.apply-backups/` was itself never actually gitignored; there was no existing entry
+   to inherit. Both gaps are closed in the same Phase-4 pass: the `.gitignore` and
+   `.gitattributes` edits above cover `context/.archive/` AND `context/.apply-backups/` together,
+   so pre-apply backups (which can hold pre-edit copies of a user's own instruction files) are not
+   committable either.
+
+Neither correction changes ADR-063/064's decision (positive allow-list, destination gating,
+archive convention path) — only the verification MECHANISM the design pointed at.
+
 End of v2.17.0 "The Steward (Auto-Cleaning)" — Phase 1 Design (ADR-062 .. ADR-066).

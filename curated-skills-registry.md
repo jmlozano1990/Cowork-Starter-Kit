@@ -28,6 +28,7 @@ These skills are installed unconditionally by the setup wizard (WIZARD.md Step 4
 | name | description | source_url | vetting_date | tier | goal_tags |
 |------|-------------|------------|--------------|------|-----------|
 | self-apply | Mandatory safety skill hosting the memory-of-use ledger's schema/counting convention and the confirmed-proposal apply/verify/rollback machinery (deny-listed — never itself an apply target). | builtin | 2026-07-21 | 1 | mandatory-infrastructure |
+| self-archive | Mandatory safety skill hosting the auto-cleaning move-eligibility gate, destination gating, and reversible-move-log rollback for proposing a stale/superseded file's relocation into the local archive convention (deny-listed — never itself a move target). | builtin | 2026-07-21 | 1 | mandatory-infrastructure |
 
 ### Study
 
