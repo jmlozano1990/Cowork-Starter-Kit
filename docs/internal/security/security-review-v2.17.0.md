@@ -94,4 +94,91 @@
 
 ---
 
+# Phase 6 — Code Audit (SECURITY-SENSITIVE, at shipped HEAD)
+
+## Phase: 6 (Code Audit — MANDATORY, no combined-path)
+## Date: 2026-07-21T21:15:00Z
+## Reviewer: @security (independent Phase-6 pass — audited the SHIPPED BYTES via grep/git-verify, not intent)
+## Branch: `feature/v2.17-steward-autoclean` @ `7cca4fc` (code `a3241f9` + QA `7cca4fc`; `main..HEAD` = `7cca4fc`+`a3241f9`+`720b0de`+`a7367d6`, no drift)
+## Status: **PASS WITH WARNINGS** — **0 CRITICAL**, **0 HIGH**, **1 WARNING (new, S5)**, 1 INFO. **Phase 7 is UNBLOCKED**, with S5 as a documented pre-sign-off condition (below).
+
+> All four Phase-2 HIGH findings-in-waiting (FW-1..FW-4) re-confirmed CLOSED against the shipped `skills/self-archive/SKILL.md`, `.gitignore`, `.gitattributes`, and `WIZARD.md`. The single new Phase-6 finding (S5) is the @qa Phase-5 residual, adjudicated below as an **acceptable named residual conditional on one prose/floor correction** — NOT a merge-blocker. No secrets in the diff. `.github/workflows/` NOT touched → no Tier-B.
+
+## Findings Summary (Phase 6)
+
+| ID | Severity | Phase | Surface | Description |
+|----|----------|-------|---------|-------------|
+| S5 | WARNING | 6 | permissions | Move-eligibility predicate mis-classifies the **root-level `*.md` convention-file class**: a hypothetical future 7th root `.md` convention file (not among the 6 named, not `README*`) evaluates as ELIGIBLE, contradicting ADR-063's own default-deny invariant. The shipped "belt-and-suspenders … caught by namespace, not by an update to this list" prose (`skills/self-archive/SKILL.md:42`) is FALSE for this class. Zero live exploit (no such file exists; all named paths denied today). Adjudicated: acceptable named residual CONDITIONAL on correction before Phase 7. Recommended fix = structural root-`.md` default-deny floor. |
+| S6 | INFO | 6 | configuration | `docs/roadmap.md:31` "Rung notes" retains stale deferred-path wording (pre-existing, already flagged by @dev/@qa). Doc-text only, non-functional. |
+
+## FW-1..FW-4 re-confirmation (shipped bytes, grep/git-verified)
+
+**FW-1 (deny/allow completeness incl. token-bearing `.mcp.json`) — CLOSED on shipped bytes.**
+- `skills/self-archive/SKILL.md:38-46`: deny-list evaluated FIRST and "always wins"; positive allow-list applies ONLY past every deny check (default = DENY, line 46).
+- Namespace floor (line 42) real in prose: `.claude/**`, `context/**`, any `*.json`, root config/dotfiles. All 6 FW-1 load-bearing paths named: `.mcp.json` (token-bearing), `cowork-profile.md`, `folder-structure.md`, `skills-as-prompts.md`, `project-instructions.txt`, `.claude/settings.json`+`.claude/settings.local.json`.
+- README-class denial (line 44, S3 Phase-3 amendment) present and explicit.
+- @qa mechanical re-implementation (Phase-5 control #5) confirmed all 14 currently-named deny paths classify DENIED. VERIFIED.
+
+**FW-2 (destination gating) — CLOSED.**
+- `skills/self-archive/SKILL.md:48-50`: destination checked against the exact same protected set as the source (not collision-only), constrained to `context/.archive/<original-basename>.<UTC-timestamp>`; a dest landing in any load-bearing namespace or elsewhere is refused visibly. No move can CREATE a load-bearing file at a novel destination. VERIFIED.
+
+**FW-3 (S1-composition: move-create look-alike + edit-pointer) — CLOSED, carried at composition level.**
+- Blocked by source+dest deny-completeness (dest can never be `.claude/skills/**`, line 40/42) + WYSIWYG turn-two render (line 56) + read-only reference check (line 71, 100). The two halves cannot chain under one confirmation. VERIFIED.
+
+**FW-4 (SECGATE path channel + read-only reference check) — CLOSED.**
+- `skills/self-archive/SKILL.md:56`: turn-two literal `source → dest` computed FRESH from the ACTUAL operation, "never from the detector's `Note` text or any path string that happened to appear in the source file's own content." This is the load-bearing anti-injection control and renders the COMPUTED pair only.
+- Line 71 + Quality-criteria #5 (line 100): reference-integrity check is READ-ONLY (detect-and-refuse/warn), never rewrites a pointer; "byte-identical before and after this check, every time." @qa control #4 confirmed read-only via before/after SHA-256. AC-VERIFYMOVE-3 provably read-only. VERIFIED.
+
+## Also-verified (shipped bytes)
+
+- **Reachability (WIZARD Step-4).** `WIZARD.md:257` unconditional install of `self-archive` (Mode A + Mode B), plus `:319`/`:332` handover narrative and `:354` explicit pre-v2.17.0 backfill clause. 4 grep hits. CONFIRMED.
+- **Self-integrity.** `SKILL.md:40` self-deny (own file never move-eligible as source or destination namespace); genuinely redundant with the `.claude/**` floor (@qa: caught by namespace even if the explicit self-deny sentence were removed — no residual). CONFIRMED.
+- **W-1 archive non-publication.** `.gitignore` adds `context/.archive/` AND `context/.apply-backups/`; `.gitattributes export-ignore` adds both (belt-and-suspenders because `context/` itself is not export-ignored — v2.15 S3). @qa control #1 fired 4/4 sub-controls (both paths, both `check-ignore` and `git archive` legs). The latent v2.16 `.apply-backups/` gitignore gap is closed in the same pass. CONFIRMED.
+- **W-4 rollback fingerprint out-of-band.** `SKILL.md:62,70,77` + ADR-062 (`architecture.md:10499`): fingerprint tuple anchored in the session TRANSCRIPT; on-disk move-log UNTRUSTED until checked against it; swapped/corrupted archive or log → rollback REFUSES. No new trust root. CONFIRMED.
+- **ADR-064 erratum.** `architecture.md:10596-10622` present, append-only, original ADR-064 text unchanged — corrects the S1 `/sync` and S2 `.apply-backups precedent` false claims without editing the original. CONFIRMED.
+- **`.github/workflows/` touched? NO.** `git diff --name-only main..HEAD` = 15 files, none under `.github/workflows/`. No Tier-B ceremony. Standard SECURITY-SENSITIVE worktree+PR applies (already on branch). CONFIRMED.
+- **Secret scan (diff).** No secret values in added lines; only the tokens "token"/"secrets" appear as prose in the QA report and a `.env.production` test-fixture *reference* (a deny-classification test input, not a value). CLEAN.
+
+## OWASP + LLM sweep on the shipped move op-class (Phase 6)
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| A01 Broken Access Control | ADDRESSED | Shipped predicate = positive allow-list + default-deny floor + destination gating + self-deny. Named residual S5 (root-`.md` class) below; live blast radius today = zero. Inspection-class (prose + human confirm), not structural — inherited from v2.16, named in ADR-062 maturation path. |
+| A05 Security Misconfiguration | ADDRESSED | Archive is dot-prefixed (non-auto-loaded) AND now gitignored + export-ignored (W-1 shipped, @qa 4/4). |
+| A06 Vulnerable/Outdated Components | CLEAN | No dependency changes; prose kit. `npm audit` N/A. |
+| LLM01 Prompt Injection | DESIGNED-CLOSED | Turn-two renders the COMPUTED src→dest, never `Note`/source-body text (SKILL.md:56); moved content is DATA, never executed; reference-check is a literal grep needle. |
+| LLM06 Excessive Agency | CONTAINED | Detection proposal-only (line 34); two-turn confirm, no batching (lines 52-58); read-only reference check (line 71); rollback carve-out scoped to restoring prior-approved placement (line 79). |
+
+## ADJUDICATION — @qa Phase-5 New Finding (belt-and-suspenders namespace overstatement)
+
+**The gap (demonstrated, not hypothetical).** @qa mechanically re-implemented the positive predicate's conditions (a)–(f) as literally written in `SKILL.md:46` and ran a root-level `.md` file that is not one of the 6 named convention files and not `README*` (e.g. `workspace-manifest.md`): it evaluates **ELIGIBLE** every time. This contradicts ADR-063's own stated invariant ("The DEFAULT is DENY … a new load-bearing file added tomorrow is denied automatically", `architecture.md:10518`). The floor's belt-and-suspenders prose ("a file added tomorrow is still caught by namespace, not by an update to this list", `SKILL.md:42`) is **FALSE for the root-`.md` convention-file class** — that class is protected only by explicit enumeration, i.e. exactly the per-file forever-obligation ADR-063 was written to escape.
+
+**Severity of the LIVE risk: LOW.** No such 7th root `.md` convention file exists today; every FW-1 path and every Phase-3-amended path IS denied. Even in the future-file case, a move requires (1) qualifying on an evidence class (explicitly-superseded, or unreferenced-and-aged ≥90d), (2) a four-part turn-one proposal the human sees, (3) a fresh human yes on the literal computed pair at turn two, (4) full reversibility via the transcript-anchored rollback, into a (5) gitignored, export-ignored destination. Owner-locked to auto-cleaning only. The blast radius is bounded by two fresh human confirmations and is reversible — it cannot reach a live-exploit severity.
+
+**Disposition: ACCEPTABLE NAMED RESIDUAL (W-5), CONDITIONAL on one correction before Phase 7 sign-off. NOT a Phase-6 merge-blocker / not a hard FAIL.** Rationale: an honest severity read cannot inflate a zero-live-exploit, human-gated, reversible, future-only maintenance gap into CRITICAL/HIGH — doing so would be an unearned RED. Two independent prior reviewers (Phase-2 S3 INFO, Phase-5 ISSUE) landed non-blocking; I concur on the live risk. **However**, the shipped *prose actively asserts the opposite of the truth* on the FW-1 deny-completeness surface — that is materially worse than an honestly-named limitation (contrast W-2/W-4, which state their limits plainly) and cannot ship uncorrected. The finding is therefore a WARNING with a required disposition, not an unconditional pass.
+
+**Two ways to close it (either satisfies the condition):**
+1. **STRUCTURAL — recommended.** Add a **root-level `*.md` default-deny floor** to the namespace floor: any bare `<workspace-root>/*.md` is denied by default (identical location-class treatment already given to root dotfiles and root config in the same floor). This has **zero legitimate-use cost** — genuine disposable user content lives under `context/` and working folders, never as a bare root `.md`; root `.md` files are convention/instruction/docs by location. It makes the predicate's own "caught by namespace" claim TRUE, eliminates the per-file obligation entirely, and realigns the shipped predicate with ADR-063's stated invariant. This is the correct permanent closure and matches this project's structural-over-prose discipline.
+2. **PROSE — minimum acceptable fallback.** Reword `SKILL.md:42` to scope the "caught by namespace" claim to the four genuinely namespace-coverable classes and add one explicit line naming the residual (mirroring W-2's prose-reference residual): "a new root-level `.md` convention file introduced in a future cycle is NOT automatically caught by namespace and MUST be added to this list by hand." `docs/assumptions.md` A-v2.17-5's "stays correct without per-file lockstep maintenance" claim must be scoped identically. This converts a false claim into an honest named residual but leaves the eligibility gap live (just documented).
+
+Recommend option 1. Either is a docs-only ~2-line change, well within a prose-fix and not a code rework.
+
+## Phase-6 Security Summary (plain-language)
+
+**PASS WITH WARNINGS — the shipped bytes close all four hard-gate risks (FW-1..FW-4), no secrets, no CI-workflow surface. One documentation-accuracy warning (S5) on the deny-list must be corrected before final sign-off; it is not a live vulnerability.**
+
+**What could go wrong.**
+1. A *future* root-level `.md` convention file (none exists today) would be treated as movable, and the shipped prose wrongly says it's auto-protected — a maintainer could believe they don't need to add it. *(Possible, future-only. Low harm — reversible, two-turn human-confirmed, owner-locked, gitignored dest.)* **This is S5 — correct before Phase 7 (structural floor recommended).**
+2. A stale pointer phrased only in prose (no literal path) isn't caught by the reference check. *(Unlikely. Low harm — reversible; named limit W-2, unchanged.)*
+
+**What's protected.** Nothing load-bearing is movable (positive allow-list + default-deny floor, `.mcp.json` explicitly named); a move can't create a dangerous file at its destination; the look-alike-skill + rewire-pointer attack can't chain under one confirmation; the turn-two confirmation always shows the real computed source→destination, never text a moved file can plant. **The load-bearing control remains the human's fresh yes at the two-turn confirmation** — the same inspection-class human boundary v2.16 shipped; not made structurally impossible, correctly named in ADR-062's maturation path (v2.18+).
+
+**What we could not prove.** The safety model is inspection-class — it rests on the skill's prose being followed and the human's fresh yes. Nothing in Cowork *structurally* prevents a write outside the deny-list (identical to the v2.16 content channel). Not a new defect; inherited and correctly documented. This design makes the right thing easy, visible, and reversible; it does not make the wrong thing structurally impossible — that waits on a future code-execution layer.
+
+---
+
+*End of Phase-6 Code Audit — v2.17.0 The Steward (Auto-Cleaning).*
+
+---
+
 *End of Security Review — v2.17.0 The Steward (Auto-Cleaning).*
