@@ -2,7 +2,7 @@
 
 **Status:** Planning (PURE-DOC). This document is a design horizon, not a committed build. Each rung named here earns its own spec, its own architecture decisions (ADRs), and its own security review before any of it merges. Nothing below changes the shipped kit until it goes through that pipeline.
 
-**Baseline:** v2.15.0. This design picks up where the shipped kit stands today and describes where it is going.
+**Baseline:** v2.17.0. Loop 1 is complete (v2.16 shipped confirm → apply → verifier-gate → rollback) and the Steward shipped partially at v2.17 (auto-cleaning delivered; living-organization and promote-repetitive-to-Skill deferred). This design picks up where the shipped kit stands today and describes where it is going.
 
 > This is a public design document written at trust-model level. It describes the security posture the way [`TRUST.md`](../TRUST.md) does — honestly, including the limits — without publishing a step-by-step guide to attacking the kit. The sharp internal detail (exact scanner recipes, the full adversary bypass-class catalog, the detailed spawn-ceremony threat model) belongs in a `docs/internal/` companion, not here.
 
@@ -51,6 +51,15 @@ The substrate is **deliberately slim** — it carries only what a curated-only w
 
 **What is deliberately *not* in the substrate: the LLM-judge.** A semantic "read this for injection intent" stage is real work, but on **curated-only** traffic it adds cost without adding safety — the maintainer's own review of every curated submission is strictly stronger than an automated judge. The LLM-judge is therefore **deferred to the intake rung (v2.20)**, where genuinely untrusted content first arrives and the judge finally earns its keep. Building the substrate curated-only means it hardens against friendly, gated traffic under human review *before* any automated judge is ever load-bearing for untrusted content.
 
+### 4a. Authored for external consumers (the transferability constraint)
+
+The substrate is not only Cowork's own supply. It is a candidate **shared, open substrate that other surfaces pull from** — and it must be *designed* that way at v2.18, not retrofitted afterward. The first external consumer is **Confidante**, a local sovereign shell that runs a **~9B model (`qwen3.5:9b`), not Claude**. Two constraints follow, both binding on the substrate's own `/spec`:
+
+1. **Skills are authored to the open SKILL.md standard, never to Cowork-private extensions.** The contribution format (§4.1) must be the *open* standard a runtime that has never heard of the wizard can still read. Any Cowork-specific concern — wizard hooks, preset routing — lives in a **surface adapter**, not in the skill body. The body a foreign runtime consumes must be tool-neutral.
+2. **The registry/manifest is consumable by an external puller, not only the wizard.** The `tier` / `source_url` / `sha256` schema (§4.4–4.5, the KDQ-MANIFEST deliverable) is the **pull contract** an external consumer reads — the same `registry.json` + status-card shape The-Council uses on itself. It is designed for a foreign puller, not only Cowork's own update path (§5).
+
+**The one risk to name so it is never treated as happy-path: *format* transfer and *capability* transfer are different layers, and format does not buy capability.** SKILL.md format transferability is cheap and solved here. Whether a skill *actually works* on the target runtime is not — Confidante's ~9B model is not Claude, and a skill authored assuming Claude-class reasoning may degrade or misfire. Claiming "Confidante-ready" therefore requires a **conformance / eval gate re-run against the target runtime**, reusing the **v2.13 WS-EVAL grade-before-install muscle**. *"It's in SKILL.md format" ≠ "it runs on Confidante."* This is carried as **KDQ-XFER** (§12).
+
 ## 5. The pull flow (persistency layer)
 
 **The problem:** a curated skill improves. How does that reach a workspace that installed the older version months ago, without silently overwriting the personalization the user added?
@@ -70,7 +79,7 @@ Every offer is a plain-language, per-component confirmation. Personalization is 
 
 The recommended default is **out-of-session re-download (Option B)** because the no-network property is a load-bearing part of the trust model, not a convenience — an in-session fetch trades away the kit's clearest trust guarantee for a small UX gain. KDQ-PULL stays open and resolves at the pull rung's own `/spec`; the default going in is "preserve the axiom."
 
-**Where per-workspace install state lives — now a substrate deliverable (KDQ-MANIFEST, resolved).** Today `cowork.lock.json` records the *maintainer-side vendored upstream*, and after the wizard's Step-7 handover it is archived into `_setup-kit/`. It does **not** record "which curated version of which skill this workspace installed" — and the trichotomy above cannot function without that record. This is no longer left open: the **per-workspace install manifest is an explicit deliverable of the Substrate rung (v2.18, §4.4)**, and the pull flow is its first consumer. The precise mechanism (extend the copied lock vs. a small standalone workspace manifest) is settled inside the substrate's own `/spec`; that a manifest exists is decided. The pull flow does not function without it.
+**Where per-workspace install state lives — now a substrate deliverable (KDQ-MANIFEST, resolved).** Today `cowork.lock.json` records the *maintainer-side vendored upstream*, and after the wizard's Step-7 handover it is archived into `_setup-kit/`. It does **not** record "which curated version of which skill this workspace installed" — and the trichotomy above cannot function without that record. This is no longer left open: the **per-workspace install manifest is an explicit deliverable of the Substrate rung (v2.18, §4.4)**, and the pull flow is its first consumer. The precise mechanism (extend the copied lock vs. a small standalone workspace manifest) is settled inside the substrate's own `/spec`; that a manifest exists is decided. The pull flow does not function without it. **The same manifest is also the external pull contract (§4a):** it is designed to be read by a foreign puller such as Confidante, not only by Cowork's own update path — which is why its schema is decided at the substrate rung, with both consumers in view.
 
 ## 6. The push flow (contribute up)
 
@@ -199,6 +208,7 @@ These are the program-level decisions that shape the roadmap. Several were resol
 | **KDQ-SPAWN-SEC** | What gate — stronger than Loop 1's apply — governs writing an entire new instruction tree? | Belongs to v3.0's dedicated design cycle; must exceed, never relax, the apply gate. |
 | **KDQ-BATCH** | Confirmation fatigue over many individual confirms. | Constraint now (confirm each self-modification individually); the batching *feature* stays deferred. |
 | **KDQ-COMMUNITY-OPEN** | What measurably counts as "the gate is proven" before the community tier opens? | Define the exit criteria at substrate time so the community-tier rung has a bar to clear, not a vibe; the gate proves on real intake (v2.20) traffic. |
+| **KDQ-XFER** | How is a substrate skill proven to *work* on an external target runtime (Confidante's ~9B model), not merely be in SKILL.md format? | **Format transfer is free; capability transfer is not.** Author to the open SKILL.md standard at v2.18 (§4a) so the format layer is solved; gate the capability layer with a **target-runtime eval re-run** reusing the v2.13 WS-EVAL muscle. Resolves inside the v2.18 substrate `/spec` (format) and again at first external-consumer integration (capability). |
 
 ## 13. Document placement (RESOLVED — public)
 
