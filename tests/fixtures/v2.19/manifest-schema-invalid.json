@@ -1,0 +1,11 @@
+{
+  "$schema_version": "1.0",
+  "kit_version": "2.19.0",
+  "installed_at": "2026-07-22T00:00:00Z",
+  "components": [
+    {
+      "slug": "note-taking",
+      "installed_path": ".claude/skills/note-taking/SKILL.md"
+    }
+  ]
+}

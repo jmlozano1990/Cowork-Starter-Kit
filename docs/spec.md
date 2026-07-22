@@ -4676,3 +4676,289 @@ check with a firing negative control").
   extension of the archived lock copy — Reason: disjoint key space, Step-7b reachability
   (lock is moved to `_setup-kit/` / absent in Mode B), and external-consumer legibility. (ADR-067)
 
+
+---
+
+# v2.19 — Persistency Layer (pull updates) — FINAL SPEC — 2026-07-22T12:17:57Z
+
+> *ISO 15288 — Stakeholder Needs & Requirements Definition Process.*
+
+**Finalized by @architect at Phase 1 from inside the worktree** (`cycle/v2.19-persistency`,
+base `a2d317f`), converting the Phase-0 draft spec + the binding Phase-0.D deliberation findings
+into the final spec. Every AC below carries a `grep`/fixture verification; every named edge case
+on this security-classified surface carries a firing negative control (§3.5, BINDING
+Check-That-Cannot-Fail pattern). Source: Phase-0 draft spec + Phase-0.D findings (scratchpad,
+returned-as-text per worktree-state-gap discipline).
+
+**Classification: SECURITY-SENSITIVE (full-strength, no combined/lightened path).** Independently
+re-derived at Phase 1 — see §Classification below. Two faces, one persistency capability; kept
+textually distinct everywhere (C-v2.19-1).
+
+## Axis separation (ARCH-F5 — state it, never blur it)
+
+The persistency layer has **two distinct axes** that read the same v2.18 install manifest but
+answer different questions:
+
+- **Face 1 — Skill-content pull** answers *"is this curated SKILL newer than the copy I
+  installed, and did I edit mine?"* — the untouched / user-customized / user-authored trichotomy
+  over individual curated skills.
+- **Face 2 — Kit-version upgrade path** answers *"is the ENGINE my space runs on one I can walk
+  forward to a newer kit version?"* — replacing framework machinery, reading `kit_version`.
+
+**ARCH-F5 clarification (the one sentence that resolves the apparent C-v2.19-1 bleed):**
+AC-PULL-7 routes the framework safety machinery (`self-apply` / `self-archive` / `self-upgrade`)
+through the **Face-1 pull channel** — but that is a **delivery-mechanism** fact (safety skills are
+delivered *as skill content*, so they ride the same per-component pull transport as any other
+curated skill), **not a conceptual-role merge**. The two axes stay distinct; the pull channel
+carrying safety-skill content does not make skill-content-pull and kit-version-upgrade the same
+capability.
+
+## Face 1 — Skill-content pull (KDQ-PULL, safe-by-construction)
+
+- **AC-PULL-1 (trichotomy, EXTENDED for the dangling/absent-file 4th state — ARCH-F2).**
+  Classify every `cowork.install.json` component via ADR-067's 2-input function — P (slug ∈
+  `curated-skills-registry.md`) × E (`H_current == installed_content_sha256`) → exactly one of
+  {user-authored/not-in-pool (P=NO), untouched (P=YES,E=YES), user-customized (P=YES,E=NO)}. The
+  P×E function is defined **only over the domain where the on-disk file EXISTS.** IF a component's
+  `installed_path` names a file **absent on disk** at classification time (H_current undefined —
+  the 4th state the matrix does not otherwise cover), THEN the component is classified
+  **`manifest-drift`** and is NEVER silently coerced into any trichotomy state; it is surfaced
+  explicitly as either (a) **re-offer as a fresh install** of the curated pool version (if slug ∈
+  registry), or (b) **refuse-and-surface** (if slug ∉ registry) — the user decides. No
+  classification path ever consumes an undefined H_current, so "no other path" is again true.
+  *Verify (firing control):* a fixture whose manifest entry names a deleted file → classification
+  returns `manifest-drift`; a **firing negative control** (same fixture, file present) returns a
+  normal trichotomy state — proving the drift branch is a real gate, not a silent fallthrough.
+- **AC-PULL-2** untouched → single plain-language offer naming skill + what's new; NEVER apply
+  without explicit per-component confirm.
+- **AC-PULL-3** user-customized → surface conflict explicitly; NO silent-overwrite path;
+  resolution requires a separate explicit decision naming exactly what would be replaced.
+- **AC-PULL-4** user-authored/not-in-pool → NEVER presented as pull-eligible, ever.
+- **AC-PULL-5** (no-internet axiom, KDQ-PULL default = Option B) unchanged: "is something newer"
+  is an out-of-session, user-initiated re-download nudge; NO in-session network fetch to any
+  registry/GitHub/update endpoint during a live session (matches WIZARD Network & Offline Rule).
+  Option A (opt-in in-session check) OUT OF SCOPE.
+- **AC-PULL-6 (SHARPENED for trust-transitivity — SEC-F2, MUST-BIND).** The overwrite/conflict
+  **decision surface** is computed from **freshly-observed bytes on BOTH sides** at offer/apply
+  time: (i) the actual on-disk `SKILL.md` bytes (H_current re-derived fresh, **never** cached,
+  **never** the manifest's `installed_content_sha256`), AND (ii) the actual incoming
+  **curated-pool** bytes (hashed fresh from the pool file this session). The manifest's
+  `installed_content_sha256` / `last_synced_upstream_sha256` **MAY inform HOW** an offer is
+  phrased but **MUST NEVER be the sole basis** for a "safe-to-overwrite / untouched"
+  determination. Concretely: "untouched, safe to offer" requires `H(on-disk, fresh) == H(pool,
+  fresh)` computed **this session**, never a manifest-asserted "unmodified" label. Mirrors ADR-066
+  path-channel WYSIWYG (the confirmed thing is the freshly-computed thing, never a stored label).
+  *Verify (firing control):* a fixture where the manifest's `installed_content_sha256` is set to
+  the hash of a **different (customized)** file than what is on disk → the decision MUST classify
+  from **on-disk** bytes (→ user-customized → conflict), NOT from the manifest label (which would
+  falsely say "untouched, safe"); **firing negative control:** a manifest with a truthful hash
+  still classifies correctly (the fresh-bytes path is not a blanket "always conflict").
+- **AC-PULL-7 (SHARPENED for poisoned-backfill + bootstrapping — SEC-F3; ARCH-F6 reword; ADR-061
+  revisit-trigger (d), BINDING non-deferrable).** Pull is the standing mechanism that backfills
+  the mandatory deny-listed safety skills — **`self-apply`, `self-archive`, AND `self-upgrade`** —
+  into **any workspace that RUNS the pull flow** (ARCH-F6: *runs the pull flow*, not the
+  mechanically-unverifiable "any already-instantiated workspace") lacking them. It retires the
+  interim WIZARD Fallback Option-2 as the primary reach path.
+  (a) **Poisoned-backfill defense:** each backfilled safety skill's bytes are **byte-verified
+  against that slug's ADR-069 registry `sha256`** BEFORE it goes live, sourced **ONLY from the
+  curated pool**; a mismatch (weakened/poisoned copy) is **refused, never installed**.
+  (b) **Bootstrapping-trust (stated explicitly):** the target has **no gate before backfill**, so
+  the backfill install is gated by the **trusted pull / WIZARD Step-4-equivalent installer
+  ceremony** — NOT by the absent `self-apply` — because you cannot gate the installation of the
+  gate on the gate you are installing.
+  *Verify (firing control):* a fixture workspace missing all three → pull offers/installs all
+  three as a **distinct labeled step** (not folded silently); a **firing negative control:** a
+  poisoned copy (bytes ≠ registry `sha256`) → backfill REFUSES; a byte-correct copy → backfill
+  proceeds.
+- **AC-PULL-8 (lock↔install naming)** unchanged: pull prose/ADR/comments/copy naming install
+  state refer to `cowork.install.json` explicitly, never interchange `lock`/`cowork.lock.json`
+  (disjoint key spaces, ADR-067). Verify: Phase 4/5 sweep finds zero conflations.
+- **AC-PULL-9 (NEW — malformed/partial manifest, edge case #1 — ARCH-F1, MED-HIGH).** WHEN
+  `cowork.install.json` is malformed, truncated, or schema-invalid (unparseable JSON, missing
+  required top-level keys, or a component entry missing `slug` / `installed_path` /
+  `installed_content_sha256`), THEN the pull flow **REFUSES to offer or apply ANY update** and
+  renders a plain-language safe-fallback ("your install record can't be read safely — re-run the
+  wizard's reconcile step"); it **NEVER proceeds on a partial parse** and **never guesses missing
+  fields.** *Verify (firing negative control, §3.5-mandatory):* a truncated-manifest fixture AND a
+  schema-invalid-manifest fixture MUST each make **no offer/apply path execute** (the refusal
+  fires); a well-formed manifest fixture MUST allow the normal flow — proving the refusal is a
+  real gate, not a blanket block.
+
+## Face 2 — Kit-version upgrade path (KDQ-UPGRADE, highest-blast-radius) — a CONTRACT + a dormant, reachable mechanism
+
+- **AC-UPGRADE-1** version seam: read `kit_version` from `cowork.install.json` (v2.18 schema — no
+  new field) as sole anchor for "which kit version am I running."
+- **AC-UPGRADE-2** upgrade-ready boundary: `kit_version` present AND ≥ `2.19.0` → upgrade-ready;
+  absent OR `< 2.19.0` (born ≤ v2.18) → manual-re-clone-only with an explicit
+  no-retroactive-guarantee statement, never silently upgrade-ready. Comparison MUST be
+  **semver-aware** (parse major/minor/patch integers; never a naive string compare — `"2.9.0" >
+  "2.19.0"` under string compare is the trap). *Verify:* fixtures `2.9.0`, `2.18.0`, `2.19.0`,
+  `2.20.1`, absent → correct ready/not-ready verdict each; a string-compare implementation FAILS
+  the `2.9.0` vs `2.19.0` fixture (firing control).
+- **AC-UPGRADE-3** three-piece contract ships exactly: (a) the `kit_version` seam; (b) a clean,
+  precisely-documented on-disk **migration seam** a future rung reads from + writes provenance
+  into — **RESOLVED (OQ2 / ADR-074):** the fixed convention directory `context/.kit-migrations/`
+  holding an append-only, **on-disk-local-only** provenance log
+  `context/.kit-migrations/kit-migration-log.md`; (c) a confirm-first, non-destructive self-update
+  **mechanism** scoped to whatever step(s) v2.19 defines (v2.19 = **zero real forward-walk
+  targets**; see AC-UPGRADE-3(c) firing control + OQ1).
+  - **AC-UPGRADE-3(c) firing control under the dormant path (ARCH-F4 / OQ1 RESOLVED).** v2.19
+    ships the mechanism (`self-upgrade`, installed + deny-listed) with **zero real forward-walk
+    targets.** Its firing controls are BOTH: (i) **inherited-by-reuse** from Loop 1 (per
+    AC-UPGRADE-4 — the reused SECGATE/verifier/rollback controls re-fire through the upgrade entry
+    point), AND (ii) a **synthetic self-referential dormant-path control:** a fixture asserting "no
+    newer `kit_version` available" MUST cause `self-upgrade` to emit the deterministic **"nothing
+    to walk forward to yet"** outcome (edge case #7) and invoke NO apply; a **firing negative
+    control** uses a fixture with a **synthetic newer target** present → the mechanism MUST route
+    into the confirmed-apply gate (proving the no-op branch is a real gate that would engage a
+    target, not a silent unconditional pass). This gives edge case #7 an executable check as §3.5
+    requires.
+- **AC-UPGRADE-4 (reuse-not-relax Loop 1 gate; HIGH non-negotiable; VERIFY CLAUSE ADDED —
+  ARCH-F3).** Self-update reuses the existing confirm→apply→verify→rollback primitives
+  (ADR-058/059/061; ADR-062–066 for path relocation) WITHOUT modifying their
+  confirmation/verification/rollback strictness — no new bypass, no batching, no "trust because
+  official upgrade" shortcut. *Verify:* (a) the Loop 1 firing negative controls (SECGATE-B1/B2,
+  verifier friction + non-regression, rollback pre-image) **RE-FIRE** when exercised through the
+  `self-upgrade` entry point — a fixture that trips each Loop 1 control trips it identically via
+  the upgrade path; (b) **structural check (C-v2.19-7):** `self-upgrade/SKILL.md` **references**
+  the Loop 1 primitives (names the `self-apply` gate / SECGATE / verifier / rollback by path)
+  rather than **re-declaring** confirmation/verification/rollback logic inline — a grep confirms
+  no re-declared verifier/rollback block, only references. (Testability shape follows OQ5 =
+  sibling-reuse-by-reference; see resolutions.)
+- **AC-UPGRADE-5** non-destructive re-install (ADR-034-consistent): upgrade = a controlled
+  re-install of newer machinery through the same confirm-first apply gate; never a live in-place
+  mutation outside the gate, never silent.
+- **AC-UPGRADE-6** each rung authors its own migration: v2.19 contains NO v3.0+ migration script —
+  seam + contract only.
+- **AC-UPGRADE-7** security posture: highest blast radius in kit history (HLD §E). Dedicated ADR
+  at Phase 1 (KDQ-UPGRADE resolves here — ADR-071) + mandatory full-strength Phase 2 gate + Phase
+  6 audit; no combined/lightened path.
+- **AC-UPGRADE-8 (NEW — self-integrity / bootstrapping-trust; SEC-F1 MUST-BIND; HARD Phase-2
+  acceptance condition).** The upgrade channel writes engine machinery, and **the gate IS part of
+  that machinery.** Therefore:
+  (i) **verify-then-swap, NEVER swap-then-verify-under-the-incoming-gate** — an upgrade step's new
+  machinery MUST be verified UNDER the **pre-upgrade (known-good) gate** before it goes live; the
+  old gate remains the acting authority until the new machinery passes verification under it.
+  (ii) The upgrade mechanism **MUST NOT modify its own gate / deny-list / verifier /
+  `scripts/canonicalize-scan.sh` / rollback machinery as an ordinary bulk engine-file write.** Any
+  change to the safety machinery itself is a **distinct, separately-confirmed, higher-ceremony
+  step** (Write-Class 2, ADR-071) that **renders a before/after (WYSIWYG)** of each safety file
+  AND **captures the rollback pre-image out-of-band FIRST.**
+  (iii) The ADR-061/066 **"a gate cannot rewrite its own rules"** property MUST hold for the
+  UPGRADE channel, not only for apply/move.
+  *Verify (firing controls):* (a) a fixture where an upgrade step attempts to modify
+  `.claude/skills/self-apply/SKILL.md` (or any safety file) via the **ordinary** engine-file path
+  → REFUSED / rerouted to the Write-Class-2 ceremony; (b) a fixture where new machinery **fails**
+  verification under the OLD gate → the swap does NOT occur (old machinery stays live); (c) a
+  byte-correct upgrade of a **non-safety** engine file rides the ordinary gate and succeeds
+  (proving the higher-ceremony gate is scoped to safety machinery, not a blanket block).
+- **AC-UPGRADE-9 (NEW — kit_version write-back CONTRACT bound now; EXECUTION deferred to v3.0 —
+  ARCH-F7).** CONTRACT bound now: WHEN a future walk-forward step completes successfully,
+  `kit_version` in `cowork.install.json` is updated through the **upgrade ceremony's own**
+  confirmed, WYSIWYG, non-destructive provenance write (the same trusted installer /
+  WIZARD-Step-4-equivalent ceremony that STAMPED `kit_version` at v2.18 install) — and **NEVER**
+  through `self-apply`'s runtime apply channel (which retains its ADR-067 `cowork.install.json`
+  deny-list entry **unchanged**), and **NEVER** by a self-special-casing silent direct writer
+  (C-v2.19-3 honored). EXECUTION deferred: v2.19 has **zero** real forward-walk targets, so no
+  `kit_version` bump is performed at v2.19; each future rung authors the actual bump inside its own
+  migration (AC-UPGRADE-6). Conscious decision, recorded in ADR-071 §Maturation — not a silent
+  gap. *Verify (at v2.19):* the shipped `self-upgrade` mechanism, invoked with no newer target,
+  performs **NO** manifest write (edge #7); the `cowork.install.json` deny entry in `self-apply` is
+  **byte-unchanged** (in the 7-file byte-unchanged deny-list).
+
+## C-v2.19-N Binding Constraints (final)
+
+- **C-v2.19-1** axis separation: two faces textually distinct everywhere (SKILL.md/ADR/README/
+  CHANGELOG); never "the update feature" as one undifferentiated thing. (See ARCH-F5 clarification
+  above — safety-skill backfill riding the pull channel is delivery-mechanism, not a role merge.)
+- **C-v2.19-2** no new network surface; WIZARD Network & Offline Rule unchanged; Option A deferred
+  not built. (Extends to the migration-seam writer — SEC-F4: provenance write is on-disk-local
+  only, never telemetry/phone-home.)
+- **C-v2.19-3** manifest write channel: `cowork.install.json` stays on `self-apply`'s hard
+  deny-list (ADR-067, byte-unchanged); any `kit_version` write post-upgrade goes through the
+  upgrade ceremony's own confirmed WYSIWYG write (AC-UPGRADE-9), never a self-special-casing direct
+  writer, never `self-apply`'s runtime apply channel.
+- **C-v2.19-4** lock/install remain disjoint — no field/section/alias/migration merges or
+  conflates them (ADR-067).
+- **C-v2.19-5** backfill in scope, not deferred (AC-PULL-7 / ADR-061 trigger d).
+- **C-v2.19-6** labeled-constraints convention restored (satisfies the v2.18 retro carry).
+- **C-v2.19-7** no parallel gate: both faces reuse — never fork/reimplement — the Loop 1
+  primitives (structurally verified per AC-UPGRADE-4(b)).
+- **C-v2.19-8** KDQ-UPGRADE resolves here: ADR-071 authored at Phase 1.
+- **C-v2.19-9 (NEW).** Self-integrity invariant (AC-UPGRADE-8 / SEC-F1) is a standing property of
+  the upgrade channel: the safety machinery is never rewritable as an ordinary bulk write;
+  verify-then-swap only.
+- **C-v2.19-10 (NEW).** Trust-transitivity: no overwrite/conflict decision, on either face, is
+  ever taken from a manifest-asserted label — always from freshly-observed bytes (AC-PULL-6 /
+  SEC-F2).
+
+## Open-Question resolutions (5/5 — recorded in ADR-071/074)
+
+1. **OQ1 (dormant vs active affordance) — RESOLVED: ship a DORMANT-but-REACHABLE mechanism.**
+   `self-upgrade` is installed + deny-listed at v2.19 (reachability, ADR-061 REWORK-1 precedent —
+   do not reintroduce the gate-not-installed gap a later rung would have to backfill), with **zero
+   real forward-walk targets**; on invoke it emits the deterministic "nothing to walk forward to
+   yet" (edge #7). Firing controls per AC-UPGRADE-3(c).
+2. **OQ2 (migration-seam shape) — RESOLVED (ADR-074):** fixed convention `context/.kit-migrations/`
+   + append-only on-disk-local `kit-migration-log.md` (`from→to | UTC | migration-id |
+   verifier-result`); on BOTH deny-lists (apply + move). SEC-F4: on-disk-local only.
+3. **OQ3 (version granularity) — RESOLVED:** the ordering primitive is **content-hash** (ADR-069
+   registry `sha256` vs manifest hashes) for skill-content "is-newer", and **semver** for
+   `kit_version`. `vetting_date` is **display-only**, never an ordering key — which is exactly why
+   its format-evolution durability concern is moot (it never orders anything).
+4. **OQ4 (offer surface) — RESOLVED:** an explicit **user-invoked trigger** ("check for updates" /
+   "pull latest"), NO unsolicited inline auto-offer (§3.6 individual-confirmation +
+   confirmation-fatigue avoidance). Interaction with AC-PULL-5: the **out-of-session nudge** says
+   "a newer kit release exists — re-download"; the **in-session trigger** only reconciles the
+   already-on-disk pool against the manifest (no network).
+5. **OQ5 (call-into vs sibling) — RESOLVED (ADR-071):** a **sibling deny-listed skill
+   `self-upgrade`** that reuses Loop 1 primitives **by reference** (not a literal call-into
+   `self-apply`, not re-declared logic). Mirrors ADR-066's self-archive-as-sibling (one operation
+   type per module; the upgrade operation type — replacing engine machinery as a re-install unit —
+   is distinct enough to warrant its own module).
+
+## Classification (independently re-derived at Phase 1)
+
+**SECURITY-SENSITIVE — full-strength; NO combined/lightened path; NO compliance surface; NO
+outbound network path on either face.** Any ONE of the following is sufficient; all four hold:
+(1) self-modifying engine surface — the upgrade path rewrites the space's own framework machinery
+(HLD §3.4/§E: highest self-modification blast radius in kit history, higher than v3.0 spawn) —
+**strongest**; (2) manifest-as-trust-anchor under adversarial read (retro A3 / SF-S-4); (3)
+reuse-not-relax obligation on the proven Loop 1 gate; (4) AC-PULL-7 backfill writes mandatory
+safety skills — *including the gate itself* — into the installed base. See §Classification Re-Run
+(post-OQ) in ADR-071.
+
+## Verification Summary (for @qa / @security)
+
+- Every AC above carries a `grep`/fixture verification; every named edge case carries a firing
+  negative control (§3.5).
+- @security Phase-2 HARD acceptance condition: AC-UPGRADE-8 (SEC-F1) MUST be present and its
+  firing controls (a)/(b)/(c) real — if the upgrade ADR omits the self-integrity invariant, it
+  does NOT clear Phase 2.
+- Negative verification at Phase 5/6: confirm NO in-session network call on either face
+  (AC-PULL-5 / C-v2.19-2); confirm the 7-file byte-unchanged deny-list held (below); confirm
+  `self-apply`'s `cowork.install.json` deny entry is byte-identical.
+
+## Architectural Modifications (v2.19)
+
+- AC-PULL-1 → EXTENDED to define the dangling/absent-file (`manifest-drift`) 4th state — Reason:
+  the P×E matrix is undefined when H_current has no on-disk source; "no other path" required an
+  explicit 4th outcome (ARCH-F2). (ADR-072)
+- AC-PULL-6 → SHARPENED: decision surface computed from fresh bytes on BOTH sides, never a
+  manifest label — Reason: `H_installed` read from the attacker-influenceable manifest could flip
+  user-customized→untouched (SEC-F2). (ADR-072)
+- AC-PULL-7 → SHARPENED (poisoned-backfill byte-verify + bootstrapping-trust) and reworded to
+  "any workspace that runs the pull flow" — Reason: pull now installs the gate itself; and the
+  universal quantifier was not mechanically verifiable (SEC-F3 / ARCH-F6). (ADR-073)
+- AC-UPGRADE-4 → verify clause added — Reason: without it the reuse-not-relax obligation is
+  aspirational (ARCH-F3). (ADR-071)
+- AC-UPGRADE-8 (NEW) → self-integrity invariant bound — Reason: reuse-not-relax is necessary but
+  not sufficient; the gate is part of the machinery the upgrade writes (SEC-F1). (ADR-071)
+- AC-UPGRADE-9 (NEW) → kit_version write-back contract bound, execution deferred to v3.0 — Reason:
+  C-v2.19-3 constrained HOW but nothing bound THAT it is written; execution has no v2.19 target
+  (ARCH-F7). (ADR-071)
+- AC-PULL-9 (NEW) → malformed/partial-manifest refusal with firing control — Reason: a named edge
+  case on a security-classified surface had no executable check (ARCH-F1, §3.5). (ADR-072)
+
+**End of v2.19 — Persistency Layer — Phase 1 FINAL SPEC.**
+

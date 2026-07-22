@@ -28,8 +28,17 @@ These skills are installed unconditionally by the setup wizard (WIZARD.md Step 4
 
 | name | description | source_url | vetting_date | tier | goal_tags | sha256 |
 |------|-------------|------------|--------------|------|-----------|----------------------------------------------------------------|
-| self-apply | Mandatory safety skill hosting the memory-of-use ledger's schema/counting convention and the confirmed-proposal apply/verify/rollback machinery (deny-listed — never itself an apply target). | builtin | 2026-07-21 | 1 | mandatory-infrastructure | 66a0e213531c5789ed5f4f5e503a0253d3f8d0858cc0e77394cfdf0e0b08f0ca |
-| self-archive | Mandatory safety skill hosting the auto-cleaning move-eligibility gate, destination gating, and reversible-move-log rollback for proposing a stale/superseded file's relocation into the local archive convention (deny-listed — never itself a move target). | builtin | 2026-07-21 | 1 | mandatory-infrastructure | 0e191cd038522e6bda761b27f0da8250849a5f23b1a6d2dfdcb3536fc6466afa |
+| self-apply | Mandatory safety skill hosting the memory-of-use ledger's schema/counting convention and the confirmed-proposal apply/verify/rollback machinery (deny-listed — never itself an apply target; v2.19 adds the `self-*` reserved-prefix deny + `context/.kit-migrations/**`). | builtin | 2026-07-22 | 1 | mandatory-infrastructure | f839793b12f9e2c4df50e8fa9532325469615ae8125a5b323082ab4390c8c970 |
+| self-archive | Mandatory safety skill hosting the auto-cleaning move-eligibility gate, destination gating, and reversible-move-log rollback for proposing a stale/superseded file's relocation into the local archive convention (deny-listed — never itself a move target; v2.19 adds `self-upgrade` + `context/.kit-migrations/**` to the belt-and-suspenders list). | builtin | 2026-07-22 | 1 | mandatory-infrastructure | 7b12d467dbc1fc73cdd058b0d2bacb06fff7b8f9b07614fa2e478a30edf6d7f9 |
+| self-upgrade | Mandatory safety skill hosting the kit-version walk-forward contract and the two-write-class self-integrity invariant (verify-then-swap on safety machinery); dormant at v2.19 (zero real forward-walk targets), installed and reachable now (deny-listed — never itself an apply or move target). | builtin | 2026-07-22 | 1 | mandatory-infrastructure | a4abd71af9dafe8a267af758c86593a1260426a5387f2825f75512559fdf3e11 |
+
+### Mandatory Infrastructure (Non-Deny-Listed)
+
+Also installed unconditionally by the setup wizard (WIZARD.md Step 4, Mode A and Mode B) — infrastructure, not part of any preset's `core_skills`/`optional_skills` — but **not** one of the three deny-listed safety-machinery siblings (`self-apply`/`self-archive`/`self-upgrade`) that ADR-061/066/071 protect from each other and from one another's write/move channels. `goal_tags` here intentionally names no preset domain either, for the same "never surfaces in a goal-derived bundle" reason as the Mandatory Safety Skills above.
+
+| name | description | source_url | vetting_date | tier | goal_tags | sha256 |
+|------|-------------|------------|--------------|------|-----------|----------------------------------------------------------------|
+| pull-updates | Face 1 of the v2.19 Persistency Layer — classifies every installed curated skill via fresh-bytes-on-both-sides against the on-disk pool and the workspace's own install manifest, offers per-component updates with no silent overwrite, and backfills the three mandatory safety skills into any workspace that runs it. Ordinary curated skill, editable through self-apply's normal confirmed-apply channel. | builtin | 2026-07-22 | 1 | mandatory-infrastructure | cb33be6c1c2090eeaa9f90fa34b3ca8633eda62f5279c12cafd248aae746e2a2 |
 
 ### Study
 
@@ -54,7 +63,7 @@ These skills are installed unconditionally by the setup wizard (WIZARD.md Step 4
 >
 > `citation-formatter` — removed at the v2.6.x audit as a phantom entry (no pool file), re-added 2026-07-06 together with a 9-section `skills/citation-formatter/SKILL.md` per the audit's disposition condition. Source: `docs/project-audit-v2.6.1.md` F-2, roadmap idea 10.
 >
-> The registry therefore has 26 rows across 25 unique skill slugs.
+> The registry therefore has 30 rows across 29 unique skill slugs (v2.19 adds `self-upgrade` and `pull-updates`; `research-synthesis` remains the only slug appearing twice, per the disposition above).
 
 ### Writing
 

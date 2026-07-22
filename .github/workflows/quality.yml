@@ -501,6 +501,149 @@ jobs:
           fi
           echo "registry-sha256-check PASSED — ${CHECKED} Tier-1 rows verified against their pool files."
 
+  self-apply-deny-completeness-check:
+    name: Self-Apply Deny-List Completeness Check (v2.19 MF-1, ADR-071)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fault-injection self-test — a stripped deny-list MUST be detected (check-that-cannot-fail)
+        run: |
+          set -euo pipefail
+          if [ ! -f skills/self-apply/SKILL.md ]; then
+            echo "::error::MISSING skills/self-apply/SKILL.md"
+            exit 1
+          fi
+          STRIPPED_FILE="$(mktemp)"
+          trap 'rm -f "$STRIPPED_FILE"' EXIT
+          # Simulate the pre-MF-1 vulnerable state: strip every line mentioning
+          # self-archive, self-upgrade, or the self-* reserved-prefix glob.
+          grep -vE 'self-archive|self-upgrade|skills/self-\*' skills/self-apply/SKILL.md > "$STRIPPED_FILE" || true
+          if grep -qE 'self-archive|self-upgrade|skills/self-\*' "$STRIPPED_FILE"; then
+            echo "::error::fault-injection fixture setup failed — stripped file still contains a match"
+            exit 1
+          fi
+          echo "Fault-injection fixture is valid (all 3 patterns genuinely absent from the stripped copy) — proving the assertion below CAN fail before trusting it on real data."
+
+      - name: Fault-injection self-test (@qa ISSUE-2) — a deny-CLAUSE-only strip that leaves explanatory prose intact MUST also be detected
+        run: |
+          set -euo pipefail
+          if [ ! -f skills/self-apply/SKILL.md ]; then
+            echo "::error::MISSING skills/self-apply/SKILL.md"
+            exit 1
+          fi
+          ANCHOR='evaluated FIRST and always wins'
+          STRIPPED_FILE="$(mktemp)"
+          trap 'rm -f "$STRIPPED_FILE"' EXIT
+
+          # Reproduce @qa's exact regression shape: strip ONLY the named
+          # self-archive/self-upgrade tokens from the deny-list's own
+          # enforcement sentence (the line containing ANCHOR) -- leaving that
+          # same line's generic `skills/self-*` glob mention untouched, and
+          # leaving every other line -- including the MF-1a/MF-1b/MF-1c
+          # explanatory paragraphs below the deny-list, which independently
+          # mention self-archive/self-upgrade in prose -- completely
+          # untouched. This is the surgical, realistic edit: someone
+          # generalizes the deny-list's named enumeration down to just the
+          # glob, silently dropping the explicit per-skill coverage. A test
+          # that instead strips the whole file (the step above) cannot
+          # expose this gap, because it removes the explanatory mentions too.
+          sed -E "/${ANCHOR}/ s/self-archive|self-upgrade//g" skills/self-apply/SKILL.md > "$STRIPPED_FILE"
+
+          # Fixture-validity control (a): the deny-list line itself must now
+          # lack self-archive/self-upgrade specifically, while STILL
+          # containing the generic skills/self-* glob mention (proving this
+          # is a surgical strip of the named enumeration, not a strip of the
+          # whole clause).
+          DENY_LINE="$(grep "${ANCHOR}" "$STRIPPED_FILE" || true)"
+          for pattern in 'self-archive' 'self-upgrade'; do
+            if echo "$DENY_LINE" | grep -qE "$pattern"; then
+              echo "::error::fixture setup failed — deny-list clause still contains '${pattern}' after the scoped strip"
+              exit 1
+            fi
+          done
+          if ! echo "$DENY_LINE" | grep -qE 'skills/self-\*'; then
+            echo "::error::fixture setup failed — deny-list clause's generic skills/self-* glob mention was unexpectedly also removed; this fixture must leave it intact to be the surgical, realistic edit"
+            exit 1
+          fi
+
+          # Fixture-validity control (b): the explanatory-paragraph mentions
+          # of self-archive/self-upgrade (MF-1a/MF-1b, outside the deny-list
+          # line) must still be present -- otherwise this is just a relabeled
+          # whole-file strip and proves nothing new.
+          EXPLANATORY_HITS="$(grep -v "${ANCHOR}" "$STRIPPED_FILE" | grep -cE 'self-archive|self-upgrade' || true)"
+          if [ "$EXPLANATORY_HITS" -lt 1 ]; then
+            echo "::error::fixture setup failed — explanatory-paragraph mentions of self-archive/self-upgrade were also removed (expected >=1 surviving hit outside the deny-list line, got ${EXPLANATORY_HITS}); this fixture must leave prose intact to reproduce the @qa ISSUE-2 regression shape"
+            exit 1
+          fi
+          echo "Fault-injection fixture is valid: the deny-list clause names neither self-archive nor self-upgrade while still naming the generic skills/self-* glob (control a), and ${EXPLANATORY_HITS} explanatory-paragraph mention(s) of self-archive/self-upgrade survive elsewhere in the file (control b) -- this is @qa's exact ISSUE-2 regression shape, not a blanket file-wide strip."
+
+          # Negative control (c): prove the gap actually existed -- an
+          # UNSCOPED whole-file check (the OLD gate's logic, all 3 patterns)
+          # wrongly PASSES OUTRIGHT against this fixture: skills/self-* is
+          # still literally on the deny-list line, and self-archive/
+          # self-upgrade are still findable file-wide via surviving
+          # explanatory prose, so the old gate cannot tell the deny-list's
+          # own enumeration apart from prose elsewhere that happens to name
+          # the same skills.
+          OLD_GATE_FAIL=0
+          for pattern in 'self-archive' 'self-upgrade' 'skills/self-\*'; do
+            grep -qE "$pattern" "$STRIPPED_FILE" || OLD_GATE_FAIL=1
+          done
+          if [ "$OLD_GATE_FAIL" -ne 0 ]; then
+            echo "::error::fixture setup failed — expected the unscoped whole-file grep to wrongly PASS on all 3 patterns against this fixture (the exact ISSUE-2 gap); at least one pattern was genuinely missing file-wide, so this fixture does not reproduce the regression"
+            exit 1
+          fi
+          echo "Confirmed: an UNSCOPED whole-file grep wrongly PASSES OUTRIGHT (all 3 patterns 'found') against this fixture even though the deny-list clause no longer names self-archive/self-upgrade at all -- this is the exact gap @qa's ISSUE-2 found in the old, file-wide check."
+
+          # Now prove the paragraph-scoped assertion (same logic as the real
+          # check below) correctly fires RED against this same fixture.
+          DENY_PARA="$(awk -v RS='' -v anchor="$ANCHOR" 'index($0, anchor) { print; found=1 } END { if (!found) exit 1 }' "$STRIPPED_FILE")"
+          SAW_RED=0
+          for pattern in 'self-archive' 'self-upgrade' 'skills/self-\*'; do
+            if ! echo "$DENY_PARA" | grep -qE "$pattern"; then
+              SAW_RED=1
+            fi
+          done
+          if [ "$SAW_RED" -ne 1 ]; then
+            echo "::error::self-test FAILED — the paragraph-scoped assertion did not fire RED against the deny-clause-only-strip fixture; check-that-cannot-fail invariant is broken"
+            exit 1
+          fi
+          echo "Confirmed RED: the paragraph-scoped assertion detects the stripped self-archive/self-upgrade tokens even though the generic glob mention and explanatory-paragraph mentions of the same skill names survive elsewhere in the file."
+
+      - name: Assert self-apply's deny-list CLAUSE (not just the file) names self-archive, self-upgrade, and the self-* reserved prefix
+        run: |
+          set -euo pipefail
+          if [ ! -f skills/self-apply/SKILL.md ]; then
+            echo "::error::MISSING skills/self-apply/SKILL.md"
+            exit 1
+          fi
+          ANCHOR='evaluated FIRST and always wins'
+          # Scope to the deny-list clause's own paragraph (the blank-line-
+          # delimited block containing the ANCHOR sentence, "Before anything
+          # else, check the deny-list. It is evaluated FIRST and always
+          # wins: ..."), not the whole file. A whole-file grep also matches
+          # the MF-1a/MF-1b/MF-1c explanatory paragraphs below the deny-list
+          # (which independently mention self-archive/self-upgrade in prose)
+          # and so cannot detect a regression that strips only the deny-
+          # list's own enumeration while leaving that prose intact (@qa
+          # ISSUE-2 — proven detectable by the fault-injection self-test
+          # above).
+          DENY_PARA="$(awk -v RS='' -v anchor="$ANCHOR" 'index($0, anchor) { print; found=1 } END { if (!found) exit 1 }' skills/self-apply/SKILL.md)" || {
+            echo "::error::could not locate the deny-list clause in skills/self-apply/SKILL.md (anchor '${ANCHOR}' not found) — the deny-list's own enforcement sentence appears to have been removed or reworded"
+            exit 1
+          }
+          FAIL=0
+          for pattern in 'self-archive' 'self-upgrade' 'skills/self-\*'; do
+            if ! echo "$DENY_PARA" | grep -qE "$pattern"; then
+              echo "::error::self-apply/SKILL.md deny-list CLAUSE is missing a reference to '${pattern}' (v2.19 MF-1 namespace-completeness fix — a sibling safety skill could be reached through the ordinary .claude/skills/*/SKILL.md allow-glob). This check is scoped to the deny-list paragraph itself, not the whole file — an explanatory-paragraph mention elsewhere does not satisfy it (@qa ISSUE-2)."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "self-apply-deny-completeness-check PASSED — the deny-list clause itself (not just the file) names self-archive, self-upgrade, and the self-* reserved prefix."
+
   skill-depth-check:
     name: Skill Depth Check
     runs-on: ubuntu-latest
