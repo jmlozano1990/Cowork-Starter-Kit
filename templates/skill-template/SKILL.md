@@ -16,7 +16,12 @@ description: [one sentence describing what this skill enables Cowork to do]
      unintended runtime instructions to Cowork. Key: use bracketed nouns, never
      imperatives; never include Ignore/Disregard/Override/Instead/Always;
      use HTML comments for guidance text; no safety-rule patterns; Example
-     placeholders must read as contributor-guidance, not Cowork instructions. -->
+     placeholders must read as contributor-guidance, not Cowork instructions.
+
+     This 9-section structure is the kit's open substrate contribution format
+     (v2.18.0) — see docs/substrate-contribution-format.md for the full spec,
+     the adapter-isolation boundary, and the external consumer contract both
+     a future push and a future pull flow are built on. -->
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      SECTION 1 — WHEN TO USE

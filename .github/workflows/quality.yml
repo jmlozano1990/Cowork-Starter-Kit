@@ -413,6 +413,94 @@ jobs:
           fi
           echo "Registry cardinality check passed: $DATA_ROWS entries found (minimum: 18)."
 
+  registry-sha256-check:
+    name: Registry sha256 Drift-Verify Check (v2.18.0 F5, ADR-069, MF-S-1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fault-injection self-test — a poisoned sha256 MUST be detected (check-that-cannot-fail)
+        run: |
+          set -euo pipefail
+          # v2.18.0 F5/MF-S-1: prove the drift-verify logic below CAN fail before trusting
+          # it on real data — matches the house lock-content-sha-fault-injection model
+          # (.github/workflows/quality.yml lock-content-sha-fault-injection job).
+          POISON_FILE="$(mktemp)"
+          trap 'rm -f "$POISON_FILE"' EXIT
+          cp curated-skills-registry.md "$POISON_FILE"
+
+          # Poison exactly one Tier-1 row's sha256 cell (self-apply's) with a
+          # deliberately wrong, syntactically-valid 64-hex value.
+          REAL_HASH=$(awk -F'|' '$0 ~ /^\| self-apply \|/ {gsub(/ /,"",$8); print $8}' curated-skills-registry.md)
+          if [ -z "$REAL_HASH" ]; then
+            echo "::error::FIXTURE SETUP FAILED — could not locate self-apply's current sha256 cell to poison."
+            exit 1
+          fi
+          POISONED_HASH="deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+          sed -i "s/${REAL_HASH}/${POISONED_HASH}/" "$POISON_FILE"
+
+          FOUND_MISMATCH=0
+          # shellcheck disable=SC2034  # markdown-table field-split; only f_name/f_sha consumed below
+          while IFS='|' read -r _ f_name f_desc f_src f_date f_tier f_goal f_sha _; do
+            slug="$(echo "$f_name" | tr -d ' ')"
+            stored="$(echo "$f_sha" | tr -d ' ')"
+            case "$stored" in
+              ''|*[!0-9a-f]*) continue ;;
+            esac
+            [ "${#stored}" -eq 64 ] || continue
+            [ -f "skills/${slug}/SKILL.md" ] || continue
+            actual="$(sha256sum "skills/${slug}/SKILL.md" | awk '{print $1}')"
+            if [ "$actual" != "$stored" ]; then
+              FOUND_MISMATCH=1
+            fi
+          done < "$POISON_FILE"
+
+          if [ "$FOUND_MISMATCH" -eq 0 ]; then
+            echo "::error::Fault-injection test FAILED — poisoned sha256 mismatch was NOT detected. Drift-verify logic may be broken."
+            exit 1
+          fi
+          echo "Fault-injection test PASSED — poisoned sha256 correctly detected as a mismatch."
+
+      - name: Verify curated-skills-registry.md sha256 matches skills/<slug>/SKILL.md (fail-closed on drift)
+        run: |
+          set -euo pipefail
+          if [ ! -f "curated-skills-registry.md" ]; then
+            echo "::error::MISSING curated-skills-registry.md at repo root"
+            exit 1
+          fi
+          FAIL=0
+          CHECKED=0
+          # shellcheck disable=SC2034  # markdown-table field-split; only f_name/f_sha consumed below
+          while IFS='|' read -r _ f_name f_desc f_src f_date f_tier f_goal f_sha _; do
+            slug="$(echo "$f_name" | tr -d ' ')"
+            stored="$(echo "$f_sha" | tr -d ' ')"
+            # skip header/separator rows and any row whose sha256 cell is not a
+            # syntactically-valid 64-char lowercase hex value.
+            case "$stored" in
+              ''|*[!0-9a-f]*) continue ;;
+            esac
+            [ "${#stored}" -eq 64 ] || continue
+            if [ ! -f "skills/${slug}/SKILL.md" ]; then
+              echo "::error::registry row '${slug}' has a sha256 cell but no skills/${slug}/SKILL.md pool file exists"
+              FAIL=1
+              continue
+            fi
+            actual="$(sha256sum "skills/${slug}/SKILL.md" | awk '{print $1}')"
+            if [ "$actual" != "$stored" ]; then
+              echo "::error::sha256 DRIFT on '${slug}' — registry=${stored} actual=${actual} (run scripts/registry-hash.sh ${slug} and update the row)"
+              FAIL=1
+            fi
+            CHECKED=$((CHECKED + 1))
+          done < curated-skills-registry.md
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::registry-sha256-check FAILED — one or more registry sha256 cells do not match their pool file."
+            exit 1
+          fi
+          if [ "$CHECKED" -eq 0 ]; then
+            echo "::error::registry-sha256-check FAILED — zero rows checked (AC-F5-1 requires every Tier-1 row populated, no partial backfill)."
+            exit 1
+          fi
+          echo "registry-sha256-check PASSED — ${CHECKED} Tier-1 rows verified against their pool files."
+
   skill-depth-check:
     name: Skill Depth Check
     runs-on: ubuntu-latest
@@ -780,6 +868,130 @@ jobs:
             done
           fi
           echo "Unenforced examples advisory complete."
+
+  canonicalize-scan-check:
+    name: Canonicalize + Forbidden-Token Scan Check (v2.18.0 F2/F3, ADR-068)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      # No new `uses:` action, no new SHA to pin — reuses the pinned checkout above
+      # and ubuntu-latest's built-in python3 (unicodedata is stdlib). No
+      # pip/npm install, no curl/wget — SF-S-1 (OI-v2.18-S8).
+      - name: Firing negative controls — F2 fixtures must prove BOTH legs (MF-S-2)
+        run: |
+          set -euo pipefail
+          chmod +x scripts/canonicalize-scan.sh
+          PATTERN='\b(Ignore|Disregard|Override|Instead of|Always respond|New instruction)\b'
+          FAIL=0
+
+          check_fixture() {
+            fixture="$1"
+            expect_exit="$2"
+            leg_desc="$3"
+            if [ ! -f "$fixture" ]; then
+              echo "::error::Fault-injection fixture missing: ${fixture}"
+              FAIL=1
+              return
+            fi
+            # RED leg — the RAW ADR-055 scan must evade/miss this fixture.
+            if grep -iE "$PATTERN" "$fixture" > /dev/null 2>&1; then
+              echo "::error::RED LEG FAILED for ${fixture} — raw scan unexpectedly matched (fixture is not a true evasion, or was authored incorrectly)."
+              FAIL=1
+              return
+            fi
+            # Catch/flag leg — scripts/canonicalize-scan.sh must return the expected non-zero code.
+            set +e
+            ./scripts/canonicalize-scan.sh "$fixture" > /tmp/canon-out-$$ 2>&1
+            actual_exit=$?
+            set -e
+            if [ "$actual_exit" -ne "$expect_exit" ]; then
+              echo "::error::${leg_desc} FAILED for ${fixture} — expected exit ${expect_exit}, got ${actual_exit}. Output:"
+              cat /tmp/canon-out-$$
+              FAIL=1
+            else
+              echo "PASS: ${fixture} — RED leg evaded raw scan, ${leg_desc} confirmed (exit ${actual_exit})."
+            fi
+            rm -f /tmp/canon-out-$$
+          }
+
+          check_fixture "tests/fixtures/canonicalization/f2-1-nfkc-fullwidth.md" 1 "GREEN leg (NFKC catch)"
+          check_fixture "tests/fixtures/canonicalization/f2-2-zero-width-split.md" 1 "GREEN leg (zero-width-strip catch)"
+          check_fixture "tests/fixtures/canonicalization/f2-3-homoglyph-mixed-script.md" 2 "FLAG leg (mixed-script flag, human review)"
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::canonicalize-scan-check firing negative controls FAILED — see above."
+            exit 1
+          fi
+          echo "Firing negative controls PASSED — all 3 F2 fixtures demonstrate both the RED (evade-raw) leg and the catch/flag leg."
+
+      - name: POOL — canonicalize + scan skills/*/SKILL.md '## Example' sections (fail-closed)
+        run: |
+          set -euo pipefail
+          chmod +x scripts/canonicalize-scan.sh
+          # SCOPE (Phase-4 finding, see scripts/canonicalize-scan.sh header
+          # SCOPE NOTE): scanning ONLY '## Example' matches CONTRIBUTING.md:129's
+          # own stated threat model (pasted/example content, not maintainer-
+          # authored prose elsewhere in the file) and is what empirically passes
+          # clean against the real pool today; a full-file scan of the
+          # byte-identical 6-token pattern false-positives on ordinary English
+          # ("instead of") across most existing skills.
+          FAIL=0
+          COUNT=0
+          for skill_file in skills/*/SKILL.md; do
+            [ -f "$skill_file" ] || continue
+            COUNT=$((COUNT + 1))
+            set +e
+            ./scripts/canonicalize-scan.sh --section "## Example" "$skill_file"
+            rc=$?
+            set -e
+            if [ "$rc" -ne 0 ]; then
+              echo "::error::canonicalize-scan-check FAILED on ${skill_file} (exit ${rc} — 1=forbidden-token match, 2=mixed-script flag; either requires human review before merge)."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "POOL canonicalize-scan-check PASSED — ${COUNT} skills/*/SKILL.md '## Example' sections clean after canonicalization."
+
+      - name: ENFORCED_EXAMPLES — canonicalize + scan depth-enforced examples' '## Example' sections (fail-closed)
+        run: |
+          set -euo pipefail
+          chmod +x scripts/canonicalize-scan.sh
+          ENFORCED_EXAMPLES="study research project-management writing creative business-admin personal-assistant"
+          FAIL=0
+          COUNT=0
+          for example in $ENFORCED_EXAMPLES; do
+            for skill_file in "examples/${example}"/.claude/skills/*/SKILL.md; do
+              [ -f "$skill_file" ] || continue
+              COUNT=$((COUNT + 1))
+              set +e
+              ./scripts/canonicalize-scan.sh --section "## Example" "$skill_file"
+              rc=$?
+              set -e
+              if [ "$rc" -ne 0 ]; then
+                echo "::error::canonicalize-scan-check FAILED on ${skill_file} (exit ${rc} — 1=forbidden-token match, 2=mixed-script flag; either requires human review before merge)."
+                FAIL=1
+              fi
+            done
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "ENFORCED_EXAMPLES canonicalize-scan-check PASSED — ${COUNT} example SKILL.md '## Example' sections clean after canonicalization."
+
+      - name: No network/dependency add in this job (SF-S-1)
+        run: |
+          set -euo pipefail
+          # Strip full-comment lines first so this check targets actual shell
+          # invocations, not the script's own documentation prose describing
+          # what it deliberately does NOT do (which necessarily names these
+          # same substrings).
+          if grep -v '^\s*#' scripts/canonicalize-scan.sh | grep -nE 'pip install|npm install|curl |wget '; then
+            echo "::error::scripts/canonicalize-scan.sh must not introduce a new dependency or network call (zero-code constraint, ADR-020)."
+            exit 1
+          fi
+          echo "SF-S-1 PASSED — no pip/npm install, no curl/wget in scripts/canonicalize-scan.sh."
 
   lock-file-zero-sha-check:
     name: Lock File Zero-SHA Rejection (S9)

@@ -19,3 +19,7 @@ skill-inputs/
 # in the same pass per the S2 finding.
 context/.archive/
 context/.apply-backups/
+
+# v2.18.0 — nested cycle worktrees (Council orchestration artifact, not product
+# content) should never appear as untracked/committed state in this repo.
+.worktrees/
