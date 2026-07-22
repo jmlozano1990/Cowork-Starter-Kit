@@ -40,11 +40,13 @@ done
 ```
 
 - [x] **RAN 2026-07-22.** Output:
+
   ```
   MISSING (pre-fix): self-archive
   MISSING (pre-fix): self-upgrade
   MISSING (pre-fix): skills/self-\*
   ```
+
   Confirmed RED against the real, unmodified pre-fix repo state — the check genuinely
   fires on the exact vulnerability @security's Phase-2 review found (0 hits, `self-archive`
   reachable via the ordinary allow-glob).
@@ -130,6 +132,7 @@ done
 ```
 
 - [x] **RAN 2026-07-22.** Output:
+
   ```
   kit_version=2.9.0 -> not-ready (exit 1)
   kit_version=2.18.0 -> not-ready (exit 1)
@@ -137,6 +140,7 @@ done
   kit_version=2.20.1 -> ready (exit 0)
   kit_version=absent -> not-ready (exit 1)
   ```
+
   All 5 fixtures correct — `2.9.0` correctly `not-ready` (a naive string compare would say
   otherwise, below).
 
@@ -167,11 +171,13 @@ tests/fixtures/v2.19/validate-manifest.sh tests/fixtures/v2.19/manifest-well-for
 ```
 
 - [x] **RAN 2026-07-22.** Output:
+
   ```
   REFUSE: unparseable/truncated JSON
   REFUSE: component[0] missing required field 'installed_content_sha256'
   OK: manifest well-formed, 1 component(s)
   ```
+
   Both malformed fixtures REFUSE (exit 1); the well-formed fixture (negative control /
   GREEN — proves the refusal is a real gate, not a blanket block) proceeds (exit 0).
 
@@ -198,12 +204,14 @@ bash tests/fixtures/v2.19/classify-component.sh my-custom-thing "$SCRATCH/.../no
 ```
 
 - [x] **RAN 2026-07-22.** Output:
+
   ```
   untouched
   user-customized
   manifest-drift
   user-authored-not-in-pool
   ```
+
   All four outcomes fire correctly: `note-taking` (byte-identical to pool) → `untouched`;
   `voice-matching` (appended line) → `user-customized`; `old-skill` (no on-disk file, the
   dangling-entry case) → `manifest-drift`, never coerced into a trichotomy state; a slug not in
@@ -238,10 +246,12 @@ bash tests/fixtures/v2.19/backfill-verify.sh self-upgrade "$SCRATCH/.../self-upg
 ```
 
 - [x] **RAN 2026-07-22.** Output:
+
   ```
   PROCEED: 'self-upgrade' byte-verified against registry sha256 (a4abd71af9dafe8a267af758c86593a1260426a5387f2825f75512559fdf3e11)
   REFUSE: byte mismatch for 'self-upgrade' — registry=a4abd71af9dafe8a267af758c86593a1260426a5387f2825f75512559fdf3e11 candidate=cdf0bba8c4038c06313f6653851d98b53bb71c56282a12be4f5ea58eefba44bc
   ```
+
   Byte-correct copy proceeds; the poisoned copy (a genuinely different hash, not asserted) is
   refused — the defense fires on real divergent bytes, not a narrated claim.
 
