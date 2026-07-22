@@ -4148,3 +4148,531 @@ amendment; the original `C-v2.17-8` text above is unchanged (superseded by this 
 
 **End of v2.17.0 — The Steward (Auto-Cleaning) — FINAL SPEC.**
 
+---
+
+# Product Spec — Claude Cowork Starter Kit v2.18.0 "The Substrate (slim)"
+
+## Classification
+
+**SECURITY-SENSITIVE.** Per HLD §3.4 ("every self-modifying surface is permanently
+security-sensitive") and `docs/roadmap.md`'s classification column, v2.18 is bound
+SECURITY-SENSITIVE at Phase 0 for three reasons, not by default inheritance from the
+ladder:
+
+1. **It is the trust/verification surface both directions inherit.** Canonicalization
+   (F2) and the deterministic scan (F3) are the gate every future push (v2.20) and
+   pull (v2.19) content passes through. A defect here is not local to v2.18 — it
+   silently weakens two future rungs.
+2. **It extends `cowork.lock.json` (ADR-020's supply-chain integrity anchor)** with new
+   trichotomy fields (F4). A schema mistake could misrepresent "untouched" vs.
+   "user-customized," risking a silent personalization overwrite once v2.19 actually
+   consumes it.
+3. **It opens the external-consumer trust boundary** (the transferability constraint).
+   A schema mistake here could leak Cowork-private routing logic into a body a foreign
+   runtime executes, or under-specify the boundary so a future external puller trusts
+   unvetted content.
+
+Per this project's own precedent (v2.16.0, v2.17.0 both ran full pipeline + mandatory
+Phase 2 hard gate + mandatory Phase 6 audit, no combined-path), the same posture is
+recommended here. **One caveat for @security to confirm at Phase 2, not assumed by
+@pm:** F1–F5 are format/schema/scan-definition work, not themselves a new
+self-modification write channel the way Loop 1's apply or the Steward's move are — no
+feature in this spec writes an instruction file into a live workspace. @security should
+state explicitly at Phase 2 whether the mandatory-hard-gate posture applies at full
+strength or a justified lighter (but still SECURITY-SENSITIVE) posture, given this
+distinction.
+
+If any Phase 1/4 implementation choice requires a new or modified `.github/workflows/*`
+file (a real possibility for F2/F3's scan-on-edit trigger — see Open Questions), that
+triggers the Tier-B PR-only ceremony (worktree + PR, no Guard Change Summary required)
+per `docs/pipeline-policy.md §PostOQClassificationReRun` (CLAUDE.md, ADR-170) —
+independent of this spec's own SECURITY-SENSITIVE ceremony.
+
+## Problem
+
+The kit's push (contribute up) and pull (get updates) flows are "the same machine
+pointed in two directions" (HLD §4), but today neither flow can be built — because the
+trust machine both stand on does not exist yet as a defined, shared substrate:
+
+- The existing 9-section skill format (`templates/skill-template/SKILL.md`, ADR-015) is
+  enforced for **preset-bundled** and **pool-promoted** skills (`PROMOTE.md`), but is
+  not yet formalized as *the one format* push and pull both target, nor is it verified
+  free of Cowork-private concerns that would break an external consumer.
+- The forbidden-token scan (ADR-055, `CONTRIBUTING.md:129`) runs at PR-time and at
+  `PROMOTE.md`'s promotion-time gate — but nothing canonicalizes content before it runs,
+  and nothing re-fires it when an already-installed file is edited after the fact.
+- `cowork.lock.json` (ADR-020) records only the **maintainer-side vendored upstream** —
+  it has no notion of "which curated version of which skill did *this workspace*
+  install," so the pull trichotomy (untouched / user-customized / not-in-pool) that
+  v2.19 needs cannot be computed. This gap is named explicitly in HLD §5 and resolved
+  as a substrate deliverable, KDQ-MANIFEST.
+- `curated-skills-registry.md` already carries a two-tier `tier` column (ADR-012,
+  shipped v1.2) but has **no content-hash field** — confirmed absent by direct grep
+  (`grep -c sha256 curated-skills-registry.md` → 0) — so no puller, internal or
+  external, can verify a pulled skill's integrity against the registry the way
+  `cowork.lock.json` already lets a maintainer verify vendored upstream.
+- The substrate is also a candidate **shared, open format** other runtimes can pull
+  from (HLD §4a) — but today's format has never been audited for Cowork-private leakage
+  into the skill body, and nothing prevents a future author from baking in an
+  assumption about which model class consumes the skill.
+
+**Evidence this is real, not speculative:** the roadmap (`docs/roadmap.md` line 17,
+"Rung notes" lines 32–34) and the HLD (§4, §4a, §5, §12 KDQ table) both name this
+substrate as the sequencing pivot — v2.19 (pull) is already committed to consuming
+KDQ-MANIFEST's output, and the roadmap's own sequencing rationale ("forces the manifest
+closed early, with a real consumer") depends on this cycle actually closing it.
+
+## Goals
+
+1. Formalize the existing 9-section format as the single substrate contribution format
+   both push and pull reuse (F1).
+2. Add a canonicalization pre-pass that neutralizes the cheapest evasion classes before
+   any scan runs (F2).
+3. Extend the existing forbidden-token scan to operate on canonicalized content and
+   re-fire on edit, not only at intake (F3).
+4. Close the KDQ-MANIFEST gap: define the lock trichotomy fields and the per-workspace
+   install manifest that v2.19 (Pull) will consume first (F4).
+5. Add the minimal missing piece of the two-tier registry schema (a content-hash field)
+   while keeping the community tier defined-but-closed (F5).
+6. Make the substrate provably open-format and runtime-agnostic, so an external
+   consumer (first candidate: Confidante) can read it without adopting any
+   Cowork-private machinery or inheriting an assumption about which model class runs
+   it.
+7. Define — not execute — the exit criteria that will tell a future cycle "the intake
+   gate is proven" (KDQ-COMMUNITY-OPEN), so v3.1 has a bar, not a vibe.
+
+## Non-Goals (see also §Out of Scope)
+
+- Building the LLM-judge (deferred to v2.20 — see HLD §4, "What is deliberately not in
+  the substrate").
+- Building the v2.19 pull UX/flow itself, or the v2.20 push/intake flow itself — this
+  cycle defines the substrate they both stand on, not the flows.
+- Opening the community tier.
+- Proving capability transfer to any specific external runtime.
+
+## Target Users
+
+1. **Cowork-starter-kit maintainers and contributors** — the direct consumers of F1–F3
+   (contribution format, canonicalization, scan) as they review push submissions
+   (v2.20) and curate pull content (v2.19), both built on this substrate.
+2. **Cowork workspace users** whose spaces will (starting v2.19) receive curated
+   updates through the pull trichotomy this cycle defines — they are not a *direct*
+   consumer of v2.18 (nothing in this cycle is user-facing), but every AC in F4 exists
+   to protect their personalization from being silently overwritten later.
+3. **External format consumers** (first named candidate: Confidante, a local sovereign
+   shell) — the audience the transferability constraint (§4a) exists for. They read the
+   SKILL.md format and the registry/manifest schema as a pull contract, never touching
+   Cowork's wizard.
+
+## Core Features (Substrate — F1 through F5)
+
+### F1 — Standardized contribution format
+
+**Rationale:** The 9-section format already exists and is already CI-enforced
+(`skill-depth-check`, `templates/skill-template/SKILL.md`) for preset skills and pool
+promotions (`PROMOTE.md` reuses it verbatim, §"Assembling the PR"). What does not yet
+exist is (a) a single canonical doc naming it as *the* substrate format both push and
+pull target, and (b) a verified boundary that keeps Cowork-private concerns out of the
+body a foreign runtime would read.
+
+- **AC-F1-1 (format doc exists):** A canonical doc (placement TBD — see Open Questions)
+  states the substrate contribution format IS the existing 9-section SKILL.md standard.
+  Verify: `grep -c '^## ' templates/skill-template/SKILL.md` returns exactly 9,
+  matching the canonical section list (`When to use`, `Triggers`, `Instructions`,
+  `Output format`, `Quality criteria`, `Anti-patterns`, `Example`, `Writing-profile
+  integration`, `Example prompts`).
+- **AC-F1-2 (no Cowork-private keys in the body):** No SKILL.md body section contains a
+  Cowork-private key. Verify: `grep -riE 'core_skills:|optional_skills:|wizard_hook|preset_route' skills/*/SKILL.md`
+  returns zero matches. (Frontmatter `name:` / `description:` / `trigger_examples:` are
+  exempt — they are already open-standard-compatible, not Cowork-private.)
+- **AC-F1-3 (adapter isolation):** Cowork-specific routing (preset membership) continues
+  to live exclusively in `selection-presets.md`'s `core_skills:` / `optional_skills:`
+  keys, never inside a SKILL.md body. Verify: no `skills/*/SKILL.md` file gains a
+  preset-membership field as part of this cycle's diff.
+- **AC-F1-4 (single-format, dual-consumer):** The format doc explicitly names both
+  consumers — push (`PROMOTE.md`'s ceremony, v2.20's future intake) and pull (v2.19) —
+  targeting this one format, with no format fork for either direction.
+
+### F2 — Canonicalization pre-pass
+
+**Rationale:** New this cycle (HLD §4.2) — nothing in the repo today normalizes
+content before the ADR-055 scan runs. This is the cheapest-evasion-class neutralizer
+named in HLD §11's security posture.
+
+- **AC-F2-1 (NFKC normalization, firing negative control):** Content is Unicode-NFKC
+  normalized before the F3 scan runs. Verify with a fixture: a skill file containing a
+  compatibility-decomposable character (e.g., fullwidth U+FF29) that would evade the
+  RAW forbidden-token scan MUST be caught after NFKC normalization — the fixture proves
+  the control can fail on raw bytes and does not fail on normalized bytes (per this
+  project's own BINDING Check-That-Cannot-Fail pattern, `docs/retro.md` §8 #3).
+- **AC-F2-2 (zero-width stripping):** Zero-width characters (U+200B, U+200C, U+200D,
+  U+FEFF) are stripped before scanning. Verify with a fixture: a forbidden token split
+  by an interposed zero-width character fails the RAW scan and is caught after
+  stripping.
+- **AC-F2-3 (mixed-script flagging):** Mixed-script content (e.g., a homoglyph
+  substitution — Cyrillic а/е for Latin a/e inside a forbidden token) is flagged as
+  mixed-script, not silently passed. Verify with a fixture: a homoglyph-substituted
+  token that a literal-match scan would miss is flagged by the mixed-script detector.
+  Per HLD §11's honest limit, this AC claims *flagging*, not automatic
+  homoglyph-correction — the flag routes to human review.
+- **AC-F2-4 (pipeline order):** Canonicalization runs strictly before F3's scan; the
+  scan-of-record never operates on raw, un-canonicalized bytes. Verify: the documented
+  pipeline order is testable — running the scan against raw input directly (bypassing
+  canonicalization) is not a supported code path.
+
+### F3 — Deterministic pattern-scan (re-scan on edit)
+
+**Rationale:** Extends the existing, deliberately-unforked ADR-055 6-token scan
+(`CONTRIBUTING.md:129`) in two ways: it now runs on canonicalized content (F2), and it
+re-fires on edit, not only at intake/promotion.
+
+- **AC-F3-1 (scan stays unforked):** The scan reuses the exact existing 6-token pattern
+  — `\b(Ignore|Disregard|Override|Instead of|Always respond|New instruction)\b` — with
+  no new tokens added. Verify: `grep -n "Ignore|Disregard|Override|Instead of|Always respond|New instruction" CONTRIBUTING.md`
+  still matches the ADR-055-cited recipe verbatim; this cycle's diff does not touch that
+  line's pattern.
+- **AC-F3-2 (re-scan on edit fires):** A previously-clean, already-installed
+  substrate-format file that is subsequently hand-edited to insert a forbidden token is
+  caught by a re-scan, not only by the one-time intake/promotion scan. Verify with a
+  fixture: install a clean skill, hand-edit it post-install to add a forbidden token,
+  confirm the re-scan (not the original intake scan) fires.
+- **AC-F3-3 (content-hash-triggered, not blind re-scan):** Re-scan-on-edit is triggered
+  by a content-hash mismatch (reusing F4's hash mechanism), not by unconditionally
+  re-scanning on every read. Verify: the scan only re-fires when the file's current
+  content hash differs from its last-scanned hash.
+- **AC-F3-4 (honest-limit statement, no LLM-judge introduced):** The scan's
+  documentation states explicitly it is a shape tripwire, not a semantic judge — per
+  HLD §11's own framing, unforked and un-escalated. No LLM-judge is introduced in this
+  cycle (cross-refs §Out of Scope).
+
+### F4 — `cowork.lock.json` trichotomy upgrade + per-workspace install manifest (KDQ-MANIFEST)
+
+**Rationale:** `cowork.lock.json` (ADR-020) today records the maintainer-side vendored
+upstream only — `path` / `sha256` / `spdx` / `category` / `content_sha256` (per
+ADR-028) — nothing about which curated skill version a given *workspace* installed.
+HLD §5 names this gap directly and assigns its closure to this rung.
+
+- **AC-F4-1 (two distinct comparison answers named):** The schema defines both a
+  **version answer** ("is something newer?") and a **content-hash answer** ("did the
+  user edit this since install?") as two DISTINCT fields/comparisons, not conflated
+  into one. Verify: the schema doc names both explicitly, mirroring HLD §4.4's
+  `last_synced_upstream_sha256` framing.
+- **AC-F4-2 (manifest existence defined; mechanism left open for @architect):** A
+  per-workspace install manifest is DEFINED — its existence, its minimum schema, and at
+  least one candidate storage location — but the mechanism choice (extend
+  `cowork.lock.json`'s copy vs. a standalone workspace manifest file) is explicitly
+  flagged OPEN as KDQ-MANIFEST for @architect's Phase 1 ADR (see §Open Questions).
+  Verify: this spec does not pick a mechanism; the Open Questions section names both
+  options with trade-offs.
+- **AC-F4-3 (trichotomy is a deterministic 2-input function):** The comparison
+  producing {untouched, user-customized, not-in-pool} is specified as a truth table
+  over exactly two inputs (installed content hash, current pool content hash), with a
+  worked example per outcome:
+  - `untouched` = installed content hash == current pool hash for the installed
+    version.
+  - `user-customized` = installed content hash != pool hash AND the component IS
+    present in `curated-skills-registry.md`.
+  - `user-authored / not-in-pool` = component absent from
+    `curated-skills-registry.md` entirely.
+  Verify: the design doc contains this table with all three outcomes and worked
+  examples, matching HLD §5's trichotomy prose exactly.
+- **AC-F4-4 (no runtime fetch introduced):** The manifest and lock upgrade remain
+  integrity anchors, never runtime fetch targets — consistent with `WIZARD.md`'s
+  Network & Offline Rule (line 26) and ADR-020's existing trust-boundary language.
+  Verify: the schema doc contains an explicit statement mirroring ADR-020's "not a
+  runtime fetch target" language; no new network call is introduced by F4 alone.
+- **AC-F4-5 (v2.19 named as first consumer, not built here):** The schema's rationale
+  section names "v2.19 pull flow" as the consuming use case. Verify: this spec's
+  §Out of Scope explicitly excludes building any pull UX/offer/confirm flow — F4 ships
+  schema only.
+- **AC-F4-6 (external pull contract — transferability tie-in):** The manifest +
+  registry schema (F4 combined with F5) is documented as consumable by an EXTERNAL
+  puller, not only the wizard — the same shape as The-Council's own `registry.json` +
+  status-card pattern (HLD §4a). Verify: the schema doc contains a section (e.g.,
+  "External consumer contract") describing the schema with zero dependency on
+  wizard-runtime state — no field that only resolves meaning mid-interview.
+
+### F5 — Minimal two-tier registry schema (community tier defined, closed)
+
+**Rationale:** `curated-skills-registry.md` already has `name` / `description` /
+`source_url` / `vetting_date` / `tier` / `goal_tags` (ADR-012, shipped v1.2) and already
+states "No Tier 2 entries." The one concrete gap for the substrate to function as a
+pull contract is a content-hash field — confirmed absent (`grep -c sha256
+curated-skills-registry.md` → 0).
+
+- **AC-F5-1 (sha256 column added):** `curated-skills-registry.md`'s schema table gains
+  a `sha256` column documenting the content hash of the skill's SKILL.md at the cited
+  `source_url` / pool location. Verify: the schema table lists 7 columns total (the
+  existing 6 + `sha256`); every populated Tier-1 row carries a non-empty value — no
+  partial backfill.
+- **AC-F5-2 (Tier 2 stays explicitly closed):** The registry continues to state no
+  Tier 2 entries are accepted this cycle; no Tier-2-specific machinery (auto-verify,
+  quarantine, promotion-to-curated automation) is built. Verify: `grep -n "Tier 2"
+  curated-skills-registry.md` still shows the existing "opt-in only … reviewed
+  carefully" + "(No Tier 2 entries…" disposition, unchanged in substance.
+- **AC-F5-3 (minimal — no v3.1-speculative fields):** No fields speculative for v3.1
+  (e.g., `quarantine_status`, `promotion_date`, `auto_verified`) are added this cycle.
+  Verify: the registry schema table has exactly 7 columns (6 existing + `sha256`), no
+  more.
+- **AC-F5-4 (`.cowork-allowlist.json` untouched):** This cycle does not modify the
+  existing fail-closed vendored-upstream category allowlist. Verify:
+  `.cowork-allowlist.json` is byte-unchanged by this cycle's diff.
+
+## Transferability Requirements (first-class, binding — HLD §4a)
+
+The substrate must be authored so an external consumer (first candidate: Confidante)
+can pull skills and operating knowledge without adopting Cowork-private machinery, and
+without any assumption baked in about which model class runs it.
+
+- **AC-XFER-1 (format-neutral body):** Restates AC-F1-2 as a binding transferability
+  requirement — zero Cowork-private keys inside any skill body.
+- **AC-XFER-2 (adapter isolation):** Restates AC-F1-3 — Cowork-specific concerns live
+  only in named adapter surfaces (`selection-presets.md`, `global-instructions.md`),
+  never in the body a foreign runtime reads.
+- **AC-XFER-3 (external pull contract, standalone):** Restates AC-F4-6 — the
+  registry+manifest schema is documented and functions with zero dependency on
+  wizard-runtime state.
+- **AC-XFER-4 (RUNTIME-AGNOSTIC — critical owner refinement, non-negotiable):** No
+  target-model-class assumption (e.g., "~9B", "qwen", "not Claude," a specific
+  parameter count, a specific runtime name) appears anywhere in
+  `templates/skill-template/SKILL.md`, `CONTRIBUTING.md`'s format rules, or the new
+  substrate-contribution-format doc. Verify: `grep -riE '9b|qwen|small model|local model|not claude' templates/skill-template/SKILL.md CONTRIBUTING.md <new-format-doc>`
+  returns zero matches. (This spec, the roadmap, and the HLD are exempt — they
+  correctly discuss Confidante as planning *context*, not as a baked-in format
+  assumption. The exemption stops at the shipped format-standard files.)
+- **AC-XFER-5 (KDQ-XFER named, not hidden):** §Risks below states format-transfer and
+  capability-transfer as two distinct layers; capability transfer (a target-runtime
+  eval gate reusing the v2.13 WS-EVAL grade-before-install muscle) is explicitly listed
+  in §Out of Scope this cycle, deferred to first external-consumer integration. Verify:
+  §Out of Scope contains this line.
+
+## Out of Scope (v2.18)
+
+1. **The LLM-judge / any semantic injection-intent scanning stage.** Deferred to v2.20
+   intake — on curated-only traffic, maintainer review is strictly stronger (HLD §4).
+2. **Any live Confidante integration, or a target-runtime capability-eval harness.**
+   Format transfer is this cycle's scope; capability transfer (does a skill actually
+   *work* on the target runtime) requires a target-runtime eval gate re-run and
+   resolves at first external-consumer integration, not here (KDQ-XFER, HLD §4a/§12).
+3. **Building the v2.19 pull flow itself** (offer/confirm UI, KDQ-PULL's transport
+   mechanism). F4 ships the manifest schema only; v2.19 is its consumer, not built
+   here.
+4. **Building the v2.20 push/intake flow itself** (issue-form, bot scaffolding,
+   maintainer review queue integration). F1–F3 ship the format+scan substrate only.
+5. **Opening the community tier** (auto-verify, quarantine, opt-in UX, promotion path).
+   Stays defined-but-closed; opens at v3.1 only once KDQ-COMMUNITY-OPEN's exit criteria
+   (defined below) are met against real v2.20 traffic.
+6. **Baking any target-model-class assumption into the format or schema.** Not merely
+   deferred — explicitly forbidden this cycle and going forward absent a dedicated ADR
+   (see AC-XFER-4).
+7. **Sigstore / provenance identity binding.** Deferred per roadmap "Later" section —
+   earns its place once the community tier is open and identity/revocation matter.
+8. **Confirmation batching (KDQ-BATCH).** Deferred convenience feature; every
+   self-modification stays individually confirmed.
+9. **Any spawn-engine (v3.0) or hub-view (v3.x) work.** Unrelated surface, no
+   dependency in either direction.
+
+## KDQ-COMMUNITY-OPEN — Exit Criteria (deliverable of this cycle)
+
+HLD §12 assigns defining "what measurably counts as 'the gate is proven'" to this
+rung, so v3.1 opens on a bar, not a vibe. These criteria are **defined now, evaluated
+later** (at/after v2.20 real traffic) — this cycle does not execute them:
+
+1. **Volume threshold [ESTIMATED]:** At least N successfully-gated intake submissions
+   (recommend N=5, matching the existing v2.20 demand-gate threshold already set in
+   `docs/roadmap.md` line 5 for triggering v2.20 itself) have passed the FULL
+   canonicalize → deterministic-scan → LLM-judge → maintainer-review pipeline with
+   **zero post-merge security incident** attributable to a gate failure.
+2. **Review-load ceiling [ESTIMATED]:** Maintainer review time-per-submission has not
+   scaled linearly with submission volume across the trial window — evidence the gate
+   is doing real triage work, not merely adding fixed overhead per item.
+3. **Zero uncaught CRITICAL/HIGH:** No CRITICAL or HIGH security finding attributable
+   to a gate *failure* (as distinct from a gate correctly *catching* something) across
+   the trial window.
+4. **Documented false-positive ceiling [UNTESTED — exact threshold to be set at v2.20
+   `/spec`]:** A named upper bound on the rate of legitimate submissions the combined
+   deterministic-scan + LLM-judge incorrectly blocks. The metric is named here; its
+   precise numeric threshold is v2.20's to calibrate against real submission data,
+   which does not exist yet.
+
+## Open Questions for @architect (Phase 1)
+
+1. **KDQ-MANIFEST — mechanism.** Extend `cowork.lock.json`'s copy (archived to
+   `_setup-kit/` post-handover, per README's Step-7 flow) vs. a small standalone
+   per-workspace manifest file. Trade-offs to weigh: the lock's copy already exists
+   post-handover but is framed as a maintainer-side artifact archived out of the way; a
+   standalone manifest is a cleaner single-purpose file but is new surface. @pm
+   deliberately does not pick — this is an architectural trade-off, not a requirements
+   one. AC-F4-2 binds the outcome, not the mechanism.
+2. **Substrate-contribution-format doc placement.** New `docs/substrate-contribution-format.md`
+   vs. an expanded `CONTRIBUTING.md` section. Must stay PUBLIC (not under
+   `docs/internal/`) per ADR-037's default-internal convention and the KDQ-PLACEMENT
+   precedent (HLD §12) — both the HLD and roadmap are already public at trust-model
+   level; this doc should be too, since it's the exact spec an external consumer reads.
+3. **Canonicalization pre-pass implementation surface.** New CI job (mirroring
+   `skills-allowlist-check`'s shape) vs. a script invoked at PR-time only vs. both. If
+   this requires a NEW `.github/workflows/*.yml` file, that triggers the Tier-B
+   worktree+PR ceremony independent of this cycle's own SECURITY-SENSITIVE ceremony
+   (CLAUDE.md, `docs/pipeline-policy.md §PostOQClassificationReRun`) — flag explicitly
+   at Phase 1 if a new workflow file is the chosen shape.
+4. **Re-scan-on-edit trigger mechanism.** A CI job re-run on every PR touching
+   `skills/**`, a Steward-integrated runtime check (reusing v2.16/v2.17's
+   confirm→apply→verify machinery), or both. @architect to decide the concrete hook
+   point; AC-F3-2/F3-3 bind the *behavior*, not the trigger's implementation.
+5. **`sha256` backfill mechanism for F5.** Manual entry (mirroring how Tier-1 rows are
+   currently hand-vetted) vs. CI-computed at PR time (mirroring ADR-020's "CI computes,
+   LLM never computes" trust boundary, `docs/architecture.md` ADR-020 §Decision
+   (Verification Mechanism)). Recommend the CI-computed approach for consistency with
+   the existing lock-file trust model, but this is @architect's call to make and
+   record as an ADR.
+
+## Technical Constraints
+
+- Stack: static markdown + JSON config repo (`cowork.lock.json`,
+  `.cowork-allowlist.json`, `curated-skills-registry.md`), GitHub Actions CI
+  (`.github/workflows/quality.yml` and siblings). No application runtime; no
+  Next.js/Supabase (The-Council's default stack does not apply to this target repo).
+- **No runtime network access** (WIZARD.md's Network & Offline Rule) — F2/F3/F4/F5 must
+  not introduce any code path that fetches at wizard/session runtime.
+- **Zero-code constraint** (ADR-020's trust boundary) — the wizard/LLM never computes
+  cryptographic hashes; any hash computation is CI-side, mirroring the existing lock
+  file's trust model.
+- **Existing ADR lineage this cycle extends, does not replace:** ADR-012 (tier model),
+  ADR-015 (9-section template), ADR-018 (preset-slug isolation, unaffected), ADR-020
+  (lock format/integrity), ADR-023 (allowlist policy, unaffected), ADR-024 (attribution,
+  unaffected), ADR-028 (`content_sha256` field precedent), ADR-055 (unforked
+  forbidden-token scan).
+- **CI baseline this cycle must not regress:** `skills-allowlist-check` (top-level
+  `.claude/skills/` locked to `setup-wizard` + `skill-studio`), `safety-rule-check`,
+  `skill-depth-check` (60-line floor, 9-section enforcement), `vendored-integrity-check`.
+
+## User Stories
+
+- As a **maintainer reviewing a v2.20-future push submission**, I can point to one
+  canonical format doc that tells me exactly what "conforms to the substrate" means,
+  so I don't have to re-derive the 9-section rule from `PROMOTE.md` and
+  `CONTRIBUTING.md` separately.
+- As a **maintainer reviewing content for injection risk**, I can trust that
+  canonicalization ran before the scan, so a zero-width-character or homoglyph evasion
+  doesn't slip past a scan that only ever saw normalized text passing.
+- As a **future v2.19 pull-flow implementer**, I can read the lock trichotomy + install
+  manifest schema and know exactly how to distinguish "safe to silently offer an
+  update" from "must surface a conflict," without inventing that logic myself.
+- As an **external integrator (e.g., Confidante)**, I can read the registry + manifest
+  schema and the SKILL.md format standard and know precisely what is safe to pull,
+  without understanding anything about Cowork's own wizard.
+- As the **project owner**, I can see the KDQ-COMMUNITY-OPEN exit criteria now, so the
+  eventual v3.1 "open the community tier" decision has a bar to check against instead
+  of a judgment call made from scratch at that time.
+
+## Acceptance Criteria
+
+All ACs are enumerated inline under each Feature (F1–F5) and under Transferability
+Requirements above — 27 feature-level ACs total (F1: 4, F2: 4, F3: 4, F4: 6, F5: 4,
+Transferability: 5), each carrying an explicit verification command or fixture. No
+prose-only assertion of safety per HLD §11 ("every safety clause ships as an executable
+check with a firing negative control").
+
+## Success Metrics
+
+- **Primary (user/business outcome):** A future external integrator (starting with
+  Confidante) can correctly identify, from the registry + manifest schema alone and
+  without reading any Cowork wizard code, which skills are safe to pull and what
+  provenance they carry. Measured by: the schema doc's "External consumer contract"
+  section (AC-F4-6) is reviewable and complete without cross-referencing wizard-runtime
+  files.
+- **Primary (engineering outcome):** v2.19's Phase 0 (`/spec`) can begin without
+  re-litigating where per-workspace install state lives — KDQ-MANIFEST's mechanism is
+  closed by @architect's Phase 1 ADR in *this* cycle, not carried forward as an open
+  question into v2.19.
+- **Secondary (trust outcome):** A maintainer reviewing a future push/pull PR built on
+  this substrate can trust that content reaching a workspace passed canonicalization +
+  scan, without re-deriving the pipeline from scratch each time — verified by the
+  documented pipeline order (AC-F2-4) and the firing negative controls (AC-F2-1,
+  AC-F2-2).
+- **Secondary (scope-discipline outcome):** Zero LLM-judge, zero live Confidante
+  integration, and zero community-tier-opening code ship in this cycle's diff —
+  verified negatively by @qa/@security grep-for-absence at Phase 5/6.
+
+## Assumptions [confidence]
+
+- [CONFIRMED] The 9-section SKILL.md format is already CI-enforced and already reused
+  by `PROMOTE.md` — grounded by direct read of `templates/skill-template/SKILL.md` and
+  `docs/architecture.md` ADR-015 references.
+- [CONFIRMED] `curated-skills-registry.md` has zero `sha256` occurrences today —
+  grounded by direct grep (`grep -c sha256 curated-skills-registry.md` → 0).
+- [CONFIRMED] The ADR-055 scan is deliberately unforked (6 tokens) and is a "shape
+  tripwire," not a semantic judge — grounded by `docs/architecture.md` ADR-055 index
+  entry and `CONTRIBUTING.md:129`.
+- [ESTIMATED] N=5 as the KDQ-COMMUNITY-OPEN volume threshold, borrowed from the
+  existing v2.20 demand-gate threshold in `docs/roadmap.md` — reasonable as a starting
+  anchor, but not independently derived; v2.20's own `/spec` should confirm or revise.
+- [UNTESTED] Whether the canonicalization pre-pass needs a new CI job or can run as a
+  script invoked at existing gate points — left open for @architect (Open Question 3).
+- [UNTESTED] Whether the manifest mechanism (extend lock's copy vs. standalone file)
+  has any interaction with the existing Step-7 `_setup-kit/` archival flow that would
+  favor one option — flagged for @architect to check against `WIZARD.md`'s Step-7
+  handover logic at Phase 1.
+
+## Risks
+
+1. **Format/capability transfer conflation (KDQ-XFER).** Named explicitly, not
+   hidden — AC-XFER-5 requires the distinction to be stated in this spec and enforced
+   as a scope boundary (capability transfer stays out of scope). Mitigation: the AC
+   itself; a future cycle attempting to claim "Confidante-ready" without the eval gate
+   would violate AC-XFER-5's own documented boundary.
+2. **Canonicalization false sense of security.** Per HLD §11, "automation never makes
+   it safe" — canonicalization narrows the cheapest evasion classes, it does not close
+   all of them. Mitigation: AC-F2-3's mixed-script *flagging* (not auto-correction)
+   keeps the honest-limit framing consistent with ADR-055's precedent; documentation
+   must not overclaim.
+3. **Registry schema scope creep toward Tier 2.** Having a two-tier schema visible
+   could tempt a future contributor to add Tier-2 machinery early. Mitigation:
+   AC-F5-2/AC-F5-3 explicitly bound the schema to 7 columns and an unchanged Tier-2
+   disposition.
+4. **KDQ-MANIFEST mechanism indecision stalling v2.19.** Mitigation: explicitly bound
+   to @architect's Phase 1 ADR in *this* cycle (Open Question 1) — not left open past
+   Phase 1, per the Success Metrics' engineering-outcome framing above.
+5. **Scan staying unforked under pressure.** A future contributor could be tempted to
+   widen the 6-token scan opportunistically during this cycle's touch of F3.
+   Mitigation: AC-F3-1 explicitly forbids new tokens this cycle; ADR-055's own
+   rationale (avoid forking the shared cross-repo recipe, avoid crying wolf on
+   legitimate approval-workflow language) still applies unchanged.
+6. **Worktree-isolated state-write gap (process risk, not product risk).** This
+   project's own retro (`docs/retro.md` §8 #1, PROMOTED to BINDING at 3 instances) names
+   Council-state stranding as a recurring risk for any worktree-isolated subagent
+   working this project. @pm's own Phase 0 for this cycle complied: this spec is
+   returned as text for the orchestrator to persist, per that binding discipline — no
+   direct write was attempted.
+
+## Verification Summary (for @qa / @security)
+
+- All 27 feature-level ACs carry an explicit `grep`/fixture-based verification, no
+  prose-only claim.
+- F2's canonicalization ACs (AC-F2-1, AC-F2-2) are specifically firing-negative-control
+  shaped: each requires a fixture that demonstrably evades the RAW check and is caught
+  by the CANONICALIZED check — consistent with this project's BINDING
+  Check-That-Cannot-Fail pattern (`docs/retro.md` §8 #3).
+- Negative verification required at Phase 5/6: confirm the LLM-judge, live Confidante
+  integration, and community-tier-opening machinery are absent from the shipped diff
+  (§Out of Scope items 1, 2, 5).
+- If any new `.github/workflows/*.yml` file is introduced (Open Question 3), @qa must
+  additionally verify the CI Workflow Quality Baseline checklist in `CONTRIBUTING.md`
+  (`§CI Workflow Quality Baseline`) — YAML parse validation, trigger registration, and
+  SHA-pin verification for any new `uses:` line — before Phase 7 APPROVED.
+
+**End of v2.18.0 — The Substrate (slim) — Phase 0 SPEC.**
+
+## Architectural Modifications (v2.18.0)
+
+- AC-F4-3: inputs phrased as "(installed content hash, current pool content hash)" → made
+  deterministic as registry-presence × edit-detection, where edit-detection = installed-hash
+  (manifest `installed_content_sha256`) vs current-on-disk-hash, and the "is-something-newer"
+  version-answer is the SEPARATE comparison of AC-F4-1 — Reason: "user-customized = edited
+  since install" logically requires installed-vs-current-on-disk; the refinement matches HLD
+  §5's three named outcomes exactly (as AC-F4-3's own verify clause requires) while making the
+  function computable. (ADR-067)
+- AC-F4-2 mechanism: RESOLVED as a standalone workspace-root `cowork.install.json`, not an
+  extension of the archived lock copy — Reason: disjoint key space, Step-7b reachability
+  (lock is moved to `_setup-kit/` / absent in Mode B), and external-consumer legibility. (ADR-067)
+
