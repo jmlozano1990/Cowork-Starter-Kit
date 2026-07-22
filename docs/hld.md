@@ -2,7 +2,7 @@
 
 **Status:** Planning (PURE-DOC). This document is a design horizon, not a committed build. Each rung named here earns its own spec, its own architecture decisions (ADRs), and its own security review before any of it merges. Nothing below changes the shipped kit until it goes through that pipeline.
 
-**Baseline:** v2.17.0. Loop 1 is complete (v2.16 shipped confirm → apply → verifier-gate → rollback) and the Steward shipped partially at v2.17 (auto-cleaning delivered; living-organization and promote-repetitive-to-Skill deferred). This design picks up where the shipped kit stands today and describes where it is going.
+**Baseline:** v2.18.0. Loop 1 is complete (v2.16 shipped confirm → apply → verifier-gate → rollback), the Steward shipped partially at v2.17 (auto-cleaning delivered; living-organization and promote-repetitive-to-Skill deferred), and **v2.18.0 "The Substrate (slim)" has shipped** (contribution-format standard, canonicalization pre-pass, deterministic re-scan-on-edit, the `cowork.install.json` install manifest + lock trichotomy, and CI-computed registry sha256). This design picks up where the shipped kit stands today and describes where it is going.
 
 > This is a public design document written at trust-model level. It describes the security posture the way [`TRUST.md`](../TRUST.md) does — honestly, including the limits — without publishing a step-by-step guide to attacking the kit. The sharp internal detail (exact scanner recipes, the full adversary bypass-class catalog, the detailed spawn-ceremony threat model) belongs in a `docs/internal/` companion, not here.
 
@@ -209,6 +209,7 @@ These are the program-level decisions that shape the roadmap. Several were resol
 | **KDQ-BATCH** | Confirmation fatigue over many individual confirms. | Constraint now (confirm each self-modification individually); the batching *feature* stays deferred. |
 | **KDQ-COMMUNITY-OPEN** | What measurably counts as "the gate is proven" before the community tier opens? | Define the exit criteria at substrate time so the community-tier rung has a bar to clear, not a vibe; the gate proves on real intake (v2.20) traffic. |
 | **KDQ-XFER** | How is a substrate skill proven to *work* on an external target runtime (Confidante's ~9B model), not merely be in SKILL.md format? | **Format transfer is free; capability transfer is not.** Author to the open SKILL.md standard at v2.18 (§4a) so the format layer is solved; gate the capability layer with a **target-runtime eval re-run** reusing the v2.13 WS-EVAL muscle. Resolves inside the v2.18 substrate `/spec` (format) and again at first external-consumer integration (capability). |
+| **KDQ-UPGRADE** | What does the confirm-first, non-destructive **kit-version** migration mechanism look like, and how is a walked-forward engine verified before it becomes the live machinery the user trusts? | New at this revise (see *Proposed Amendments — 2026-07-22*, below). Resolves at the v2.19 `/spec`; must reuse — not relax — the Loop 1 confirm → apply → verify → rollback gate. |
 
 ## 13. Document placement (RESOLVED — public)
 
@@ -219,3 +220,47 @@ Both are therefore written at **trust-model level** — the security posture is 
 ## 14. What this document is not
 
 This is a design horizon, not a build order and not an architecture record. It writes **no ADRs** — every decision sketched here becomes a real, reviewed ADR inside the spec of the rung that implements it. It commits nothing. Each rung on the [roadmap](./roadmap.md) enters its own `/spec`, produces its own architecture, and passes its own security review before it ships. The one thing this document *does* commit to is the shape: one shared substrate, two directions over it, a Steward that keeps a space honest, and an Engine that lets a space spawn its own siblings — all measured against whether a non-technical user can use it safely.
+
+## Proposed Amendments — 2026-07-22
+
+*This section is appended per `/plan --revise` discipline; it does not rewrite §5 or §8 in place. It adds a second, distinct face to the v2.19 persistency layer: a **kit-version upgrade path**. Per §14 this revise writes **no ADRs** — the real ADR is authored at the v2.19 `/spec`.*
+
+### A. The axis distinction (state it crisply — do not blur it)
+
+The persistency layer now has **two distinct axes**, related but separate:
+
+- **Skill-content pull (§5) — unchanged.** Moves *individual curated skills* between the pool and a space, using the untouched / user-customized / user-authored trichotomy. It reads the manifest's **per-component version + content-hash**. This is the §5 flow exactly as written; nothing here amends it.
+- **Kit-version upgrade path (new) — a different axis.** Replaces a space's own **engine / framework machinery** — the kit itself — reading the manifest's **`kit_version`** field (stamped in `cowork.install.json` at v2.18, KDQ-MANIFEST). It is **not** the skill-content trichotomy.
+
+The two are **related** — both read the same v2.18 install manifest, and both are confirm-first, per-item, and non-destructive — but they must stay **distinct in the prose**. Skill-content pull answers "is this *skill* newer than the copy I installed?"; the upgrade path answers "is the *engine my space runs on* one that can be walked forward to a newer kit version?". Folding engine-upgrade into §5's trichotomy would muddy both; the upgrade path is its own clearly-labeled capability.
+
+### B. The upgrade contract (what v2.19 actually ships)
+
+v2.19 ships an **upgrade *contract*, not a pre-baked path to a v3.0 that is not designed yet.** The contract is three pieces:
+
+1. **The version seam.** The `kit_version` field stamped in the v2.18 `cowork.install.json` manifest is the seam a space reads to know which kit version it is running — the anchor every walk-forward step compares against.
+2. **A clean, documented migration seam.** A stable place a future rung writes its migration against, reading what the prior rung left on disk.
+3. **A confirm-first, non-destructive self-update mechanism.** The machinery that applies a walk-forward step — never silently, never in-place-destructive, always one confirmed step at a time.
+
+From v2.19 onward a space is **"upgrade-ready"**: it *can* be walked forward to v3.0, v3.1, and beyond, one confirmed, non-destructive upgrade at a time. **Spaces born at v2.18 or earlier stay on the manual re-clone path** — there is no retroactive guarantee, because they carry no `kit_version` seam the contract can stand on.
+
+### C. The binding discipline (each rung authors its own migration)
+
+**You cannot pre-author a migration to an undesigned version.** Each future rung — **v3.0 included** — MUST author its own migration that honors this contract and reads what the prior rung left on disk. v2.19 provides the *contract and the seam*; it does not and cannot provide the v3.0 migration, because v3.0 is not designed yet.
+
+This is the **same shape as the §8 v3.0-spawn forward-compatibility obligation** — where spawn seeds a shared parent directory and a status-card write so a future v3.x hub can read it later, without re-spawning existing spaces. The upgrade contract mirrors that precedent exactly: lay a cheap, stable seam now so a future rung can build against it, and make honoring that seam a standing obligation of every rung that follows.
+
+### D. Precedents and consistency (does not contradict the kit's standing discipline)
+
+- **ADR-026 — the `/setup-wizard --upgrade` flow.** Already establishes an opt-in, non-destructive, user-confirmed re-install: the wizard *"never auto-replaces content; user opt-in only,"* with per-item confirmation required for every change. The upgrade contract **formalizes and extends** that pattern into the persistency layer — the same opt-in, confirm-first, non-destructive shape, now applied to the engine machinery rather than to individual skills.
+- **ADR-034 — clone-once preset template / no live-state migration** (already in §10's reuse table, row *"The template a space is spawned from"*). The kit-version upgrade is a **controlled re-install of newer machinery**, fully consistent with clone-once — **not** a risky in-place mutation of a live space. It does not contradict the kit's standing non-destructive-migration discipline; it is that discipline, extended to the engine layer.
+
+### E. Name the risk (never happy-path)
+
+An engine that upgrades its **own machinery** is the **highest-blast-radius capability in the kit** — a space replacing the very code that keeps it safe. In self-modification terms it is **higher even than v3.0 spawn**, because spawn writes a *new* sibling tree while an upgrade rewrites the **running framework** the current space depends on. It MUST therefore be **confirm-first, non-destructive, and receive a hard @security review at the v2.19 build**. This is exactly why it is being made an **explicit, deliberate v2.19 scope item** rather than a quiet add-on, and it is a direct application of design principle **§3.4 — every self-modifying surface is permanently security-sensitive.**
+
+### F. Open question carried
+
+- **KDQ-UPGRADE.** *What exactly does the confirm-first, non-destructive kit-version migration mechanism look like, and how is a walked-forward engine verified before it becomes the live machinery the user trusts?* **Resolves at the v2.19 `/spec`; must reuse and not relax the Loop 1 confirm → apply → verify → rollback gate.** (Also listed in the §12 "Still open" table.)
+
+*Per §14, this revise authors **no ADR**. The real ADR — the upgrade-mechanism decision, its verifier, and its threat model — is written at the v2.19 `/spec`, where KDQ-UPGRADE resolves.*
