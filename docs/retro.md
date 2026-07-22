@@ -2,6 +2,63 @@
 
 ---
 
+## [v2.19.0] - 2026-07-22 — Persistency Layer (Pull + Kit-Version Upgrade Contract)
+
+**Date:** 2026-07-22
+**Classification:** SECURITY-SENSITIVE — independently derived 4 ways at Phase 0, re-confirmed unchanged at every subsequent gate through Phase 6 (any one ground sufficient, self-modifying-engine-surface strongest alone): (1) the upgrade path rewrites the kit's own framework machinery — the highest self-modification blast radius in kit history; (2) `cowork.install.json` is a trust anchor only protected against the confirmed-apply channel, not direct hand-edit (v2.18 retro carry A3); (3) reuse-not-relax obligation on the proven Loop 1 gate; (4) AC-PULL-7 backfill writes mandatory safety skills into already-instantiated workspaces. Full-strength Phase 2 hard gate + mandatory Phase 6 audit, no combined/lightened path.
+**Mode:** full pipeline, with two extra pre-build deliberation rounds: Phase 0.D (architect + security, before Phase 1 design opened — caught the cycle's highest-severity finding, SEC-F1/AC-UPGRADE-8, at the cheapest possible point) and a **post-conditional-gate** Phase 2.D (architect + qa, run only because the user's Phase 3 decision was itself "approve, but de-risk the linchpin first"). One Phase 5→5.1 CI-fix loop (non-security).
+**Cycle SHAs** (branch `cycle/v2.19-persistency`, squash-merged `16e84f8`, PR #89, tag `v2.19.0`): Phase 0 draft → 0.D (SEC-F1 MUST-BIND + 6 more) → Phase 1 (ADR-071..074 + ADR-026 amendment) → Phase 2 (PASS-WITH-WARNINGS, 0 CRIT/3 WARNING, 12 MF) → 2.D (APPROVE-WITH-REFINEMENT/CAVEAT, MF-1a/b/c) → gate cleared → Phase 4 `a92a18e` (4 commits) → Phase 5 **FAIL** (1 CI-breaking defect + linchpin gate-weakness ISSUE) → Phase 5.1 `930fa06` (2 commits) → Phase 5 re-verify **PASS** (orchestrator fix-pass-same-review) → Phase 6 **PASS** (0 CRIT/0 WARNING) → merge `16e84f8`. Wall-clock Phase 0→merge ≈ 2h13m — fastest full-mode SECURITY-SENSITIVE cycle in this ledger.
+**Rework rate: ≈14.7%** (119/809 lines: markdownlint whitespace + a genuine ~90-line hardening of the linchpin CI gate). **0% product/skill/AC substance** — 100% CI-harness hardening (the cycle caught its own linchpin gate being foolable and fixed the verifier, not the product). By line count the highest since v2.16.0; by substance the opposite of concerning.
+
+### 1. Phase Findings Summary
+
+- **Phase 0 (@pm):** 18 ACs, 8 C-v2.19-N constraints, 4-ground SECURITY-SENSITIVE; proactively folded 3 standing carry-forwards + surfaced AC-PULL-7 backfill unprompted. 0 blocking.
+- **Phase 0.D (@architect + @security):** 7 findings. **SEC-F1 (HIGH, MUST-BIND)** — an upgrade step could reuse Loop 1 primitives yet swap its own gate/deny-list/verifier as an ordinary write; bound as AC-UPGRADE-8 (verify-then-swap) before design opened. ARCH-F1 added a wholly new AC (malformed-manifest refusal). 0 CRITICAL.
+- **Phase 1 (@architect):** ADR-071 (self-upgrade, two-write-class self-integrity, discharges SEC-F1 first-class) + ADR-072/073/074. All 5 OQs resolved with real decisions.
+- **Phase 2 (@security, hard gate):** 0 CRITICAL / 3 WARNING / HARD GATE (AC-UPGRADE-8) CLEARS. Linchpin MF-1: self-apply deny covered only its own file. 12 MF bound Phase-4. Ground-truthed shipped code + 2 defeat attempts on verify-then-swap (both fail by construction).
+- **Phase 2.D (@architect + @qa):** 3 binding MF-1 refinements (reserved-prefix / hole-in-allow / channel-scope). @qa upgraded MF-6 to a binding "semver as a script, not prose" MUST-FIX.
+- **Phase 3 gate:** CONDITIONAL APPROVE ("de-risk MF-1 first"), then FULLY CLEARED — first ledger instance of a gate decision mandating its own narrow deliberation round.
+- **Phase 4 (@dev):** all 12 MF self-verified with real commands; disclosed a stale-registry-footnote fix in commit prose; flagged MF-2(b)/AC-UPGRADE-3c as pre-implementation-un-exercisable for @qa live-invoke.
+- **Phase 5 (@qa):** 18/18 AC + 12/12 MF PASS with QA-built fixtures; **blocker=0, issue=2, info=3**. BLOCKER: markdownlint (trivial). **ISSUE-2 (best catch):** the linchpin deny-completeness CI gate greps anywhere-in-file → passes on a stripped deny-enumeration with surviving prose; adversarial regression built. Live-invoked MF-2(b)+AC-UPGRADE-3c (4 scenarios, real MD5).
+- **Phase 5.1 (@dev):** both closed. markdownlint 0; gate re-scoped to the deny-list paragraph + fault-injection self-test proving old-gate-wrongly-passes / new-gate-fires-RED. Orchestrator independently reproduced the regression (fix-pass-same-review) — no @qa re-spawn.
+- **Phase 6 (@security):** 0 CRITICAL / 0 WARNING. All 12 MF re-resolved at HEAD; @qa ISSUE-2 fix reproduced; 7-file byte-unchanged + additive-tightening confirmed; verify-then-swap not-defeatable-by-construction. 2 INFO carry-forwards (CF-v2.19-A/B).
+- **Merge:** PR #89 squash `16e84f8`; CI 58 pass / 0 fail / 2 skip; tag v2.19.0.
+
+### 2. Hardest ACs
+
+**AC-UPGRADE-8 (verify-then-swap self-integrity)** — absent from the Phase 0 draft entirely; added at 0.D as SEC-F1, required a dedicated ADR, closable only via a live-invoke exercise at Phase 5. **MF-1 / self-apply namespace deny-list** — a Phase-2 WARNING needing 3 refinements (esp. MF-1c channel-scoping), and even then its CI gate was found foolable (ISSUE-2). **MF-6 semver** — upgraded to binding because "deterministic" wasn't, as model prose. **AC-PULL-9 (malformed manifest)** — wholly new at 0.D.
+
+### 3. Token cost
+
+Not derivable — `metrics.json` has zero events in this cycle's window (2nd consecutive full-mode cycle with an unrecoverable token-cost gap; Council-side look warranted). Model mix by role unchanged from prior cycles (opus architect/security deliberation+review+audit; sonnet pm/dev/qa).
+
+### 4. Phase durations
+
+All gaps ≈7–31 min (avg ≈18.9 min), no gap >2× — smoothest, most consistently-paced full SECURITY-SENSITIVE cycle in this ledger.
+
+### 5. Phases abbreviated
+
+None — full pipeline, hard Phase 2 gate + mandatory Phase 6 audit + 2 extra deliberation rounds + 1 CI-fix loop, all single-pass. `.github/workflows/` touched (Tier-B awareness), no extra GCS burden. @ux correctly not invoked (no CSS/TSX surface).
+
+### 6. Rework rate and causes
+
+≈14.7% (119/809), 0% product substance. Markdownlint (10 whitespace lines) + a genuine strengthening of the linchpin CI gate @qa found weak — rework in the best sense: hardening a verifier before merge at zero cost to what shipped. A new causal category ("the verification layer itself needed hardening") worth tracking if it recurs.
+
+### 7. Issues prevented
+
+qa_issues_prevented: blocker=0, issue=2, info=3. issue = markdownlint BLOCKER + ISSUE-2 gate-weakness (both closed Phase 5.1, neither reached main). Plus 7 Phase-0.D findings resolved into the design before any numbered item existed (not double-counted).
+
+### 8. Pattern detection
+
+3-cycle Phase-6 WARNING+ check: NO MATCH (v2.19 audit 0/0). Updated: (1) Check-That-Cannot-Fail — 6th confirming instance (ISSUE-2). (2) Write-channel-scope ≠ reachability/self-integrity — WATCH 1/3 → 2/3 (SEC-F1, proactive at 0.D). (3) NEW WATCH: Gate-conditional de-risk-the-linchpin-before-build (1st instance).
+
+### 9. Retrospective verdict
+
+**HEALTHY.** Closed the highest-blast-radius surface the kit has opened (engine self-upgrade) with 0 CRITICAL / 0 unresolved WARNING at every gate, fastest full SECURITY-SENSITIVE wall-clock in the ledger, and its one rework loop spent entirely hardening a verification gate. Defining event: @security caught the hardest finding (SEC-F1) at the cheapest point (0.D, before design), and @qa closed the loop by proving the CI gate protecting the *other* hardest finding could be defeated. To improve: (1) metrics.json coverage now zero for 2 cycles — Council-side look; (2) security docs stamp date-only, not time-of-day — tighten if it recurs a 3rd time.
+Ecosystem impact: NONE
+
+---
+
 ## [v2.18.0] - 2026-07-22 — The Substrate (slim)
 
 **Date:** 2026-07-22
