@@ -4,6 +4,17 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.19.1] - 2026-07-22
+
+**Documentation.** Front-page message refresh — no functional change. `README.md` repositioned from "builds a personalized, skill-equipped workspace" (setup-only) to "builds a workspace that then keeps itself sharp" (setup + self-maintenance), surfacing the v2.15–v2.19 living-workspace arc (mini-Council friction-noticing, self-apply, self-archive, pull-updates, and the dormant self-upgrade contract) that had shipped but was invisible on the front page. The README's "Why trust it" summary gains a third, self-integrity threat class alongside the two existing supply-chain threats, carrying TRUST.md's honest containment framing (inspection-class and human-boundary, not a structural guarantee). The 12-entry "What's new in vX.Y" version wall is replaced with a short "Recent releases" pointer to CHANGELOG/Releases. The stale "Next up" teaser is refreshed to the current roadmap: v2.20 demand-gated community intake, v3.0 spawn-only Engine.
+
+### Changed
+
+- `README.md` — hero tagline, new "Two things this kit does" section, reworked "Why trust it," reworked Highlights (living-workspace bullet), condensed "Recent releases" replacing the 12-entry "What's new" stack, refreshed "Next up," minor "Safety first" and "Staying up to date" additions pointing at `pull-updates`.
+- `VERSION` — 2.19.0 → 2.19.1.
+
+---
+
 ## [2.19.0] - 2026-07-22
 
 **"The Persistency Layer"** — the v2.18.0 substrate's first real consumer. Two distinct faces, kept textually separate throughout: **Face 1 (skill-content pull)** lets a workspace check its installed curated skills against the on-disk pool and offer safe, conflict-aware updates; **Face 2 (kit-version upgrade contract)** lays the engine-walk-forward seam and a dormant-but-reachable mechanism for replacing a workspace's own framework machinery across future kit versions. Highest self-modification blast radius in the kit's history (Face 2 rewrites the running framework) — full-strength security review, 12 binding MUST-FIX items, all discharged with real firing controls.

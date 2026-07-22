@@ -1,10 +1,10 @@
 # Cowork Starter Kit
 
-> Describe your goal in plain language. Claude Cowork builds a personalized, skill-equipped workspace from vetted, SHA-pinned skills — no code, no template hunting, three quick turns, about 15 minutes (an estimate — see [methodology](tests/offline-smoke-test.md)).
+> Describe your goal in plain language. Claude Cowork builds a personalized, skill-equipped workspace from vetted, SHA-pinned skills — no code, no template hunting, three quick turns, about 15 minutes (an estimate — see [methodology](tests/offline-smoke-test.md)). Then it keeps working: your workspace notices its own friction, proposes fixes you approve one at a time, and safely pulls skill updates — every change confirm-first, never silent, always reversible.
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.19.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.19.1-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -18,14 +18,32 @@ A synthetic demo of the real 3-turn interview: describe a goal, confirm a skill 
 
 ---
 
+## Two things this kit does
+
+**1. It builds your workspace.** Describe a goal in plain language. Three quick turns later you have a personalized `CLAUDE.md`, a skill bundle drawn from a 25-skill curated pool, and a writing profile tuned to your voice — no code, no template hunting.
+
+**2. It keeps that workspace sharp.** Once you're working, the kit doesn't just sit there:
+
+- **It notices recurring friction** — the same correction, the same repeated ask, three separate days — and proposes a plain-language fix: here's what I noticed, here's the exact change, you decide.
+- **It proposes cleaning up after itself** — a stale or superseded file gets moved (never deleted) into a local archive, only after you confirm the exact move.
+- **It safely pulls curated-skill updates** — checks what you have installed against the current pool, flags anything you've customized so nothing gets silently overwritten, and only applies what you approve.
+- **It carries a path to walk its own framework forward** — a dormant-but-reachable contract for upgrading the kit's own machinery across future versions, gated by a stricter rule than any of the above: new safety machinery must prove itself under the *old* gate before it's ever trusted to replace it.
+
+None of this happens silently. Every one of these is propose-then-confirm, and every write is reversible.
+
+---
+
 ## Why trust it
 
-This kit exists because the AI-agent skill ecosystem it plugs into has real, documented problems — and it's built specifically to avoid them, not just to claim it does:
+This kit exists because the AI-agent skill ecosystem it plugs into has real, documented problems — and it's built specifically to avoid them, not just to claim it does. Two supply-chain threats, and a third that comes from the kit's own newest capability:
 
 - **Community skills are frequently unsafe.** Snyk's February 2026 ToxicSkills study scanned 3,984 public agent skills and found 36.82% (1,467 skills) had at least one security flaw, with 76 confirmed-malicious payloads built for credential theft, backdoors, or data exfiltration.
 - **Prompt injection via pasted or uploaded content is a live threat, not theory.** PromptArmor disclosed in January 2026 that Claude Cowork itself could be manipulated, via a booby-trapped file, into exfiltrating a user's data through an allowlisted API endpoint.
+- **A workspace that can edit its own instructions is a different risk shape than a static skill file.** The surface that watches your workspace's behavior is the same surface that can change it.
 
-This kit's answer: every upstream skill is **SHA-pinned** in `cowork.lock.json` (not tracking a branch), **vendored inside this repo** so nothing is fetched at runtime, and **attribution-injected** (ADR-024) before it ever reaches your workspace — with human review and a 24-hour soak before any upstream update ships. Full plain-language threat model and mitigations: **[TRUST.md](TRUST.md)**.
+This kit's answer to the first two: every upstream skill is **SHA-pinned** in `cowork.lock.json` (not tracking a branch), **vendored inside this repo** so nothing is fetched at runtime, and **attribution-injected** (ADR-024) before it ever reaches your workspace — with human review and a 24-hour soak before any upstream update ships.
+
+Its answer to the third — **self-integrity**: every self-modifying path (proposing a fix, archiving a file, pulling a skill update, or the dormant engine-upgrade path) runs behind a fixed, named allow-list, requires an explicit confirmation showing the literal change before anything lands, is checked by an automated verifier, and rolls back automatically if that check fails. Changing the safety machinery itself is a stricter, separate step: the new machinery has to pass verification *under the old, still-active gate* before it's ever allowed to take over — never the reverse. This is inspection-class and human-boundary containment, not a claim that an out-of-scope write is physically impossible — read the honest version in **[TRUST.md](TRUST.md)**.
 
 ---
 
@@ -148,6 +166,7 @@ You describe your goal in plain language. The wizard routes to the closest prese
 - **Unified skill pool** — 25 skills (`skills/<slug>/SKILL.md`) consolidated into a single canonical source, including an authenticity pass (`anti-ai-slop`) and a periodic GTD review (`weekly-review`). The wizard composes your bundle from this pool regardless of which path it takes.
 - **Selection presets as suggestions** — 7 named presets in `selection-presets.md` are starting templates the wizard suggests, not exclusive choices. Users confirm and customize from there.
 - **Draft-then-shape bundle building** — the wizard proposes a skill bundle as a draft you shape, surfacing a few suggestions at a time and adding more whenever you ask. You confirm when it's right. No batch-install surprises.
+- **A workspace that maintains itself** — a personal mini-Council watches for recurring friction and proposes a fix in plain language; a Steward proposes archiving stale files; `pull-updates` checks your installed skills against the curated pool and offers safe, per-item updates. All three are confirm-first, verified, and reversible on failure — see "Two things this kit does," above.
 - **ADR-024 attribution preserved** — every skill installed from the pool includes a verified attribution block. No skill installs without it.
 - **Writing profile for every workspace** — an optional voice-calibration turn tunes Cowork to your voice; every workspace ships with a goal-appropriate `writing-profile.md`.
 - **Curated skills registry** — `curated-skills-registry.md` lists vetted skills with descriptions, source URLs, and goal tags.
@@ -170,6 +189,8 @@ Want to go deeper? Three paths:
 
 Every preset includes a non-negotiable rule: **Cowork will always ask for your confirmation before deleting, moving, or overwriting any file or folder.** This rule is built into every workspace this wizard generates and is enforced by CI on every community contribution.
 
+The same discipline governs everything the workspace does to itself — noticing friction, archiving a file, pulling a skill update: propose, show you the literal change, wait for a yes, verify it worked, and undo it automatically if it didn't.
+
 ---
 
 ## Supply-Chain Integrity
@@ -178,61 +199,19 @@ All upstream content from `msitarzewski/agency-agents` is SHA-pinned in `cowork.
 
 > **Trust boundary:** The `cowork.lock.json` file is the integrity anchor for upstream content. If you cloned this repo from a fork or modified the lock file locally, the supply-chain guarantees do not apply. Always install from a trusted clone of cowork-starter-kit's main repository.
 
-## What's new in v2.17
+---
 
-The Steward can now propose cleaning up after itself — a stale or superseded file gets a two-turn confirmation and, on your yes, moves (never deletes) into a local `context/.archive/`. It reuses v2.16's confirm→apply→verify→rollback shape, generalized to a move: an out-of-band fingerprint stands in for a content pre-image (a move preserves bytes and changes location, not the other way around), the move-eligibility gate inverts to a positive allow-list (almost nothing should be movable, so the default is deny), and a read-only reference check refuses a move that would orphan a live pointer rather than silently rewriting it. This release ships auto-cleaning only — living organization (a maintained `folder-structure.md` contract) and routing a recurring friction into a proposed new Skill are deferred to a later increment.
+## Recent releases
 
-## What's new in v2.16
+v2.19 taught the kit to keep its own installed skills current — checking what's on disk against the curated pool and offering safe, per-item updates, never a silent overwrite. v2.16–v2.18 built the machinery that makes that possible: a workspace that can propose a fix for its own recurring friction, archive a stale file, and (not yet active) walk its own framework forward across future kit versions — every step confirm-first, verified, and reversible. Full history: **[CHANGELOG.md](CHANGELOG.md)** · **[Releases](https://github.com/jmlozano1990/cowork-starter-kit/releases)**.
 
-The mini-Council can now act on what it proposed. Say yes to a proposal from v2.15, and a second confirmation shows you the exact file and the exact literal change about to be made — say yes to that, and it's written, verified against the friction it was meant to fix, and automatically rolled back if the check doesn't pass. The safety model changes on purpose: v2.15's guarantee was structural (no code path could write an instruction file at all); this release opens a real, narrow write channel instead, contained by a fixed allow-list your workspace's own memory-of-use ledger is excluded from, a confirmation you read before anything lands, and a rollback if it doesn't hold up. That's honestly a weaker guarantee than v2.15's, in exchange for the workspace actually being able to help itself — see [TRUST.md](TRUST.md) for the full, undressed trade-off.
-
-## What's new in v2.15
-
-A personal mini-Council starts noticing its own use: when you correct the same thing, or get asked the same question, on three separate days — or a weekly review turns up a recurring friction — your workspace writes it down in one plain file (`context/memory-of-use.md`) and shows you a plain-language proposal: here's what I noticed, here's the exact change I'd suggest, you decide. This release notices and proposes only; it never touches its own instructions. The safety model is structural, not just promised — the proposal flow has no code path that can write to a `CLAUDE.md` or a skill file, an adversarial-looking note is read as data and flagged, never obeyed, and nothing is ever marked confirmed without your explicit yes.
-
-## What's new in v2.14
-
-"Skill Studio — Increment 2c (Promote-to-Pool)" closes the promotion path: a locally-generated skill that's earned it — passed both quality and safety grading fresh, re-run at promotion time, never a stored result — can graduate from your own workspace's `.claude/skills/` into the shared curated pool via a PR-gated ceremony (`PROMOTE.md`) that never writes the pool directly, even from a maintainer's own checkout. This release ships the ceremony only; no skill is promoted yet.
-
-## What's new in v2.13
-
-"Skill Studio — Increment 2b (Eval-Loop)" adds a Grade step to the generation loop: a new skill is checked on two axes before it's ever called "installed" — does it actually help (a baseline-vs-with-skill comparison) and does it behave safely under adversarial pressure (staged tests graded on attempt vs. refusal, with no destructive action ever actually executed). A skill that fails either axis is refined or discarded, never installed silently.
-
-## What's new in v2.12
-
-"Skill Studio — Increment 2a (Discoverability)" closes the gap between generating a skill and remembering it exists: the setup wizard now offers to author one on the spot when nothing in the pool fits your goal, and every generated skill writes its own triggers into your workspace's instructions, so Cowork reaches for it proactively later without you having to recall its name.
-
-## What's new in v2.11
-
-"Skill Studio — Increment 1 (Walking Skeleton)" adds a second path alongside the wizard's usual pool assembly: when a need doesn't match any of the 25 pool skills, `skill-studio` runs a full brainstorm → author → install → validate loop entirely inside your own workspace, on the spot, no internet required.
-
-## What's new in v2.10
-
-Two new pool skills close real gaps: `anti-ai-slop` is an opt-in authenticity pass that flags AI-tell vocabulary, uniform rhythm, and empty hedging in any drafted content, without touching a writer's own established style; `weekly-review` runs a periodic Collect → Process → Review → Plan pass across your own files, distinct from the daily briefing or a project status update. `voice-matching` also gains an explicit recalibration path — check whether your voice has drifted and update your profile deliberately, instead of living with a stale onboarding snapshot. All three are offered, never forced, through the existing bundle-customization and full-pool-suggestion flows — no new interview questions, no `core_skills` changes. The pool grows to 25 skills.
-
-## What's new in v2.9
-
-"Dynamic Reclaim" — reclaims the wizard's co-creation framing without touching the underlying routing fix. Path A/B's binary preset verdict became an explicit draft frame naming which signal matched, with a three-way close (run with it, adjust it, or set it aside for custom). Path C now mirrors that same structure — a named, reasoned draft team instead of a flat skill list — and its matching reads the registry's `goal_tags` column too, so a crossover goal surfaces skills from every domain it touches. The remaining "Dynamic Workspace Architect" naming was retired to plain language across the kit.
-
-## What's new in v2.8
-
-This release is about making the kit visible and provably trustworthy, not changing how setup works. Highlights: a rewritten front page (this one) with a real trust story and a live demo, all 7 paste-only starter files brought back to parity with the current interview (they were quietly running a retired, broken flow), a real measured time-to-workspace claim instead of an unverified guess, and a `docs/` split so a first-time visitor sees credibility assets instead of internal QA paperwork.
-
-## What's new in v2.7
-
-v2.7.x shipped after a **16-agent swarm test** — 7 AI personas each played both sides of a full onboarding session end-to-end, then adversarially self-audited the result against the spec. Two failures the test caught and this release fixed: the fast-track exit used to leave a user with **no files on disk at all** despite claiming "workspace ready," and a session crash before the old Q5 lost every earlier answer with no way to resume. Both are now closed by a crash-proof profile-stub checkpoint written the moment a bundle is confirmed. Also shipped: the setup interview cut from ~10 questions to 3 core turns, a fixed goal-routing path (F3) so descriptions match the right preset on the first try, two new pool skills (`citation-formatter` and `list-tracker`), and a clean Step 7 handover — setup now ends with a personalized workspace `CLAUDE.md` and the installer tidied out of the way, instead of leaving you living inside the wizard.
-
-Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), and MF-1/MF-2 CI hardening.
-
-**Next up:** v2.20 — the push/intake flow: a maintainer-reviewed path for community skill submissions, built on this release's canonicalization + registry-hash trust substrate, gated by a real-traffic demand threshold before it opens. Personalization is never touched. Spaces stay alive and updated, and carry the latest skills into any space they spawn.
-
-**Also next up:** The Steward's auto-cleaning half shipped in v2.17 (propose → move → verify → rollback, never silent, never a delete). Still ahead: living organization (`folder-structure.md` becomes a maintained contract the workspace keeps current) and routing a recurring friction into a proposed new Skill instead of just a fixed instruction.
+**Next up:** **v2.20** — a maintainer-reviewed path for community skill submissions, opening once real contributor demand shows up (not on a fixed schedule). **v3.0 — "The Engine"** — the North-Star release: from a live workspace, ask for a new capability and it spawns a fully-capable, isolated sibling workspace from the local pool, carrying your latest skills. Its own dedicated design cycle comes first.
 
 ---
 
 ## Staying up to date
 
-This repo uses [semantic versioning](https://github.com/jmlozano1990/cowork-starter-kit/releases). When a new version ships, check the [Releases](https://github.com/jmlozano1990/cowork-starter-kit/releases) tab. The [CHANGELOG](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md) lists which presets changed. To update: download the new preset folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours and are never overwritten.
+This repo uses [semantic versioning](https://github.com/jmlozano1990/cowork-starter-kit/releases). When a new version ships, check the [Releases](https://github.com/jmlozano1990/cowork-starter-kit/releases) tab. The [CHANGELOG](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md) lists which presets changed. To update: download the new preset folder and replace only the template files. Your `cowork-profile.md` and `project-instructions-starter.txt` are yours and are never overwritten. Already have a workspace running? Ask it to run `pull-updates` to check your installed skills against the current pool.
 
 ---
 
