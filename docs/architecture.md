@@ -85,6 +85,15 @@ Claude Cowork Config is a static template repository that provides a goal-driven
 | ADR-064 | Destination Gating + Archive Convention `context/.archive/` (v2.17.0 Steward, AQ-3, AC-DENY-2, FW-2, W-1) — the move DESTINATION is gated against the same protected set as the source, not merely collision-checked: a move may NOT CREATE a load-bearing/auto-loaded file by relocation (`.claude/skills/<x>/SKILL.md`, `global-instructions.md`/`CLAUDE.md` where absent). Destinations are constrained to the archive convention `context/.archive/<original-basename>.<UTC-timestamp>` (dot-prefixed → non-auto-loaded, mirrors the existing `context/.apply-backups/` precedent). W-1 binding: the archive tree MUST be gitignored/non-published and on the Content Exclusion list (never read by `/sync` or any external channel — token-bearing content risk). Layout preserves reversible-move-back and does not foreclose a future reversible-delete/reap. | ACCEPTED |
 | ADR-065 | Read-Only, Scoped-Enumerated Reference-Integrity Check (v2.17.0 Steward, AQ-1b/C1, AC-VERIFYMOVE-3, AQ-5, FW-4) — before a move lands, the verifier greps a DEFINED, ENUMERATED set of convention files (`folder-structure.md`, `skills-as-prompts.md`, `global-instructions.md`, root `CLAUDE.md`, `cowork-profile.md`, every `.claude/skills/*/SKILL.md`, every `context/*.md`) for a literal reference to the source path/basename. A live reference → refuse at propose-time OR FAIL the verifier + rollback. The check is READ-ONLY (FW-4): detect-and-refuse/warn only, NEVER auto-rewrite a pointer (an unconfirmed content edit riding a move confirmation would be a SECGATE bypass). Grounded: `context/memory-of-use.md:7` carries a live pointer to `self-apply/SKILL.md`. Residual (W-2): a reference phrased in prose without the literal path is a NAMED accepted limit, mapped to reversibility. | ACCEPTED |
 | ADR-066 | Sibling `self-archive` Skill (not extend `self-apply`) + Path-Channel SECGATE Re-Instantiation (v2.17.0 Steward, AQ-4, FW-4, FW-3, hld §7) — the path-channel machinery lives in a NEW mandatory-installed, deny-listed sibling skill `.claude/skills/self-archive/SKILL.md`, not bolted onto `self-apply`, keeping each verification module focused on ONE operation TYPE (hld §7's warning against one over-loaded verifier; content-edit verification ≠ path-op verification). `self-archive` is on its own move deny-list (can never archive itself — mirrors ADR-061 self-integrity for the new channel). SECGATE re-instantiated for the PATH channel (ADR-058 B1/B2 pattern): the two-turn confirm renders the literal `source→dest` pair computed from the ACTUAL op, never from `Note`/detector-supplied path text; fresh yes required. Closes FW-3 (S1 HIGH-at-composition) via source+dest deny-completeness + WYSIWYG. | ACCEPTED |
+| ADR-067 | Per-Workspace Install Manifest = standalone `cowork.install.json` (KDQ-MANIFEST; NOT an extension of the archived lock copy) — on the apply hard deny-list; disjoint key space from `cowork.lock.json` (v2.18.0 Substrate F4) | ACCEPTED |
+| ADR-068 | Canonicalization + Re-Scan surface = single-source `scripts/canonicalize-scan.sh` + new `quality.yml` job (no new workflow file) + inspection-class runtime re-scan in `self-apply` (v2.18.0 Substrate F2/F3) | ACCEPTED |
+| ADR-069 | Registry `sha256` = CI-computed backfill (`scripts/registry-hash.sh`) + drift-verify job; the content-hash half of the pull contract (v2.18.0 Substrate F5) | ACCEPTED |
+| ADR-070 | Substrate Contribution Format doc = new PUBLIC `docs/substrate-contribution-format.md` + external pull-contract / runtime-agnostic boundary (v2.18.0 Substrate F1 + Transferability) | ACCEPTED |
+| ADR-071 | Kit-Version Upgrade Mechanism = third deny-listed sibling skill `self-upgrade` reusing Loop 1 primitives BY REFERENCE + the self-integrity **verify-then-swap** two-write-class invariant (AC-UPGRADE-8 / SEC-F1) as first-class; KDQ-UPGRADE / OQ1 / OQ5 resolved (v2.19 Persistency, Face 2) | ACCEPTED |
+| ADR-072 | Manifest-Integrity Trust Posture — pull overwrite/conflict decisions computed from FRESH BYTES on both sides, never a manifest-asserted label (SEC-F2); malformed-manifest refusal (AC-PULL-9); dangling-entry `manifest-drift` 4th state (ARCH-F2) (v2.19 Persistency, Face 1) | ACCEPTED |
+| ADR-073 | Poisoned-Backfill Defense + Bootstrapping-Trust — safety-skill backfill byte-verified against ADR-069 registry `sha256`, curated-pool-only, trusted-installer-gated (SEC-F3); AC-PULL-7 sharpened + ARCH-F6 reword (v2.19 Persistency, Face 1) | ACCEPTED |
+| ADR-074 | Migration-Seam On-Disk Contract = fixed `context/.kit-migrations/` convention + append-only, on-disk-local provenance log, on both deny-lists (OQ2 / AC-UPGRADE-3(b) / SEC-F4) (v2.19 Persistency, Face 2) | ACCEPTED |
+| ADR-026 (amendment v2.19) | `/setup-wizard --upgrade` formalized + extended into the persistency layer as `self-upgrade` (engine-layer successor; ADR-026 not superseded — the two coexist axis-distinct) | ACCEPTED |
 
 ---
 
@@ -11139,3 +11148,368 @@ boundary is authored in, not retrofitted (§4a).
   of §4a; revisit-trigger (c) forces the eval gate before any "runs on Confidante" claim is made.
 
 End of v2.18.0 "The Substrate (slim)" — Phase 1 Design (ADR-067 .. ADR-070).
+
+---
+
+## ADR-071: Kit-Version Upgrade Mechanism = a Third Deny-Listed Sibling Skill `self-upgrade` Reusing Loop 1 Primitives by Reference, with the Self-Integrity Verify-Then-Swap Invariant as First-Class (KDQ-UPGRADE RESOLVED) (v2.19 Persistency, Face 2)
+
+> *ISO 15288 — Architecture Definition Process.*
+
+**Date:** 2026-07-22T12:17:57Z **Status:** ACCEPTED
+**Resolves:** KDQ-UPGRADE (C-v2.19-8), OQ1 (dormant-vs-active), OQ5 (call-into-vs-sibling).
+**Binds:** AC-UPGRADE-4 (verify clause), AC-UPGRADE-8 (self-integrity / SEC-F1 — HARD Phase-2
+condition), AC-UPGRADE-9 (kit_version write-back contract).
+**Reuses (by reference, not re-declaration):** ADR-057 (WYSIWYG-at-apply), ADR-058 (SECGATE-B1/B2),
+ADR-059 (verifier gate + rollback + pre-image integrity), ADR-060 (no-batching), ADR-061
+(`self-apply` deny-listed relocation + "a gate cannot rewrite its own rules"), ADR-066 (sibling
+skill precedent + path-channel WYSIWYG). **Extends:** ADR-026 (`/setup-wizard --upgrade`) — see
+ADR-026 amendment (v2.19), below. **Consistent with:** ADR-034 (clone-once / non-destructive).
+
+### Context
+
+v2.19 Face 2 must decide the real mechanism for walking a space's own engine/framework machinery
+forward across kit versions (HLD Amendments §B/§E). The blast radius is the highest in kit history
+(higher than v3.0 spawn: spawn writes a *new* sibling tree, an upgrade rewrites the *running*
+framework the current space depends on). Two decisions were open: **OQ5** — does the mechanism
+literally call into `self-apply`/`self-archive`, or is it its own sibling skill? — and **OQ1** —
+does v2.19 ship any real user-invokable affordance, or a dormant seam only? Overhanging both is the
+**SEC-F1 hole (Phase-0.D, MUST-BIND):** "reuse Loop 1" is necessary but NOT sufficient, because an
+upgrade step could *faithfully* reuse Loop 1 primitives yet swap out the deny-list/verifier/scan as
+an ordinary engine-file write — after which every subsequent step runs under the attacker-chosen
+gate (the *swap-then-verify-under-the-incoming-gate* hole).
+
+### Decision — a third sibling, `self-upgrade`; reuse-by-reference; a two-write-class model with verify-then-swap on the safety machinery
+
+**1. Sibling skill, not a call-into (OQ5 RESOLVED).** The mechanism is a **third deny-listed
+sibling skill, `.claude/skills/self-upgrade/SKILL.md`**, joining `self-apply` (content-edit type)
+and `self-archive` (path-relocation type). The upgrade operation TYPE — replacing engine machinery
+as a re-install unit spanning potentially several files — is distinct enough to warrant its own
+module, exactly as ADR-066 split path-relocation out of `self-apply` so no module carries two
+verification concerns. It reuses the confirm→apply→verify→rollback / SECGATE / WYSIWYG primitives
+**by reference** — it names the `self-apply` gate, SECGATE, verifier, and rollback by path and
+defers to them, and MUST NOT re-declare confirmation/verification/rollback logic inline (C-v2.19-7;
+structurally checked by AC-UPGRADE-4(b)). Rejected — *literal call-into `self-apply`*: `self-apply`
+is scoped to single-file ledger-driven content edits with a content-channel deny-list; the upgrade
+unit is a multi-file engine re-install with a *different* deny surface (it must also protect the
+safety machinery from itself, below). Folding it into `self-apply` re-creates the two-concerns
+God-module ADR-066 rejected. Rejected — *no skill until v3.0 (pure ADR contract)*: reintroduces the
+REWORK-1 reachability gap ADR-061 closed — a later rung would have to backfill the gate into
+already-instantiated spaces, the very AC-PULL-7 problem this cycle solves for `self-apply`/
+`self-archive`. So the skill ships now, installed + deny-listed, dormant only in that it has no real
+target.
+
+**2. `self-upgrade` is itself deny-listed (self-integrity floor).** `self-upgrade/SKILL.md` is on
+`self-apply`'s apply deny-list and `self-archive`'s move deny-list — a booby-trapped apply/move can
+never rewrite or relocate the upgrade mechanism, mirroring ADR-061's closure for `self-apply` and
+ADR-066's for `self-archive`. The mandatory safety-skill set is now **three**: `self-apply`,
+`self-archive`, `self-upgrade` (AC-PULL-7 backfills all three; ADR-073).
+
+**3. The two-write-class model — the SEC-F1 invariant, first-class (AC-UPGRADE-8).** An upgrade
+step classifies every file it would write into exactly one of two classes, deny-first:
+
+- **Write-Class 2 — safety machinery (checked FIRST, always wins).** `self-apply`, `self-archive`,
+  `self-upgrade`, every apply/move deny-list, the verifier, `scripts/canonicalize-scan.sh`, and the
+  rollback machinery. A change to ANY of these is **NOT** an ordinary bulk engine-file write. It is
+  a **distinct, separately-confirmed, higher-ceremony step** that: (a) **verifies the incoming new
+  machinery UNDER the pre-upgrade (known-good) gate BEFORE it goes live** — *verify-then-swap, never
+  swap-then-verify-under-the-incoming-gate*; the old gate remains the acting authority until the new
+  machinery passes verification under it; (b) **renders a before/after (WYSIWYG) of each safety
+  file**, so the human sees exactly what the safety change is; (c) **captures the rollback pre-image
+  out-of-band FIRST** (the session-transcript anchor `self-apply`/`self-archive` already use — a
+  place nothing this loop writes can reach). The ADR-061/066 "a gate cannot rewrite its own rules"
+  property is thereby extended to the UPGRADE channel: the machinery cannot re-author its own
+  governing rules out from under itself in a single confirmed step.
+- **Write-Class 1 — ordinary engine file (only past the Class-2 check).** A non-safety framework
+  file rides the ordinary Loop 1 confirm→apply→verify→rollback gate unchanged.
+
+This is deny-first exactly like `self-apply`'s allow-list: Class 2 is evaluated before Class 1 and
+wins, so a safety file can never be reached through the ordinary-write path that would otherwise
+cover it.
+
+**4. Dormant-but-reachable, with firing controls (OQ1 RESOLVED).** v2.19 ships `self-upgrade`
+installed and reachable with **zero real forward-walk targets** (no v3.0 exists). On invoke it emits
+the deterministic **"nothing to walk forward to yet"** (edge case #7), invoking NO apply. Its firing
+controls are BOTH inherited-by-reuse (Loop 1 controls re-fire through the upgrade entry point,
+AC-UPGRADE-4(a)) AND a synthetic self-referential dormant-path control (a synthetic-newer-target
+fixture MUST route into the confirmed-apply gate; the no-newer fixture MUST no-op) — so edge #7 has
+an executable check (§3.5).
+
+**5. kit_version write-back (AC-UPGRADE-9) — contract now, execution deferred.** Because
+`cowork.install.json` is on `self-apply`'s hard deny-list (ADR-067, unchanged), the `kit_version`
+provenance write does NOT ride `self-apply`. It is written by the **upgrade ceremony's own confirmed
+WYSIWYG write** — the same trusted installer / WIZARD-Step-4-equivalent ceremony that STAMPED
+`kit_version` at v2.18 install (the manifest is written only by the trusted install/upgrade
+ceremony, never by the runtime memory-of-use apply loop — this is itself part of the self-integrity
+story). No self-special-casing silent direct writer (C-v2.19-3). Execution is deferred to each
+future rung's own migration (AC-UPGRADE-6); v2.19 has no target to bump.
+
+### Consequences
+
+- SEC-F1 is bound as a first-class invariant — this ADR does not clear Phase 2 without it (hard
+  condition). @security Phase 2 verifies the three AC-UPGRADE-8 firing controls are real.
+- One new skill file (`self-upgrade`), installed unconditionally at WIZARD Step 4 alongside the two
+  existing safety skills; the two-tier trust model and no-network axiom are untouched (no new
+  `uses:`, no network, C-v2.19-2).
+- The `self-apply` `cowork.install.json` deny entry and the whole Loop 1 gate stay **byte-unchanged**
+  (7-file deny-list) — this cycle reuses, never relaxes, them.
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** (a) the first REAL walk-forward target arrives at v3.0, at which point
+  `self-upgrade` gains concrete migration steps and AC-UPGRADE-9's kit_version write-back is actually
+  executed inside v3.0's migration; (b) a structurally-shared `self-*` gate module (once the platform
+  offers an import/include mechanism) replacing the by-reference reuse; (c) a stronger-than-Loop-1
+  spawn gate (KDQ-SPAWN-SEC) may subsume or extend the Write-Class-2 ceremony.
+- **Concrete revisit triggers:** (a) v3.0 `/spec` opens (first real target — execute AC-UPGRADE-9,
+  author the first migration honoring the seam); (b) any audit finding that `self-upgrade` drifted
+  from re-declaring vs referencing the Loop 1 primitives; (c) the platform provides a real
+  import/include mechanism making the by-reference reuse replaceable by a shared module.
+- **Risk knowingly accepted:** v2.19 ships the upgrade mechanism dormant (no real target) and reuses
+  Loop 1 by prose-pointer reference rather than a structurally-shared module, so a future edit could
+  drift the two; accepted because (i) `self-upgrade` is deny-listed and inspection-class identically
+  to its siblings, (ii) the Write-Class-2 verify-then-swap invariant is the load-bearing control and
+  is independently firing-tested, and (iii) shipping dormant-but-reachable is strictly safer than the
+  reachability gap the no-skill alternative would reintroduce.
+
+---
+
+## ADR-072: Manifest-Integrity Trust Posture — Pull Decisions Computed from Fresh Bytes on Both Sides, Never a Manifest-Asserted Label; Malformed-Manifest Refusal; Dangling-Entry 4th State (v2.19 Persistency, Face 1 — SEC-F2 / ARCH-F1 / ARCH-F2)
+
+> *ISO 15288 — Architecture Definition Process.*
+
+**Date:** 2026-07-22T12:17:57Z **Status:** ACCEPTED
+**Binds:** AC-PULL-6 (sharpened, SEC-F2), AC-PULL-9 (NEW, ARCH-F1), AC-PULL-1 extension (ARCH-F2).
+**Extends:** ADR-067 (manifest = attacker-influenceable per retro A3/SF-S-4), ADR-068 (fresh-bytes
+re-scan at apply), ADR-066 (WYSIWYG — the confirmed thing is the freshly-computed thing).
+
+### Context
+
+The v2.18 substrate resolved the manifest EXISTS (ADR-067) and that its `installed_content_sha256`
+is used for edit-detection (AC-F4-3). But the v2.18 security audit (A3 / SF-S-4) flagged, and
+Phase-0.D SEC-F2 sharpened, that the manifest is **attacker-influenceable** — a workspace-root JSON
+file a hand-edit or third-skill write can tamper with. The pull trichotomy's edit-detect is
+`E = (H_current == H_installed)`; AC-PULL-6 re-derives `H_current` fresh, but if `H_installed` is
+read from the tampered manifest, an attacker who sets `installed_content_sha256` to the hash of a
+user-*customized* file flips "user-customized (never overwrite)" → "untouched (offer update)" and
+misrepresents the file as unmodified in the confirm message. Two further gaps: **ARCH-F1** — a
+malformed/truncated/schema-invalid manifest has no AC and no firing control (a §3.5 violation on a
+security-classified surface); **ARCH-F2** — an absent on-disk file (`H_current` undefined) is a 4th
+state the P×E matrix does not cover, falsifying "no other path."
+
+### Decision
+
+**1. Fresh-bytes-on-both-sides (SEC-F2, AC-PULL-6).** The overwrite/conflict **decision surface** is
+computed from freshly-observed bytes on BOTH sides at offer/apply time: the actual on-disk
+`SKILL.md` bytes AND the actual incoming curated-pool bytes, each hashed *this session*. The
+manifest's `installed_content_sha256` / `last_synced_upstream_sha256` **MAY inform HOW** an offer is
+phrased but is **NEVER the sole basis** for a "safe-to-overwrite / untouched" determination.
+"Untouched, safe to offer" requires `H(on-disk, fresh) == H(pool, fresh)` — never a manifest label.
+This mirrors ADR-066 WYSIWYG (the confirmed thing is the freshly-computed thing) and extends
+ADR-068's fresh-bytes re-scan discipline from the apply channel to the pull-classification channel.
+The manifest becomes a *hint*, not a *trust root*, for the overwrite decision.
+
+**2. Malformed-manifest refusal (ARCH-F1, AC-PULL-9).** A manifest that is unparseable, truncated,
+or schema-invalid (missing required top-level keys, or a component missing
+`slug`/`installed_path`/`installed_content_sha256`) → the pull flow REFUSES to offer or apply
+anything and renders a plain-language safe-fallback; it never proceeds on a partial parse and never
+guesses missing fields. Firing negative control per AC-PULL-9.
+
+**3. Dangling-entry 4th state (ARCH-F2, AC-PULL-1 extension).** An entry whose `installed_path`
+names an absent file → classified `manifest-drift` (re-offer as fresh install if slug ∈ registry,
+else refuse-and-surface), never coerced into a trichotomy state. No path consumes an undefined
+`H_current`. Firing control per the AC-PULL-1 extension.
+
+### Consequences
+
+- The pull classification is now trust-transitivity-safe: no overwrite decision is ever taken from a
+  manifest-asserted label (C-v2.19-10). Confirm messages describe on-disk reality, not manifest
+  claims.
+- Two named edge cases (malformed, dangling) gain executable firing controls — §3.5 satisfied.
+- Honest limit: the fresh-bytes comparison is inspection-class — it detects tampering *at
+  classification/apply time*, it cannot *structurally prevent* a hand-edit of the manifest (nothing
+  in Cowork can). This is the same honest-limit posture ADR-068's re-scan carries.
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** (a) a cryptographically-signed manifest (or a detached signature the
+  installer verifies) that would let a puller reject a tampered manifest structurally rather than
+  route around it with fresh-bytes recomputation, once a signing/key-management mechanism exists in
+  the kit; (b) folding the fresh-bytes recomputation into a single shared `self-*` integrity helper.
+- **Concrete revisit triggers:** (a) the kit gains any signing/key-management capability (today it
+  deliberately has none — no-network, zero-code-at-runtime); (b) a real workspace reports a tampered
+  manifest that the fresh-bytes path caught, motivating a structural upgrade; (c) the external puller
+  (Confidante) needs the manifest as a trust root and cannot accept "hint, not trust root."
+- **Risk knowingly accepted:** the manifest remains structurally tamperable and the defense is
+  inspection-class (detect-at-use, recompute-from-fresh-bytes) rather than a structural signature;
+  accepted because (i) the overwrite decision never rests on the manifest label, so a tampered
+  manifest degrades to at-worst a mis-phrased *hint* over a correct fresh-bytes decision, (ii) signing
+  would require key management the no-network axiom cannot host today, and (iii) every applied change
+  is still individually confirmed against freshly-rendered content.
+
+---
+
+## ADR-073: Poisoned-Backfill Defense + Bootstrapping-Trust for the Safety-Skill Backfill — Byte-Verify Against the ADR-069 Registry sha256, Curated-Pool-Only Source, Trusted-Installer-Gated (v2.19 Persistency, Face 1 — SEC-F3)
+
+> *ISO 15288 — Architecture Definition Process.*
+
+**Date:** 2026-07-22T12:17:57Z **Status:** ACCEPTED
+**Binds:** AC-PULL-7 (sharpened, SEC-F3 + ARCH-F6 reword).
+**Extends:** ADR-069 (registry `sha256` = the content-hash trust anchor), ADR-061 (mandatory
+deny-listed safety skills + REWORK-1 reachability), ADR-071 (`self-upgrade` joins the safety set).
+
+### Context
+
+AC-PULL-7 makes pull the standing mechanism that backfills the mandatory safety skills into gateless
+workspaces (ADR-061 revisit-trigger (d)). Phase-0.D SEC-F3 raised two problems this creates:
+**(a) poisoned backfill** — pull now installs *the gate itself* into a workspace; if the copy it
+installs is a weakened/poisoned `self-apply`, every later apply in that workspace runs under an
+attacker-chosen gate; **(b) bootstrapping** — the target has NO gate before backfill, so the backfill
+cannot be gated *by* `self-apply` (it is not there yet). ARCH-F6 additionally flagged the
+"any already-instantiated workspace" universal quantifier as mechanically unverifiable.
+
+### Decision
+
+**1. Byte-verify against the registry sha256 (poisoned-backfill defense).** Each backfilled safety
+skill (`self-apply`, `self-archive`, `self-upgrade`) is **byte-verified against that slug's ADR-069
+registry `sha256`** before it goes live, and sourced **only from the curated pool**. A mismatch
+(weakened or poisoned copy) is refused, never installed. The ADR-069 registry `sha256` — CI-computed,
+drift-verified — is the trust anchor that makes "is this the real gate?" a byte-check, not a guess.
+
+**2. Bootstrapping-trust, stated explicitly.** The backfill install is gated by the **trusted pull /
+WIZARD Step-4-equivalent installer ceremony** — the same trusted ceremony that installs the safety
+skills at first setup — NOT by the absent `self-apply`. You cannot gate the installation of the gate
+on the gate you are installing; the trust root for the *first* install of the gate is the installer
+ceremony itself, exactly as it is at Step 4 of a fresh setup.
+
+**3. ARCH-F6 reword.** AC-PULL-7's reach is "any workspace that RUNS the pull flow" (matches the
+fixture verify clause + ADR-061(d) residual: Option-1 / never-re-run spaces are simply unreached
+until they invoke pull), not the unverifiable "any already-instantiated workspace."
+
+### Consequences
+
+- The backfill cannot install a weakened gate — the registry `sha256` byte-check is a firing control
+  (poisoned fixture refuses, byte-correct fixture proceeds).
+- The bootstrapping trust root is named, not hand-waved: the installer ceremony, consistent with
+  fresh-setup Step 4.
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** (a) a signed registry (or signed pool skills) so the backfill trust
+  anchor is a signature rather than a CI-computed hash a compromised registry could also rewrite; (b)
+  a periodic re-verify that already-backfilled safety skills still match the registry `sha256` (drift
+  detection in the installed base, not only at backfill time).
+- **Concrete revisit triggers:** (a) the kit gains signing/key-management (today: none, by axiom); (b)
+  the community tier opens (v3.1) and the registry carries non-maintainer-authored rows, raising the
+  value of a signed anchor; (c) a real workspace reports a backfilled safety skill drifting after
+  install.
+- **Risk knowingly accepted:** the backfill trust anchor is the CI-computed registry `sha256`, which a
+  compromise of the registry file itself could rewrite; accepted because (i) the registry is
+  maintainer-guarded curated content under CI drift-verify (ADR-069), (ii) the alternative signing
+  infrastructure the no-network/zero-runtime-code axiom cannot host today, and (iii) the backfill is
+  curated-pool-only, so the exposure is bounded to the same curated content the whole trust model
+  already rests on.
+
+---
+
+## ADR-074: Migration-Seam On-Disk Contract = Fixed `context/.kit-migrations/` Convention + Append-Only, On-Disk-Local Provenance Log, on Both Deny-Lists (v2.19 Persistency, Face 2 — OQ2 / SEC-F4)
+
+> *ISO 15288 — Architecture Definition Process.*
+
+**Date:** 2026-07-22T12:17:57Z **Status:** ACCEPTED
+**Resolves:** OQ2 (migration-seam shape), AC-UPGRADE-3(b). **Binds:** SEC-F4 (on-disk-local only).
+**Extends:** ADR-071 (the upgrade mechanism reads/writes this seam), ADR-061/066 (deny-list floors),
+ADR-064 (the `context/.archive/` fixed-convention precedent this mirrors).
+
+### Context
+
+AC-UPGRADE-3(b) requires "a clean, precisely-documented on-disk migration seam a future rung reads
+from + writes provenance into," named concretely at Phase 1 even though no v3.0 migration is authored
+now. OQ2 asked the exact shape: a fixed convention directory, or a reserved manifest field?
+Phase-0.D SEC-F4 (INFO) added: the seam's provenance write must be on-disk-local only, never a
+telemetry/phone-home path, as the seam gains a writer.
+
+### Decision — a fixed convention directory, NOT a manifest field
+
+**Location/shape.** The migration seam is the fixed convention directory **`context/.kit-migrations/`**
+holding a single append-only provenance log **`context/.kit-migrations/kit-migration-log.md`**. Each
+future walk-forward step appends one row: `<from_version> → <to_version> | <UTC timestamp> |
+<migration-id> | <verifier-result>`. Rejected — *a reserved field inside `cowork.install.json`*:
+the manifest is on the apply deny-list precisely because it must not be a runtime write target
+(ADR-067); adding a migration-provenance field would either force a deny-list carve-out (a
+self-special-casing writer, C-v2.19-3 violation) or overload the manifest's single purpose (the same
+SoC/God-file drift ADR-067 rejected for the lock). A separate convention directory keeps install
+provenance (`cowork.install.json`) and migration provenance (`context/.kit-migrations/`) as disjoint
+single-purpose surfaces, mirroring how `context/.archive/` (ADR-064) is the fixed convention for the
+archive channel.
+
+**On both deny-lists.** `context/.kit-migrations/**` is added to `self-apply`'s apply deny-list and
+`self-archive`'s move deny-list (namespace floor `context/**` already covers it — named explicitly as
+belt-and-suspenders per ADR-063's convention), so a booby-trapped apply/move can never forge or
+relocate migration provenance.
+
+**On-disk-local only (SEC-F4).** The provenance write is a local file write, never a network call —
+consistent with AC-PULL-5 / C-v2.19-2. The seam gains a writer, not a phone-home.
+
+### Consequences
+
+- v3.0's migration has a stable, documented on-disk contract to read the prior rung's state from and
+  write its own provenance into — the "cheap seam laid now" that §8/§B of the HLD mirrors.
+- No manifest carve-out; the deny-list stays clean and `cowork.install.json` stays single-purpose.
+
+#### §Maturation Path (per [[maturation-path-in-adr]] binding)
+- **Future-state options:** (a) v3.0 authors the first real migration that reads/writes this seam,
+  fixing the row schema in practice; (b) a structured (JSON) migration log if a future hub (v3.x)
+  needs to read migration state across siblings programmatically; (c) a retention/reap policy for the
+  log if it grows unbounded over many rungs.
+- **Concrete revisit triggers:** (a) v3.0 `/spec` (first real writer of the seam — the row schema
+  gets exercised); (b) the v3.x filesystem hub needs cross-space migration state (may motivate a
+  machine-readable format); (c) the log becomes a footprint concern in a long-lived space.
+- **Risk knowingly accepted:** the seam ships with a markdown-table row schema fixed by convention but
+  never exercised by a real migration at v2.19 (no target), so the exact row shape may need adjustment
+  when v3.0 first writes it; accepted because the seam is deliberately cheap-and-stable (the whole
+  point of laying it now), it is on both deny-lists so it cannot be tampered via the runtime channels,
+  and each rung authors its own migration (AC-UPGRADE-6) and can refine the schema additively.
+
+---
+
+## ADR-026 amendment (v2.19): `/setup-wizard --upgrade` Formalized and Extended into the Persistency Layer as `self-upgrade`
+
+> *ISO 15288 — Architecture Definition Process (supersession record).*
+
+**Date:** 2026-07-22T12:17:57Z **Status:** ACCEPTED (append-only amendment; ADR-026 body above
+unchanged).
+
+ADR-026 established the `/setup-wizard --upgrade` flow: an opt-in, non-destructive, user-confirmed
+re-install where *"the wizard never auto-replaces content; user opt-in only,"* with per-item
+confirmation for every change. ADR-071's `self-upgrade` mechanism **formalizes and extends** that
+pattern into the persistency layer — the same opt-in, confirm-first, non-destructive shape, now
+applied to the **engine/framework machinery** (walk-forward across kit versions) rather than to
+individual v1.x skills, and now carrying the AC-UPGRADE-8 self-integrity invariant (verify-then-swap
+on the safety machinery) that a per-skill re-install did not need. ADR-026's `--upgrade` flow is
+**not superseded** — it remains the v1.x→v2.x skill-content migration path; ADR-071 is its
+engine-layer successor for v2.19-onward walk-forward. The two coexist: `--upgrade` (skill content,
+ADR-026) and `self-upgrade` (engine machinery, ADR-071), kept axis-distinct exactly as Face 1 and
+Face 2 are (C-v2.19-1).
+
+---
+
+## v2.19 — Persistency Layer — Phase 1 Design narrative
+
+**§Maturation self-grep (repo convention — verified this session).** This repo's binding §Maturation
+format uses the three bold sub-bullets **Future-state options / Concrete revisit triggers / Risk
+knowingly accepted** under `#### §Maturation Path (per [[maturation-path-in-adr]] binding)`.
+**Pre-cycle count: 36/36/36.** Four new ADRs (ADR-071..074) each carry the section → **expected
+post-cycle: 40/40/40** (the ADR-026 v2.19 amendment records supersession and carries no new
+deferral — its deferred execution is captured in ADR-071/074's Maturation sections, so it adds no
+§Maturation block, avoiding double-counting). @dev/@qa MUST re-run and confirm the delta is exactly
++4 each:
+
+    for h in 'Future-state options:' 'Concrete revisit triggers:' 'Risk knowingly accepted:'; do
+      printf '%s -> %s\n' "$h" "$(grep -cF "**${h}**" docs/architecture.md)"; done
+
+**Classification Re-Run (post-OQ, per PostOQClassificationReRun).** After resolving all 5 OQs and
+finalizing the file list (see the design summary's file-map), classification re-evaluated:
+**CONFIRMED SECURITY-SENSITIVE (full-strength).** The OQ resolutions did not shrink the surface —
+OQ1 (ship `self-upgrade` now) and OQ5 (a new sibling gate skill) if anything *add* a self-modifying
+surface; the mandatory Phase-2 gate + Phase-6 audit remain; no combined/lightened path. No
+compliance surface; no outbound network on either face. Rationale: reason #1 (self-modifying engine
+surface) is unchanged and strongest.
+
+End of v2.19 — Persistency Layer — Phase 1 Design (ADR-071 .. ADR-074 + ADR-026 v2.19 amendment).
