@@ -4,6 +4,22 @@ All notable changes to this project are documented here. This project uses [Sema
 
 ---
 
+## [2.18.0] - 2026-07-22
+
+**"The Substrate (slim)"** — opens the substrate contribution format the Cowork Evolution Program's next rungs (v2.19 pull, v3.0 spawn) build on: a public, runtime-agnostic contract naming the existing 9-section `SKILL.md` shape as the one format both push (`PROMOTE.md`) and a future pull direction target, plus the integrity plumbing — a per-workspace install manifest and a CI-computed registry hash column — that a future pull step needs to trust what it reads. This increment ships the format and the plumbing only; the pull flow itself is deferred to v2.19.
+
+### Added
+
+- **`docs/substrate-contribution-format.md` — the public contribution-format contract.** Names the 9-section `SKILL.md` template as the single, unforked format for both directions of the skill economy (push via `PROMOTE.md`, a future pull flow), states the Cowork-private-key boundary that keeps routing concerns (`core_skills:`, `optional_skills:`, `wizard_hook`, `preset_route`) out of a skill body, and states plainly what the deterministic scan does and does not catch — an honest-limits section covering homoglyph evasion, the bounded zero-width strip, and scan-section coverage. Kept public (not under `docs/internal/`) on purpose: it is the exact spec an external format consumer reads without touching this kit's own wizard code.
+- **Canonicalization pre-pass + re-scannable forbidden-token scan (`scripts/canonicalize-scan.sh`), new CI job.** A single-sourced, fixed-order pipeline — Unicode NFKC normalization, a bounded zero-width strip (U+200B, U+200C, U+200D, U+FEFF), mixed-script flagging (routes to human review, never auto-corrects), then the existing unforked six-token pattern scan — runs at every call site: the pool's own CI gate, the promotion ceremony, and a workspace's own re-check of an edited installed skill. No call site re-implements the pipeline independently.
+- **`cowork.install.json` — per-workspace install manifest, plus lock trichotomy.** A standalone, workspace-root file recording which curated skill version a given workspace installed and at what content hash, deny-listed on the mandatory `self-apply` skill so no confirmed-apply write can ever rewrite it. Its two hash comparisons (registry version vs. installed version; on-disk hash vs. installed hash) are kept always distinct, driving a deterministic three-outcome classification — not-in-pool, untouched, or user-customized — so a future update offer never silently overwrites an edited copy. A matching template ships at `templates/cowork.install.template.json`.
+- **CI-computed `sha256` column on `curated-skills-registry.md`.** The registry's existing 6-column schema gains a 7th column: the 64-char lowercase hex content hash of each skill's `SKILL.md` bytes at its pool location, computed and drift-verified by CI — never hand-entered. This is the integrity anchor an external puller (or a future in-kit pull flow) reads to verify a pool skill's bytes without re-deriving trust from anything else.
+
+### Deferred
+
+- **The pull flow itself** — a workspace reading `cowork.install.json` + the registry to offer, apply, and record a curated-skill update. This increment ships the manifest and the registry hash it depends on; v2.19 is the first real consumer.
+- **Capability transfer to a specific external runtime** — the contribution format proves format transfer only. Confirming a skill behaves the same on a named external runtime (e.g. Confidante) requires a dedicated evaluation pass against that runtime, not assumed from the format alone.
+
 ## [2.17.0] - 2026-07-21
 
 **"The Steward (Auto-Cleaning)"** — extends the v2.16.0 confirm→apply→verify→rollback machinery from content edits to a new operation TYPE: file relocation. A stale or superseded file can now be *proposed* for archiving (never silent, never deleted) into a local `context/.archive/`, gated by a positive move-allow-list (default-deny-by-namespace), destination gating, a read-only reference-integrity check, and a reversible-move-log rollback anchored by an out-of-band fingerprint. Scope is auto-cleaning only this increment — living-organization and promote-repetitive-to-Skill are deferred.

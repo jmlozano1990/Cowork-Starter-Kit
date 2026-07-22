@@ -190,6 +190,14 @@ Stated plainly, because a false sense of security is worse than a known gap:
   for a maintainer actually reading a submission before it merges. On a curated-only
   pool, that maintainer review is the strictly stronger layer; every automated step
   above is defense-in-depth beneath it, not a replacement for it.
+- **The deterministic scan covers `## Example` only, not the whole file.** Every
+  mechanically-enforced call site (the CI gate, the promotion ceremony, and the
+  workspace re-check) scans the `## Example` section, matching `CONTRIBUTING.md`'s
+  stated threat model (that section is the one executed as AI context). A forbidden
+  imperative planted in another section — `## Instructions`, `## Anti-patterns`, etc. —
+  is **not** caught by this deterministic gate. On a curated-only pool, maintainer
+  review is the layer that covers those sections; the deterministic scan is a shape
+  tripwire over the highest-risk section, not whole-file coverage.
 
 ---
 

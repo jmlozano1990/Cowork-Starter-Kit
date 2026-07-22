@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml/badge.svg)](https://github.com/jmlozano1990/cowork-starter-kit/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.17.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.18.0-green.svg)](https://github.com/jmlozano1990/Cowork-Starter-Kit/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/jmlozano1990/Cowork-Starter-Kit?style=social)](https://github.com/jmlozano1990/Cowork-Starter-Kit)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -224,7 +224,7 @@ v2.7.x shipped after a **16-agent swarm test** — 7 AI personas each played bot
 
 Earlier (v2.5): ADR-028 `content_sha256` integrity field (all 110 lock entries backfilled + CI cross-check), `tools:` SKILL.md frontmatter with MF-3 vocab gate, the first outbound skill contribution ([meeting-notes → agency-agents#521](https://github.com/msitarzewski/agency-agents/pull/521)), and MF-1/MF-2 CI hardening.
 
-**Next up:** External skill install support — wizard-managed installs from the vendored upstream library, plus multi-tool skill authoring with structured routing intent.
+**Next up:** v2.19 — the persistency layer (pull updates): lock trichotomy, per-component versioning, and plain-language per-component update offers, all built on this release's `cowork.install.json` manifest — the first real consumer of it. Personalization is never touched. Spaces stay alive and updated, and carry the latest skills into any space they spawn.
 
 **Also next up:** The Steward's auto-cleaning half shipped in v2.17 (propose → move → verify → rollback, never silent, never a delete). Still ahead: living organization (`folder-structure.md` becomes a maintained contract the workspace keeps current) and routing a recurring friction into a proposed new Skill instead of just a fixed instruction.
 
