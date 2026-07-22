@@ -501,6 +501,48 @@ jobs:
           fi
           echo "registry-sha256-check PASSED — ${CHECKED} Tier-1 rows verified against their pool files."
 
+  self-apply-deny-completeness-check:
+    name: Self-Apply Deny-List Completeness Check (v2.19 MF-1, ADR-071)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fault-injection self-test — a stripped deny-list MUST be detected (check-that-cannot-fail)
+        run: |
+          set -euo pipefail
+          if [ ! -f skills/self-apply/SKILL.md ]; then
+            echo "::error::MISSING skills/self-apply/SKILL.md"
+            exit 1
+          fi
+          STRIPPED_FILE="$(mktemp)"
+          trap 'rm -f "$STRIPPED_FILE"' EXIT
+          # Simulate the pre-MF-1 vulnerable state: strip every line mentioning
+          # self-archive, self-upgrade, or the self-* reserved-prefix glob.
+          grep -vE 'self-archive|self-upgrade|skills/self-\*' skills/self-apply/SKILL.md > "$STRIPPED_FILE" || true
+          if grep -qE 'self-archive|self-upgrade|skills/self-\*' "$STRIPPED_FILE"; then
+            echo "::error::fault-injection fixture setup failed — stripped file still contains a match"
+            exit 1
+          fi
+          echo "Fault-injection fixture is valid (all 3 patterns genuinely absent from the stripped copy) — proving the assertion below CAN fail before trusting it on real data."
+
+      - name: Assert self-apply's deny-list names self-archive, self-upgrade, and the self-* reserved prefix
+        run: |
+          set -euo pipefail
+          if [ ! -f skills/self-apply/SKILL.md ]; then
+            echo "::error::MISSING skills/self-apply/SKILL.md"
+            exit 1
+          fi
+          FAIL=0
+          for pattern in 'self-archive' 'self-upgrade' 'skills/self-\*'; do
+            if ! grep -qE "$pattern" skills/self-apply/SKILL.md; then
+              echo "::error::self-apply/SKILL.md deny-list is missing a reference to '${pattern}' (v2.19 MF-1 namespace-completeness fix — a sibling safety skill could be reached through the ordinary .claude/skills/*/SKILL.md allow-glob)."
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            exit 1
+          fi
+          echo "self-apply-deny-completeness-check PASSED — self-archive, self-upgrade, and the self-* reserved prefix are all named in the deny-list."
+
   skill-depth-check:
     name: Skill Depth Check
     runs-on: ubuntu-latest

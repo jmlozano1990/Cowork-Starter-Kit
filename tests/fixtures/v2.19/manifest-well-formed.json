@@ -1,0 +1,15 @@
+{
+  "$schema_version": "1.0",
+  "kit_version": "2.19.0",
+  "installed_at": "2026-07-22T00:00:00Z",
+  "components": [
+    {
+      "slug": "note-taking",
+      "installed_path": ".claude/skills/note-taking/SKILL.md",
+      "source": "curated-pool",
+      "installed_registry_version": "2026-04-18",
+      "installed_content_sha256": "33a02c35e0b52031326c3c80c58901611d768e193d927c0d32297020199f2926",
+      "last_synced_upstream_sha256": "33a02c35e0b52031326c3c80c58901611d768e193d927c0d32297020199f2926"
+    }
+  ]
+}
