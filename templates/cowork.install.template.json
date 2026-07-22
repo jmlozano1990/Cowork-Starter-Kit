@@ -1,0 +1,15 @@
+{
+  "$schema_version": "1.0",
+  "kit_version": "[fill in from VERSION at install time]",
+  "installed_at": "[ISO 8601 UTC timestamp, e.g. 2026-07-22T00:00:00Z]",
+  "components": [
+    {
+      "slug": "[skill-slug, matching name: frontmatter in the installed SKILL.md]",
+      "installed_path": "[e.g. .claude/skills/<slug>/SKILL.md]",
+      "source": "[curated-pool | user-authored]",
+      "installed_registry_version": "[curated-skills-registry.md's vetting_date for this slug at install time; omit or null for source=user-authored]",
+      "installed_content_sha256": "[64-char lowercase hex sha256 of the SKILL.md bytes AS installed]",
+      "last_synced_upstream_sha256": "[64-char lowercase hex — pool hash at last sync; equals installed_content_sha256 at first install]"
+    }
+  ]
+}
