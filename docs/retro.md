@@ -2,6 +2,52 @@
 
 ---
 
+## [v2.18.0] - 2026-07-22 — The Substrate (slim)
+
+**Date:** 2026-07-22
+**Classification:** SECURITY-SENSITIVE — independently re-confirmed at Phase 6 (any one of five grounds mandates it: modifies `skills/self-apply/SKILL.md`, the ADR-061 mandatory apply-governing safety skill; extends the apply HARD DENY-LIST; modifies `.github/workflows/quality.yml` (Tier-B CI); extends the ADR-055 injection-scan surface; defines the trust/verification substrate the next two rungs (v2.19 pull, v2.20 push) inherit). Full-strength Phase-2 hard gate + mandatory Phase-6 audit, no combined-path — matches v2.16.0/v2.17.0 precedent, lighter posture explicitly declined by @security at the classification-ruling step.
+**Mode:** full pipeline, mandatory Phase 2 hard gate (5 WARNING → 5 binding Phase-4 MUST-FIX, `MF-v2.18-S-1..5`) + mandatory Phase 6 audit (0 CRITICAL / 2 WARNING / 4 INFO). No REWORK sub-phase — the only post-Phase-4 diff is the release follow-up closing a planned Phase-6 merge condition, not a fix loop for a shipped defect.
+**Cycle SHAs** (squash-merged to `main` at `5620730`, PR #86, tag `v2.18.0`): combined Phase 0–2 doc commit `01dcebf` (spec — 27 ACs across F1/F2/F3/F4/F5/XFER; design — ADR-067..070; security review PASS-WITH-WARNINGS, 5 WARNING → 5 binding MF-S; gate APPROVED) → Phase 4 build `54e5d3e`(F1 format doc)→`543b36c`(F4 manifest schema)→`dd06706`(F2/F3 canonicalize+scan, MF-S-3/MF-S-4, PROMOTE wiring — **the Example-scoping deviation is documented in this commit's own message, not discovered later**)→`4d7cec8`(F5 registry sha256)→`5647665`(CI jobs)→**`78edead`** (chore: gitignore worktrees — Phase-4 binding SHA, the HEAD both @qa's Phase 5 pass and @security's Phase 6 audit reviewed against) → Phase 6 condition-close + release `ea12ddb` (A1 disclosure text + VERSION 2.17.0→2.18.0 + CHANGELOG + README badge/teaser) → paperwork commit recording the QA report + security audit docs → merge `5620730`.
+**Rework rate: ≈2.96%** (30 changed lines / 1012 Phase-4 lines — `git diff --numstat 78edead ea12ddb` = 27 insertions/3 deletions across 4 files, against a Phase-4 build of 955 insertions/57 deletions across 16 files). By construction this is **0% defect-driven**: the entire post-Phase-4 diff is the `ea12ddb` follow-up, which is planned Phase-6-condition closure (A1) bundled with ordinary release admin (VERSION/CHANGELOG/README) — not a fix for anything that shipped wrong. Lower than every full-mode cycle in this ledger except v2.17.0's ≈1.1%, and unlike v2.17.0's number (driven by one real S5 defect fix), this cycle's ~3% contains zero defect-fix lines at all.
+
+---
+
+### 1. Phase Findings Summary
+
+| Phase | Agent | Findings | Severity |
+|-------|-------|----------|----------|
+| 0–2 (combined doc commit) | @pm + @architect + @security | 27 ACs specified (F1:4, F2:4, F3:4, F4:6, F5:4, XFER:5); design closes KDQ-MANIFEST (standalone `cowork.install.json`, not an extension of the archived lock copy); **5 WARNING, 6 INFO** | All 5 WARNING (S1/S2/S3/S6/S7) bound as Phase-4 MUST-FIX per `[[phase2-findings-to-phase4-contract]]` — each closes a check-that-cannot-fail or dead-prose-reachability gap the ADRs described but did not yet make deterministic. 0 CRITICAL. Gate APPROVED. |
+| 4. Implementation | @dev | 0 blocking; **1 documented implementation-time scope finding** | The byte-identical 6-token pattern, run whole-file, false-positives on ordinary English ("instead of") across most of the existing pool (14/27 skills). @dev scoped the mechanical scan to `## Example` via a `--section` flag and **named the deviation explicitly in the commit message**, rather than letting @qa or @security discover it unannounced. All 5 MF-S items closed. |
+| 5. Testing (independent) | @qa | 27/27 ACs, 5/5 MF-S items, 5/5 fixture/firing-control tests — all independently reproduced, not narrative-trusted; **blocker=0, issue=1, info=3** | Reproduced BOTH legs of the scope-narrowing gap (injection in `## Instructions` escapes `--section "## Example"` but is caught by a whole-file scan; whole-file scan false-positives 14/27 pool skills) — handed to @security for Phase-6 ruling rather than adjudicated at Phase 5. |
+| 6. Code Audit | @security | **0 CRITICAL, 2 WARNING (A1/A2), 4 INFO (A3–A6)** | Both legs of the deviation gap independently re-reproduced. Ruling: **(b) ACCEPT with two binding conditions** — A1 (disclose the scope limit, before merge) and A2 (`v2.20-CARRY-1`). All 5 MF-S RESOLVED, verified against shipped bytes. Self-integrity + reachability both checked and PRESERVED (`[[reachability-vs-write-scope-review-axes]]`). |
+| 7. Final Approval | @qa | 0 | **APPROVED.** A1 confirmed closed on shipped bytes; A2 bound as `v2.20-CARRY-1`. Rework ≈2.96%, 0% defect. 0 CRITICAL/0 WARNING-open at merge. |
+| Merge | Orchestrator + User | 0 | PR #86 squash-merged `5620730`; tag `v2.18.0` pushed. CI 56/56 green pre-merge. |
+
+### 2. What went well
+
+0 CRITICAL across all six review-bearing phases. Every safety mechanism in the substrate (drift-verify fault-injection, the three canonicalization fixtures, the deny-list entry, the reachable re-scan invocation) shipped a **firing negative control proven to fire** on the thing it claims to catch — independently reproduced by @qa at Phase 5 AND @security at Phase 6, not accepted on narrative. KDQ-MANIFEST, an open design question carried since earlier cycles, is closed cleanly (standalone manifest, not a lock-copy extension), so v2.19 inherits a decided question.
+
+### 3. The key event — the `## Example`-scoping deviation
+
+Mid-implementation, @dev found the byte-identical 6-token scan false-positives on ordinary English across 14/27 pool skills whole-file — a blunt deterministic pattern cannot safely go whole-file. Rather than silently narrowing or widening the (shared cross-repo) token set, @dev scoped the scan to `## Example` (matching `CONTRIBUTING.md:129`'s pre-existing, byte-unchanged threat model) and **named the deviation explicitly in the commit that introduced it**. @qa reproduced both legs and routed the unresolved question to @security; @security re-reproduced both legs and ruled **(b) ACCEPT with two binding conditions** — not pure-accept (would under-deliver on honesty) and not require-fix-now (would over-escalate; the correct instrument is v2.20's already-deferred semantic judge). **Lesson:** a blunt deterministic pattern cannot go whole-file → scope-narrow + disclose the limit publicly + bind the semantic fix forward. Found by the implementer, disclosed prominently, reproduced independently twice, closed with a proportionate ruling — the cycle's best evidence of process health, not a blemish.
+
+### 4. Carry-forwards
+
+- **A2 / `v2.20-CARRY-1` (binding):** v2.20 intake accepts untrusted content, at which point the Example-only deterministic scan is structurally insufficient — v2.20's semantic LLM-judge (already deferred) MUST extend coverage beyond `## Example`.
+- **A3 (v2.19):** the install manifest is integrity-protected only against the apply channel, not direct hand-edits — v2.19's pull threat model must treat manifest content as attacker-influenceable (confirm-before-overwrite, HLD §5).
+- **Convention regression:** no `C-v2.18-N` binding-constraints section (coverage distributed across 27 ACs + 5 MF-S instead) — restore the labeled section next cycle before a second skip reads as a pattern.
+- **Hygiene:** both security docs carry a placeholder `00:00:00Z` timestamp — stamp real completion times at the doc-authoring step.
+
+### 5. Agent quality baselines
+
+@pm / @architect / @security / @dev / @qa all PASS. Notably @dev's flagged-not-buried deviation disclosure and @qa+@security's independent double-reproduction of every firing control (no check-that-cannot-fail survived).
+
+### 6. Retrospective Verdict
+
+**HEALTHY.** Built the shared trust substrate two future rungs will stand on, with 0 CRITICAL, 0 blocker-level findings anywhere, and a rework rate (≈2.96%) that on inspection is 100% planned-condition-closure + release admin — zero defect-fix lines. Ecosystem impact: NONE.
+
+---
+
 ## [v2.17.0] - 2026-07-21 — The Steward (Auto-Cleaning)
 
 **Date:** 2026-07-21
