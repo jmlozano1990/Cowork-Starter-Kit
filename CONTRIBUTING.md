@@ -131,6 +131,38 @@ The `## Example` section in a SKILL.md is executed as AI context. Apply these th
 
 These rules apply to both user-pasted (B10 direct input) and orchestrator-proposed (defaults + clarify) worked examples.
 
+### The substrate contribution format (v2.18.0)
+
+The 9-section `SKILL.md` structure this contributing guide assumes throughout is
+formally named as the kit's **substrate contribution format** — see
+[docs/substrate-contribution-format.md](./docs/substrate-contribution-format.md) for
+the full spec: the adapter-isolation boundary (Cowork-private routing keys stay out of
+a skill body), the external consumer contract (what a foreign puller reads), and the
+runtime-agnostic constraint (no target-model-class assumption baked into a shipped
+format file). This section stays here as a pointer; the format spec itself lives in
+that doc, not duplicated here.
+
+**Canonicalize → scan pipeline order.** Rule 2 above (the forbidden-token scan) is the
+literal, byte-identical recipe. Everywhere this scan is mechanically enforced — the
+`canonicalize-scan-check` CI job, `PROMOTE.md`'s promotion gate, and `self-apply`'s
+workspace-side re-check of an edited installed skill — it runs through one
+single-sourced script, `scripts/canonicalize-scan.sh`, which performs, in this fixed
+order: (1) Unicode NFKC normalization, (2) zero-width character stripping, (3)
+mixed-script flagging (routed to human review, never auto-corrected), then (4) this
+same six-token pattern against the result of steps 1–3. The raw pattern shown in Rule 2
+above is the recipe those steps 1–3 feed into — it is not itself a separate,
+un-canonicalized code path. See `docs/substrate-contribution-format.md`
+§Canonicalization + scan pipeline for the full honest-limit statement (what this
+pipeline does, and explicitly does not, catch).
+
+**`cowork.install.json`.** A workspace installing a skill from the pool now also
+records that install in a workspace-root `cowork.install.json` manifest (schema at
+`templates/cowork.install.template.json`) — which curated version, and at what content
+hash, so a future update can tell whether the user's copy has since diverged. This file
+is written by the setup wizard, never by a contributor by hand; see
+`docs/substrate-contribution-format.md` §External consumer contract for the schema and
+`WIZARD.md` for when it is written.
+
 ---
 
 ## After Phase 7 — push and PR checklist
