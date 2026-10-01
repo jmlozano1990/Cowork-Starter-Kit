@@ -9,8 +9,8 @@ This file is regenerated automatically by `.github/workflows/sync-agency.yml`
 on every upstream SHA bump. Direct edits will be overwritten — to update
 notices, update the lock file via `/sync-agency`.
 
-Last regenerated: 2026-09-01T14:03:12Z
-Lock file: cowork.lock.json (pinned commit: 3c9588880b7cafaec325a104899fd8bbe27e7d72)
+Last regenerated: 2026-10-01T16:10:51Z
+Lock file: cowork.lock.json (pinned commit: e31d699e06e78056489bb72282b754dfaa4b254a)
 
 ---
 
@@ -19,7 +19,7 @@ Lock file: cowork.lock.json (pinned commit: 3c9588880b7cafaec325a104899fd8bbe27e
 - **Source:** <https://github.com/msitarzewski/agency-agents>
 - **License:** MIT
 - **Copyright:** Copyright (c) msitarzewski/agency-agents contributors
-- **Pinned commit:** 3c9588880b7cafaec325a104899fd8bbe27e7d72
+- **Pinned commit:** e31d699e06e78056489bb72282b754dfaa4b254a
 - **License file SHA-256:** 9a45258434d5cedf0af73c9ad4771373701225038d246c49219026c33677f66f (from `cowork.lock.json` `license_file_sha256`)
 
 ### Full License Text

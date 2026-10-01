@@ -1,8 +1,8 @@
 {
   "$schema_version": "1.0",
   "upstream": "msitarzewski/agency-agents",
-  "pinned_commit_sha": "3c9588880b7cafaec325a104899fd8bbe27e7d72",
-  "pinned_at": "2026-09-01T14:02:38Z",
+  "pinned_commit_sha": "e31d699e06e78056489bb72282b754dfaa4b254a",
+  "pinned_at": "2026-10-01T16:10:36Z",
   "license_file_sha256": "9a45258434d5cedf0af73c9ad4771373701225038d246c49219026c33677f66f",
   "files": [
     {
@@ -139,6 +139,13 @@
       "content_sha256": "278798c42d7a7cf4f42d3973795765403105ce60d518d647abfdaa522d862d8e"
     },
     {
+      "path": "engineering/engineering-ats-validator-architect.md",
+      "sha256": "b2514fc107f8f8287401969dbf4030e70c9b4484162d5025d538af1c2c63882a",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "b2514fc107f8f8287401969dbf4030e70c9b4484162d5025d538af1c2c63882a"
+    },
+    {
       "path": "engineering/engineering-autonomous-optimization-architect.md",
       "sha256": "6904f627eff4a2035ecc245b3ee65f326b484083a08c3e284ad4106bdc57d2d8",
       "spdx": "MIT",
@@ -151,6 +158,13 @@
       "spdx": "MIT",
       "requires_review": false,
       "content_sha256": "18f237d054fa91f72a5dcda46a52ddcf7354ea3a3e39e0247629f4ea0f446917"
+    },
+    {
+      "path": "engineering/engineering-china-network-engineer.md",
+      "sha256": "d375db645d1192fb8be3dd4e40de005d55edd33557abf909a4a4135257e03788",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "d375db645d1192fb8be3dd4e40de005d55edd33557abf909a4a4135257e03788"
     },
     {
       "path": "engineering/engineering-cms-developer.md",
@@ -210,10 +224,10 @@
     },
     {
       "path": "engineering/engineering-developer-tooling-engineer.md",
-      "sha256": "da81449e9bbaf957df34a358fbac7cc8b539b52710022f2c201ddf8f66a03d9b",
+      "sha256": "948d44fddfa47e2363236de150f9dc948edd79599609a92af8bf6b72b5b9b609",
       "spdx": "MIT",
       "requires_review": false,
-      "content_sha256": "da81449e9bbaf957df34a358fbac7cc8b539b52710022f2c201ddf8f66a03d9b"
+      "content_sha256": "948d44fddfa47e2363236de150f9dc948edd79599609a92af8bf6b72b5b9b609"
     },
     {
       "path": "engineering/engineering-devops-automator.md",
@@ -391,6 +405,20 @@
       "content_sha256": "b07c4e97ee1c23aec7fdacc79ffd39a0fcee73fef46700f82970be240dad9f5e"
     },
     {
+      "path": "engineering/engineering-pdf-engine-architect.md",
+      "sha256": "8ca4ccb119fdb0d5f20f385d72b45d14e941a11073b95cedba254e0e74869dc9",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "8ca4ccb119fdb0d5f20f385d72b45d14e941a11073b95cedba254e0e74869dc9"
+    },
+    {
+      "path": "engineering/engineering-platform-engineer.md",
+      "sha256": "0736a0c476ff46e16e33b36ec143352107b82d69b3501bcdaefe22feee252652",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "0736a0c476ff46e16e33b36ec143352107b82d69b3501bcdaefe22feee252652"
+    },
+    {
       "path": "engineering/engineering-privacy-engineer.md",
       "sha256": "0d00d2f0d3008a55000eb01f13adac54f40daf471d240a7c073477efe92376a6",
       "spdx": "MIT",
@@ -454,6 +482,13 @@
       "content_sha256": "63b8da6c12b95f54bbdbcd0666abeb9519a98b35395233e1b1d8e5c102c82599"
     },
     {
+      "path": "engineering/engineering-servicenow-developer-mentor.md",
+      "sha256": "0a35abb24b63834dc910f7813e7a657cfb06c93f6760f0204da75aabd6b722bd",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "0a35abb24b63834dc910f7813e7a657cfb06c93f6760f0204da75aabd6b722bd"
+    },
+    {
       "path": "engineering/engineering-software-architect.md",
       "sha256": "b85121691776147bacde26673e68fbbacd6a7f0816d1ca8e203c264d25ce1d30",
       "spdx": "MIT",
@@ -480,6 +515,13 @@
       "spdx": "MIT",
       "requires_review": false,
       "content_sha256": "70c8a29cddf7de486b41185693b4961af3fcccbc632b8df13ec43572859edc43"
+    },
+    {
+      "path": "engineering/engineering-universal-document-compiler.md",
+      "sha256": "53c755d4ea1dfb083fd94b8d3cb16f8a8584e04adabdb3350b46f8ec1280119d",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "53c755d4ea1dfb083fd94b8d3cb16f8a8584e04adabdb3350b46f8ec1280119d"
     },
     {
       "path": "engineering/engineering-uswds-developer.md",
@@ -641,6 +683,13 @@
       "spdx": "MIT",
       "requires_review": false,
       "content_sha256": "073dba84e8159c763c073fcf16f14d57685611c50555a7cde346df85a25c6293"
+    },
+    {
+      "path": "marketing/marketing-developer-community-builder.md",
+      "sha256": "f1d87ae21d21ee90f73cd94754b2a99e4af7fec64b23290fea59fb2b4637db11",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "f1d87ae21d21ee90f73cd94754b2a99e4af7fec64b23290fea59fb2b4637db11"
     },
     {
       "path": "marketing/marketing-douyin-strategist.md",
@@ -816,6 +865,13 @@
       "spdx": "MIT",
       "requires_review": false,
       "content_sha256": "61f8a4a6a502ac0239c1a555d859051f0ecc83189f5f26048e2a448becf1c722"
+    },
+    {
+      "path": "product/product-dx-engineer.md",
+      "sha256": "af7f005d51cd5d74885c1850c3570c2aee67a2a655d6fa9a695e895ff986a448",
+      "spdx": "MIT",
+      "requires_review": false,
+      "content_sha256": "af7f005d51cd5d74885c1850c3570c2aee67a2a655d6fa9a695e895ff986a448"
     },
     {
       "path": "product/product-feedback-synthesizer.md",
