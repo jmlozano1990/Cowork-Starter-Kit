@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-git-workflow-master.md
-Content SHA-256: b2ab151fa5dc31035ba5f40f9b104f61cc8ef45dab8a8249ad15675141550d77
+Content SHA-256: d3f7718f852e03d5cd83a97340550a5b82694547c4b9b22c9e77bb40c1467ba3
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -92,16 +92,30 @@ develop ───●───●───●───●───●────
 ### Starting Work
 ```bash
 git fetch origin
-git checkout -b feat/my-feature origin/main
-# Or with worktrees for parallel work:
-git worktree add ../my-feature feat/my-feature
+git switch --no-track -c feat/my-feature origin/main
+# Publish your feature branch and set its upstream explicitly:
+git push -u origin feat/my-feature
 ```
+
+For parallel work, use this **instead of** creating the branch in the current
+checkout. Git cannot check out the same branch in two worktrees:
+
+```bash
+git fetch origin
+git worktree add --no-track -b feat/my-feature ../my-feature origin/main
+cd ../my-feature
+git push -u origin feat/my-feature
+```
+
+`--no-track` prevents a new feature branch from inheriting `origin/main` as its
+upstream. After the first push, its upstream is `origin/feat/my-feature`.
 
 ### Clean Up Before PR
 ```bash
 git fetch origin
 git rebase -i origin/main    # squash fixups, reword messages
-git push --force-with-lease   # safe force push to your branch
+# Only rewrite your own feature branch, with collaborators' agreement:
+git push --force-with-lease origin HEAD:feat/my-feature
 ```
 
 ### Finishing a Branch

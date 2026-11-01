@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-feishu-integration-developer.md
-Content SHA-256: 836667ab301da70a2da5d6241c44f2134fe059f839b4efeac7f6ceece632b76a
+Content SHA-256: 22f4c40c0d2681918b1bd5884edfca2a3556325054d1b8e912f6524111e2e4fb
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -509,7 +509,7 @@ async function createApprovalInstance(params: {
 // Query approval instance details
 async function getApprovalInstance(instanceCode: string) {
   const resp = await client.approval.instance.get({
-    params: { instance_id: instanceCode },
+    path: { instance_id: instanceCode },
   });
 
   if (resp.code !== 0) {
@@ -547,9 +547,17 @@ router.get('/login/feishu', (req, res) => {
 router.get('/callback/feishu', async (req, res) => {
   const { code, state } = req.query;
 
-  if (state !== req.session!.oauthState) {
+  const expectedState = req.session?.oauthState;
+  if (typeof code !== 'string' || !code ||
+      typeof state !== 'string' || !state ||
+      typeof expectedState !== 'string' || !expectedState ||
+      state !== expectedState) {
     return res.status(403).json({ error: 'State mismatch — possible CSRF attack' });
   }
+  // Consume this request's session binding before the first await.
+  // If callbacks can load separate session copies, invalidate state atomically
+  // in the shared session store as well; deleting this object alone cannot do that.
+  delete req.session!.oauthState;
 
   const tokenResp = await client.authen.oidcAccessToken.create({
     data: {

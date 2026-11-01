@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-finops-engineer.md
-Content SHA-256: 54134b5d3e3bf59db0de7a42b1246ea3a6ad771133d946670f4211e424c33aba
+Content SHA-256: 2971ce273c45e96002127fd8456cfcb3dce761595aab5b6428cd1f5036dc9cd1
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -120,18 +120,29 @@ A commitment you don't fully utilize is a discount you paid for and threw away.
 ### Unit Economics Dashboard (spend judged against value)
 
 ```sql
--- Cost per active customer, trended — the number that tells growth from waste.
--- Total cloud cost rising is fine IF cost-per-unit is flat or falling.
-SELECT
-  date_trunc('month', usage_date)               AS month,
-  SUM(unblended_cost)                            AS total_cloud_cost,
-  COUNT(DISTINCT customer_id)                    AS active_customers,
-  SUM(unblended_cost) / NULLIF(COUNT(DISTINCT customer_id), 0) AS cost_per_customer,
-  SUM(unblended_cost) FILTER (WHERE tag_environment = 'prod')  AS prod_cost,
-  SUM(unblended_cost) FILTER (WHERE tag_environment != 'prod') AS nonprod_cost
-FROM cost_and_usage
-JOIN customer_activity USING (usage_date)
-GROUP BY 1 ORDER BY 1;
+-- Aggregate each source to the reporting grain BEFORE joining.
+-- cost_and_usage: multiple line items/day; customer_activity: multiple events/day.
+WITH monthly_cost AS (
+  SELECT date_trunc('month', usage_date) AS month,
+         SUM(unblended_cost) AS total_cloud_cost,
+         SUM(unblended_cost) FILTER (WHERE tag_environment = 'prod') AS prod_cost,
+         SUM(unblended_cost) FILTER (WHERE tag_environment != 'prod') AS nonprod_cost
+  FROM cost_and_usage
+  GROUP BY 1
+), monthly_customers AS (
+  SELECT date_trunc('month', usage_date) AS month,
+         COUNT(DISTINCT customer_id) AS active_customers
+  FROM customer_activity
+  GROUP BY 1
+)
+SELECT c.month, c.total_cloud_cost,
+       COALESCE(a.active_customers, 0) AS active_customers,
+       c.total_cloud_cost / NULLIF(a.active_customers, 0) AS cost_per_customer,
+       c.prod_cost, c.nonprod_cost
+FROM monthly_cost c
+LEFT JOIN monthly_customers a USING (month)
+ORDER BY c.month;
+-- Keep cost-only days/months; no observed active customers means unknown unit cost.
 -- Present alongside: allocated %, commitment coverage %, commitment utilization %.
 ```
 

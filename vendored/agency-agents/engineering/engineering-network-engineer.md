@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-network-engineer.md
-Content SHA-256: d4c65a148af24cec08e14ab2bee3a0a3699cc966c8d170eea196f00df3e87d98
+Content SHA-256: 1400d7393e47b05c629d2902b2114911d6e55f34a703c2b77da24bd5f2b31576
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -164,6 +164,12 @@ set firewall family inet filter PROTECT-RE term allow-ssh from source-address 10
 set firewall family inet filter PROTECT-RE term allow-ssh from protocol tcp
 set firewall family inet filter PROTECT-RE term allow-ssh from destination-port ssh
 set firewall family inet filter PROTECT-RE term allow-ssh then accept
+set firewall family inet filter PROTECT-RE term allow-bgp from source-address 203.0.113.1/32
+set firewall family inet filter PROTECT-RE term allow-bgp from protocol tcp
+set firewall family inet filter PROTECT-RE term allow-bgp from port bgp
+set firewall family inet filter PROTECT-RE term allow-bgp then accept
+set firewall family inet filter PROTECT-RE term allow-ospf from protocol ospf
+set firewall family inet filter PROTECT-RE term allow-ospf then accept
 set firewall family inet filter PROTECT-RE term drop-rest then discard
 set interfaces lo0 unit 0 family inet filter input PROTECT-RE
 ```

@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-identity-access-engineer.md
-Content SHA-256: f37ea9df4e87d468fe2e34e29fc78fc508e717ae69d5bf4187a09375e842eedf
+Content SHA-256: 803b047d1b838fba2687a95bf2b8528cee86cf744130037f8380b1cc172c3f8e
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -105,18 +105,26 @@ export async function handleCallback(req: Request, session: Session) {
   const { code, state } = params(req);
   if (!session.auth || state !== session.auth.state) throw new AuthError('state_mismatch');
 
-  const tokens = await exchangeCode(code, session.auth.verifier); // includes PKCE verifier
+  // Capture and consume the validated flow before any asynchronous operation.
+  // A second callback must not exchange it; a new login must not replace its nonce.
+  const auth = session.auth;
+  delete session.auth;
+  const tokens = await exchangeCode(code, auth.verifier);       // includes PKCE verifier
   const claims = await verifyIdToken(tokens.id_token, {
     issuer: 'https://idp.example.com',
     audience: process.env.OIDC_CLIENT_ID!,
     algorithms: ['RS256'],                                      // allowlist — never trust the header alone
   });
-  if (claims.nonce !== session.auth.nonce) throw new AuthError('nonce_mismatch');
+  if (claims.nonce !== auth.nonce) throw new AuthError('nonce_mismatch');
 
-  delete session.auth;                                          // one-time use
   return establishSession(claims.sub, claims.email);
 }
 ```
+
+For a shared or multi-process session store, claiming the flow must be one atomic
+consume operation in that store (with its short TTL), not an unsynchronized
+read/delete pair. The in-memory example above has no asynchronous gap between
+checking and consuming. An exchange failure requires starting a fresh login flow.
 
 ### Session & Token Architecture Decision Table
 
@@ -168,14 +176,27 @@ challengeStore.put(user.id, options.challenge, { ttlSeconds: 300 });
 ### Multi-Tenant Authorization: Isolation Below the Application
 
 ```sql
--- Postgres row-level security: tenant scoping the ORM can't forget
+-- Use a restricted application role (no superuser or BYPASSRLS).
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE documents FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY tenant_isolation ON documents
-  USING (tenant_id = current_setting('app.tenant_id')::uuid);
+  USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+  WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
 
--- Set from the AUTHENTICATED session at connection checkout — never from request input:
--- SET app.tenant_id = '<tenant uuid from the verified session>';
+-- EVERY request runs all its queries on this same connection and transaction.
+-- Bind the authenticated tenant UUID using the driver's parameter API.
+BEGIN;
+SELECT set_config('app.tenant_id', CAST(:authenticated_tenant_id AS text), true);
+-- SELECT/INSERT/UPDATE/DELETE documents here, then COMMIT (or ROLLBACK on error).
+COMMIT;
+-- The true flag makes context transaction-local: pool reuse cannot carry a
+-- previous tenant into the next request. Missing context denies access.
+-- FORCE also subjects the table owner to RLS; privileged maintenance roles
+-- still bypass it and must never be used by request-serving connections.
+-- Objects called by requests must also use the caller's restricted privileges:
+-- avoid privileged SECURITY DEFINER functions and bypass-capable view owners;
+-- use security_invoker views where supported.
 ```
 
 ## 🔄 Your Workflow Process

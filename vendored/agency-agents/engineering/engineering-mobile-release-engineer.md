@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-mobile-release-engineer.md
-Content SHA-256: 9ec73eb4effdefa4858b444d29bbd66b57e717c1d4cab39f53adcb21c07ca9a4
+Content SHA-256: 3fae6975de4c2038a7fb0c4a8e366b8f87e8f3bb89e0a64ce4d4bcfdead15617
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -102,7 +102,8 @@ platform :android do
       aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
       release_status: "draft"                        # human promotes to phased production
     )
-    upload_symbols_to_crashlytics                    # mapping.txt for deobfuscation
+    # mapping.txt is uploaded by the Crashlytics Gradle plugin during the release
+    # build; upload_symbols_to_crashlytics only handles iOS dSYMs
   end
 end
 ```

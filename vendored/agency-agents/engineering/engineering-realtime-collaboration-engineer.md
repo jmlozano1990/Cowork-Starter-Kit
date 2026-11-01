@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-realtime-collaboration-engineer.md
-Content SHA-256: 08ab1a6a421a435fd5fffa9f03720566bd95fcda17c06eeff6e056d482e96a2a
+Content SHA-256: 79b1fa3544a7f768ca3702b8b41f2969c9ea14ddb73c7fe349fc652219f91a75
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -77,19 +77,21 @@ You are **Realtime Collaboration Engineer**, an expert in the systems behind liv
 
 ```typescript
 // The contract: server assigns seq to every op; client acks what it has applied;
-// resume replays the gap. Duplicates are impossible by construction (opId dedupe).
+// resume replays the gap. Server opId dedupe prevents duplicate log entries;
+// clients must separately ignore replayed deliveries and reject sequence gaps.
 class SyncConnection {
+  private ws?: WebSocket;                      // absent until connect() is called
   private lastServerSeq = 0;                    // highest seq applied locally
   private pending = new Map<string, Op>();      // sent, not yet acked
   private backoff = 500;
 
   connect() {
-    this.ws = new WebSocket(`${WS_URL}?resumeFrom=${this.lastServerSeq}`);
-    this.ws.onmessage = (e) => this.receive(JSON.parse(e.data));
-    this.ws.onclose = () => this.scheduleReconnect();
-    this.ws.onopen = () => {
+    const ws = this.ws = new WebSocket(`${WS_URL}?resumeFrom=${this.lastServerSeq}`);
+    ws.onmessage = (e) => this.receive(JSON.parse(e.data));
+    ws.onclose = () => this.scheduleReconnect();
+    ws.onopen = () => {
       this.backoff = 500;
-      this.pending.forEach((op) => this.ws.send(JSON.stringify(op))); // safe: opId dedupes
+      this.pending.forEach((op) => ws.send(JSON.stringify(op))); // safe: opId dedupes
     };
   }
 
@@ -97,14 +99,21 @@ class SyncConnection {
     const stamped = { ...op, opId: crypto.randomUUID() };  // client-generated identity
     this.pending.set(stamped.opId, stamped);
     this.queueLocally(stamped);                            // optimistic apply + offline queue
-    if (this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(stamped));
+    if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(stamped));
   }
 
   private receive(msg: ServerMsg) {
     if (msg.type === 'op') {
-      this.lastServerSeq = msg.seq;                        // server ordering is truth
-      this.pending.delete(msg.opId);                       // ack of our own op, or...
-      this.applyRemote(msg);                               // ...someone else's, transformed
+      if (msg.seq <= this.lastServerSeq) return;           // replay: already applied
+      if (msg.seq !== this.lastServerSeq + 1) {
+        // Keep the contiguous cursor: reconnect/replay from the last applied op.
+        // Closing triggers the existing onclose reconnect path.
+        this.ws?.close();
+        return;
+      }
+      this.applyRemote(msg);                               // may throw; do not advance yet
+      this.lastServerSeq = msg.seq;
+      this.pending.delete(msg.opId);                       // ack only after successful apply
     }
   }
 
@@ -129,16 +138,20 @@ class SyncConnection {
 ### Presence System (ephemeral, TTL-scoped, coalesced)
 
 ```typescript
-// Redis-backed presence: heartbeat refreshes TTL; silence means gone.
+// Redis-backed presence: each peer heartbeat refreshes only its own TTL.
+// A room-wide hash TTL keeps departed peers forever while anyone remains active.
 // Fan out at most ~10 presence updates/sec per room — coalesce, last write wins.
 async function heartbeat(roomId: string, userId: string, state: PresenceState) {
-  await redis.hset(`presence:${roomId}`, userId, JSON.stringify({
+  const peerKey = `presence:${encodeURIComponent(roomId)}:${encodeURIComponent(userId)}`;
+  await redis.set(peerKey, JSON.stringify({
     ...state,                    // cursor, selection, viewport
     updatedAt: Date.now(),
-  }));
-  await redis.expire(`presence:${roomId}`, 60);            // room GC
-  await redis.publish(`room:${roomId}:presence`, userId);  // subscribers re-read the hash
+  }), 'EX', 60);                                         // atomic value + peer TTL
+  await redis.publish(`room:${roomId}:presence`, userId);  // subscribers GET the peer key
 }
+// Subscribers compose the same encoded peerKey and GET it after each published userId;
+// an expired key means the peer is gone. Rejoining gets an application-owned snapshot
+// or the next heartbeat; do not SCAN the keyspace on every room update.
 // Client rule: render peers whose updatedAt is fresh (< 30s); fade the rest.
 // Presence NEVER writes to the document log — different channel, different guarantees.
 ```

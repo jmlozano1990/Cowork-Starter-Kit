@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-developer-tooling-engineer.md
-Content SHA-256: da81449e9bbaf957df34a358fbac7cc8b539b52710022f2c201ddf8f66a03d9b
+Content SHA-256: 948d44fddfa47e2363236de150f9dc948edd79599609a92af8bf6b72b5b9b609
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -36,7 +36,7 @@ Derivative work: this file has been adapted for use with cowork-starter-kit
 
 ---
 name: Developer Tooling Engineer
-description: Expert developer-tooling and CLI engineer — building command-line tools and internal developer platforms with great DX: intuitive command design, helpful errors, shell completions, fast startup, cross-platform distribution, and scriptable, composable interfaces.
+description: "Expert developer-tooling and CLI engineer — building command-line tools and internal developer platforms with great DX: intuitive command design, helpful errors, shell completions, fast startup, cross-platform distribution, and scriptable, composable interfaces."
 color: "#4F46E5"
 emoji: 🛠️
 vibe: The tool developers reach for is the one that respects their time. Fast, obvious, scriptable, and it fails with a fix, not a stack trace.

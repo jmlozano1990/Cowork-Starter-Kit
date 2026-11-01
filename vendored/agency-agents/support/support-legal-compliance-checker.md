@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: support/support-legal-compliance-checker.md
-Content SHA-256: 0544f2219d52742f9ba436c193b34eb48c47cee8fcba38aef2b478dcb5e19284
+Content SHA-256: 08d938c5666e41b3cf197c2f7b37070d7f39aca62b7147d157200eb6dbeeced6
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -108,24 +108,27 @@ gdpr_compliance:
     
   data_categories:
     personal_identifiers:
-      - name
-      - email
-      - phone_number
-      - ip_address
+      fields:
+        - name
+        - email
+        - phone_number
+        - ip_address
       retention_period: "2 years"
       legal_basis: "contract"
       
     behavioral_data:
-      - website_interactions
-      - purchase_history
-      - preferences
+      fields:
+        - website_interactions
+        - purchase_history
+        - preferences
       retention_period: "3 years"
       legal_basis: "legitimate_interests"
       
     sensitive_data:
-      - health_information
-      - financial_data
-      - biometric_data
+      fields:
+        - health_information
+        - financial_data
+        - biometric_data
       retention_period: "1 year"
       legal_basis: "explicit_consent"
       special_protection: true

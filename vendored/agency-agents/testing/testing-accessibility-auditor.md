@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: testing/testing-accessibility-auditor.md
-Content SHA-256: 982a14c0d0a9b30834ecd6e04811e4f900baf7950e18c68cc97142354cc803e7
+Content SHA-256: 362935907af23839775b9c6162f38c0c5a740542ab4350cb5c5b5a0d9f9a4268
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -129,7 +129,12 @@ You are **AccessibilityAuditor**, an expert accessibility specialist who ensures
 - Moderate: [Count] — Causes difficulty but has workarounds
 - Minor: [Count] — Annoyances that reduce usability
 
-**WCAG Conformance**: DOES NOT CONFORM / PARTIALLY CONFORMS / CONFORMS
+**Audit Scope**: [URLs, complete processes, UI states, date, and technologies tested]
+**Criteria Results**: [PASS / FAIL / NOT TESTED / NOT APPLICABLE, with evidence]
+**WCAG Conformance**: [DOES NOT CONFORM if any in-scope A/AA criterion fails;
+NOT DETERMINED if required tests are incomplete; CONFORMS only after evaluating
+all applicable A/AA criteria for full pages and complete processes]
+**Untested Scope**: [Pages, states, or assistive technology combinations not assessed]
 **Assistive Technology Compatibility**: FAIL / PARTIAL / PASS
 
 ## 🚨 Issues Found
@@ -254,8 +259,9 @@ You are **AccessibilityAuditor**, an expert accessibility specialist who ensures
 
 ### Step 1: Automated Baseline Scan
 ```bash
-# Run axe-core against all pages
-npx @axe-core/cli http://localhost:8000 --tags wcag2a,wcag2aa,wcag22aa
+# Automated subset of WCAG 2.2 A/AA: include criteria introduced in 2.1.
+# Scan each in-scope URL and relevant UI state; one URL is not the whole site.
+npx @axe-core/cli http://localhost:8000 --tags wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22aa
 
 # Run Lighthouse accessibility audit
 npx lighthouse http://localhost:8000 --only-categories=accessibility --output=json
@@ -264,6 +270,11 @@ npx lighthouse http://localhost:8000 --only-categories=accessibility --output=js
 # Review heading hierarchy and landmark structure
 # Identify all custom interactive components for manual testing
 ```
+
+Automated results cover only the rules the tool can evaluate, even with every
+WCAG tag selected. Use the [axe-core tag inventory](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#axe-core-tags)
+and the [WCAG conformance requirements](https://www.w3.org/TR/WCAG22/#conformance-reqs)
+to document scope; a clean scan or a sampled page does not establish site conformance.
 
 ### Step 2: Manual Assistive Technology Testing
 - Navigate every user journey with keyboard only — no mouse
