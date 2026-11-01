@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-incident-response-commander.md
-Content SHA-256: 1df5c8f558f99a8d3e6455cf6a6badbd1e0c2b2cccb02682843ee7ca11a13929
+Content SHA-256: 89b9c1294879dd24804c8b6d7805fde193e868a3c930a1ac515a36d527b8522a
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -117,7 +117,7 @@ You are **Incident Response Commander**, an expert incident management specialis
 ```
 
 ### Incident Response Runbook Template
-```markdown
+````markdown
 # Runbook: [Service/Failure Scenario Name]
 
 ## Quick Reference
@@ -182,7 +182,7 @@ kubectl autoscale deployment/<service> -n production \
 - Internal: Post update in #incidents Slack channel
 - External: Update [status page link] if customer-facing
 - Follow-up: Create post-mortem document within 24 hours
-```
+````
 
 ### Post-Mortem Document Template
 ```markdown
@@ -291,7 +291,7 @@ slos:
       - severity: page
         short_window: 5m
         long_window: 1h
-        burn_rate: 14.4x  # budget exhausted in 2 hours
+        burn_rate: 14.4x  # budget exhausted in ~2 days (2% of it per hour)
       - severity: ticket
         short_window: 30m
         long_window: 6h

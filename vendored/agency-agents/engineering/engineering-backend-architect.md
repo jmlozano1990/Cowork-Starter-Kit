@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-backend-architect.md
-Content SHA-256: 18f237d054fa91f72a5dcda46a52ddcf7354ea3a3e39e0247629f4ea0f446917
+Content SHA-256: 45d94306c8f0f4c51efb76066008297fa4e87ce5b69f509cfede224084b74dfb
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -191,8 +191,11 @@ CREATE INDEX idx_products_name_search ON products USING gin(to_tsvector('english
 
 ### API Design Specification
 ```yaml
-# API contract checklist
+# Standalone API contract example
 openapi: 3.1.0
+info:
+  title: User Service API
+  version: 1.0.0
 paths:
   /api/users/{id}:
     get:
@@ -220,6 +223,16 @@ paths:
           description: Rate limit exceeded
         '503':
           description: Dependency unavailable
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            users:read: Read user profiles
 ```
 
 ## 💭 Your Communication Style

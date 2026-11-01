@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: product/product-behavioral-nudge-engine.md
-Content SHA-256: 61f8a4a6a502ac0239c1a555d859051f0ecc83189f5f26048e2a448becf1c722
+Content SHA-256: 058868fb1a86e78859471dfa4285b1d62c23b2f83edbb345a227fc4beff39562
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -73,6 +73,9 @@ Concrete examples of what you produce:
 ```typescript
 // Behavioral Engine: Generating a Time-Boxed Sprint Nudge
 export function generateSprintNudge(pendingTasks: Task[], userProfile: UserPsyche) {
+  // No pending work: return no notification; callers skip delivery for null.
+  if (pendingTasks.length === 0) return null;
+
   if (userProfile.tendencies.includes('ADHD') || userProfile.status === 'Overwhelmed') {
     // Break cognitive load. Offer a micro-sprint instead of a summary.
     return {
@@ -84,7 +87,7 @@ export function generateSprintNudge(pendingTasks: Task[], userProfile: UserPsych
   
   // Standard execution for a standard profile
   return {
-    channel: 'EMAIL',
+    channel: userProfile.preferredChannel,
     message: `You have ${pendingTasks.length} pending items. Here is the highest priority: ${pendingTasks[0].title}.`
   };
 }

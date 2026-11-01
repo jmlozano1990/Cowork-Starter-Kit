@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-frontend-developer.md
-Content SHA-256: 35961da50f408e00eb6189c87825ac5e62e6b1bf9de3dee198a95536c6d2619e
+Content SHA-256: 71eeb60cbeedd94b41b2e5852d8986c909e8d150c324b4bb99e3b184ae202094
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -132,24 +132,30 @@ export const DataTable = memo<DataTableProps>(({ data, columns, onRowClick }) =>
       role="table"
       aria-label="Data table"
     >
-      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        const row = data[virtualItem.index];
-        return (
-          <div
-            key={virtualItem.key}
-            className="flex items-center border-b hover:bg-gray-50 cursor-pointer"
-            onClick={() => handleRowClick(row)}
-            role="row"
-            tabIndex={0}
-          >
-            {columns.map((column) => (
-              <div key={column.key} className="px-4 py-2 flex-1" role="cell">
-                {row[column.key]}
-              </div>
-            ))}
-          </div>
-        );
-      })}
+      <div role="rowgroup" style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
+        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+          const row = data[virtualItem.index];
+          return (
+            <div
+              key={virtualItem.key}
+              className="flex items-center border-b hover:bg-gray-50 cursor-pointer"
+              style={{
+                position: 'absolute', top: 0, left: 0, width: '100%',
+                height: virtualItem.size, transform: `translateY(${virtualItem.start}px)`,
+              }}
+              onClick={() => handleRowClick(row)}
+              role="row"
+              tabIndex={0}
+            >
+              {columns.map((column) => (
+                <div key={column.key} className="px-4 py-2 flex-1" role="cell">
+                  {row[column.key]}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 });

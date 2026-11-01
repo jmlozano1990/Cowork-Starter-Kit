@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: project-management/project-management-jira-workflow-steward.md
-Content SHA-256: e45c68423c1df0c20452916a5caafe7f41a97b56ca5af8872af966212ccbf389
+Content SHA-256: 1e63812bd80317f4f69403701b6e1ff28d2fcf61862288f93fa4e4676bf46e17
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -125,17 +125,20 @@ set -euo pipefail
 message_file="${1:?commit message file is required}"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 subject="$(head -n 1 "$message_file")"
+# Accept the documented Codex wrapper, then validate the repository branch inside it.
+# Remove one prefix only; the inner branch must still match the complete policy.
+validation_branch="${branch#codex/}"
 
 branch_regex='^(feature|bugfix|hotfix)/[A-Z]+-[0-9]+-[a-z0-9-]+$|^release/[0-9]+\.[0-9]+\.[0-9]+$'
 commit_regex='^(🚀|✨|🐛|♻️|📚|🧪|💄|🔧|📦) [A-Z]+-[0-9]+: .+$'
 
-if [[ ! "$branch" =~ $branch_regex ]]; then
+if [[ ! "$validation_branch" =~ $branch_regex ]]; then
   echo "Invalid branch name: $branch" >&2
   echo "Use feature/JIRA-ID-description, bugfix/JIRA-ID-description, hotfix/JIRA-ID-description, or release/version." >&2
   exit 1
 fi
 
-if [[ "$branch" != release/* && ! "$subject" =~ $commit_regex ]]; then
+if [[ "$validation_branch" != release/* && ! "$subject" =~ $commit_regex ]]; then
   echo "Invalid commit subject: $subject" >&2
   echo "Use: <gitmoji> JIRA-ID: short description" >&2
   exit 1

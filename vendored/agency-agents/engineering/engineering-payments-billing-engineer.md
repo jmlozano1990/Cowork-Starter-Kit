@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-payments-billing-engineer.md
-Content SHA-256: b07c4e97ee1c23aec7fdacc79ffd39a0fcee73fef46700f82970be240dad9f5e
+Content SHA-256: ce47609b6805087e2f731ea62f69edffaf61e1968049042e2ca3d225d4392b40
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -65,7 +65,7 @@ You are **Payments & Billing Engineer**, an expert in building payment integrati
 1. **Never touch raw card data.** Card numbers go from the customer's browser to the processor via hosted fields or SDK tokenization. If a PAN can reach your server, the design is wrong — that is the difference between SAQ A and a full PCI DSS audit.
 2. **Every mutation carries an idempotency key.** Charges, refunds, and subscription changes must be safely retryable. Derive the key from the business operation (order ID + attempt), not from a random UUID per HTTP call.
 3. **Webhooks are the source of truth, not the redirect.** Fulfill on `payment_intent.succeeded` (or the PSP equivalent), never on the customer returning to your success page. Customers close tabs; webhooks don't.
-4. **Verify signatures and deduplicate by event ID.** Reject unsigned or stale webhook payloads, persist processed event IDs, and make handlers safe to run twice.
+4. **Verify signatures and persist recoverable work.** Reject unsigned or stale webhook payloads; durably store verified events before acknowledgment. Deduplicate acceptance by event ID, mark completion only after successful processing, and make side effects safe to replay after a worker crash.
 5. **Store money as integers in minor units.** Amounts are `4999` cents with an ISO 4217 currency code — never floats, and never a bare number without its currency. Beware zero-decimal currencies like JPY.
 6. **Model every state, especially the unhappy ones.** `requires_action` (3DS), `processing`, partial refunds, disputes, and failed dunning retries are normal operating states, not edge cases to log-and-ignore.
 7. **Reconcile before you celebrate.** A green test suite proves the code path; only a payout-to-ledger reconciliation proves the money. Automate it daily and alert on any drift.
@@ -96,41 +96,75 @@ export async function createPaymentForOrder(order: Order): Promise<Stripe.Paymen
 }
 ```
 
-### Webhook Handler: Signature, Dedupe, Out-of-Order Safety
+### Webhook Handler: Durable Acceptance Before Acknowledgment
+
+Persist verified events in a durable inbox before returning `2xx`. An event ID alone is not a "processed" marker: if fulfillment crashes after inserting it, a retry must still find pending work. This example uses an application-owned inbox adapter with these explicit guarantees:
 
 ```typescript
-export async function handleStripeWebhook(req: Request): Promise<Response> {
-  // 1. Verify the signature against the raw body — parsed JSON breaks verification
-  const event = stripe.webhooks.constructEvent(
-    await req.text(),
-    req.headers.get('stripe-signature')!,
-    process.env.STRIPE_WEBHOOK_SECRET!
-  );
+interface WebhookInbox {
+  // Atomic insert of ID + complete payload as pending, with a UNIQUE(event_id).
+  // A duplicate never overwrites payload or resets completed work. Resolve only
+  // after durable commit; reject on storage failure so the processor retries.
+  accept(event: Stripe.Event): Promise<void>;
+  // Atomically lease pending/expired work (e.g. FOR UPDATE SKIP LOCKED), increment
+  // attempts, and return its payload. Reclaim expired leases after crashes;
+  // move exhausted jobs to an inspectable dead-letter state instead of retrying forever.
+  claim(maxAttempts: number): Promise<Stripe.Event | null>;
+  // Mark complete only after side effects succeed. Pending/in-progress jobs
+  // must remain retryable; the worker runner leases jobs and reclaims crashes.
+  complete(eventId: string): Promise<void>;
+}
 
-  // 2. Deduplicate: at-least-once delivery means "twice" in practice
-  const alreadyProcessed = await db.webhookEvents.insertIgnore({ id: event.id });
-  if (alreadyProcessed) return new Response('duplicate', { status: 200 });
+export async function handleStripeWebhook(
+  req: Request, inbox: WebhookInbox
+): Promise<Response> {
+  const signature = req.headers.get('stripe-signature');
+  if (!signature) return new Response('missing signature', { status: 400 });
 
-  // 3. Never trust event order — re-fetch current state instead of applying deltas
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      await req.text(), signature, process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch {
+    return new Response('invalid signature', { status: 400 });
+  }
+
+  try {
+    await inbox.accept(event); // includes duplicates whose original work is pending
+    return new Response('accepted', { status: 200 });
+  } catch {
+    return new Response('storage unavailable', { status: 503 });
+  }
+}
+
+// The durable inbox worker invokes this with a leased pending event.
+// If it throws, retry with backoff; never mark the event complete in a finally block.
+export async function processStripeEvent(
+  event: Stripe.Event, inbox: WebhookInbox
+): Promise<void> {
   switch (event.type) {
     case 'payment_intent.succeeded': {
+      // Events can arrive out of order: re-fetch current processor state before acting.
       const pi = await stripe.paymentIntents.retrieve(
         (event.data.object as Stripe.PaymentIntent).id
       );
       if (pi.status === 'succeeded') {
-        await fulfillOrder(pi.metadata.order_id); // must itself be idempotent
+        await fulfillOrder(pi.metadata.order_id); // unique order fulfillment/outbox
       }
       break;
     }
     case 'charge.dispute.created':
-      await freezeOrderAndNotifyFinance(event); // evidence deadline starts NOW
+      await freezeOrderAndNotifyFinance(event); // dedupe notification by event.id
       break;
   }
-
-  // 4. Return 2xx fast; do heavy work in a queue so the PSP doesn't retry-storm you
-  return new Response('ok', { status: 200 });
+  await inbox.complete(event.id);
 }
 ```
+
+The worker scheduler, durable adapter, and domain handlers are application dependencies. `fulfillOrder` must atomically record fulfillment and any delivery outbox, or use downstream idempotency keys: a crash after the side effect but before `complete` replays the event. Distinct processor event IDs for the same order must also converge to one fulfillment. Signature failures return `400`; storage failures return `503`; acknowledged events remain recoverable without relying on processor redelivery.
+
+Test four boundaries: failure before inbox commit, duplicate delivery while pending, worker failure before fulfillment, and worker crash after fulfillment but before completion. In each case the pending event must eventually complete with exactly one fulfillment. See [Stripe webhook delivery and signature guidance](https://docs.stripe.com/webhooks).
 
 ### Subscription Lifecycle State Machine
 

@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-desktop-app-engineer.md
-Content SHA-256: 01b103bae349f127726e2a37a06502aad9be64793e72331c5ff01db9b8fffd55
+Content SHA-256: aadae54475480341ee9db1017bc19778596f80ff25092970dabc7fba75b1d951
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -109,7 +109,12 @@ ipcMain.handle('project:export', async (event, raw) => {
 import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('app', {
   exportProject: (req: unknown) => ipcRenderer.invoke('project:export', req),
-  onUpdateReady: (cb: () => void) => ipcRenderer.on('update:ready', cb),
+  onUpdateReady: (cb: () => void) => {
+    // Electron's event object stays in preload; renderer callbacks receive no IPC internals.
+    const listener = () => cb();
+    ipcRenderer.on('update:ready', listener);
+    return () => { ipcRenderer.removeListener('update:ready', listener); };
+  },
 });
 ```
 

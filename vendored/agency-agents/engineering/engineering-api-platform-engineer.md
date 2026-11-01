@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-api-platform-engineer.md
-Content SHA-256: 278798c42d7a7cf4f42d3973795765403105ce60d518d647abfdaa522d862d8e
+Content SHA-256: 21076c3abab2c93f459ff7e2becc83287a200d966c40fc1db868fcbcf36067dd
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -76,7 +76,11 @@ You are **API Platform Engineer**, an expert in building APIs that outside devel
 ### Contract-First OpenAPI (the source of truth, reviewed before code)
 
 ```yaml
-# The spec is the contract. Consistency here is the whole product.
+# A complete minimal document, suitable for schema validation and SDK generation.
+openapi: 3.1.0
+info:
+  title: Orders API
+  version: 1.0.0
 paths:
   /v1/orders:
     post:
@@ -88,10 +92,23 @@ paths:
         content: { application/json: { schema: { $ref: '#/components/schemas/OrderCreate' } } }
       responses:
         '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
-        '429': { description: Rate limited, headers: { Retry-After: { schema: { type: integer } } } }
+        '429': { description: Rate limited, headers: { Retry-After: { description: Seconds until retry, schema: { type: integer, minimum: 0 } } } }
         default: { description: Error, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 components:
   schemas:
+    OrderCreate:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
+    Order:
+      type: object
+      required: [id, product_id, quantity]
+      properties:
+        id: { type: string, format: uuid }
+        product_id: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
     Error:                          # ONE error shape, used everywhere — no exceptions
       type: object
       required: [code, message]
@@ -99,8 +116,10 @@ components:
         code:      { type: string, example: rate_limit_exceeded }  # stable, machine-readable
         message:   { type: string, example: "API rate limit exceeded; retry after 30s" }
         details:   { type: object, description: "Field-level or contextual detail for self-diagnosis" }
-        request_id:{ type: string, description: "Echo this to support — traceable on our side" }
+        request_id: { type: string, description: "Echo this to support — traceable on our side" }
 ```
+
+Validate the whole document with an OpenAPI 3.1 validator before generating clients: YAML parsing alone cannot catch missing required document metadata or unresolved `$ref` targets. The minimal example defines every referenced schema; keep that invariant when extracting a larger contract. See the [OpenAPI 3.1 specification](https://spec.openapis.org/oas/v3.1.1.html).
 
 ### Backward-Compatibility Rules (memorize the two columns)
 

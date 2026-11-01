@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-i18n-engineer.md
-Content SHA-256: 913c72b65eca4af13d2edadf4b53acff63df91715c7c446a63cea75a9a14f007
+Content SHA-256: 4239debe839a7ba60ad1339bb5527e816dda87a6ff3e1fa4caddd838b56917fc
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -90,15 +90,30 @@ You are **Internationalization Engineer**, an expert in making software genuinel
 ```
 
 ```javascript
-// Rendering with FormatJS — the same message file drives web, and its format
-// (ICU) is what Android, iOS, and most TMS platforms speak natively.
-import { createIntl } from '@formatjs/intl';
+// Rendering with FormatJS: retain descriptions in the translator catalog,
+// but pass message strings (or compiled ASTs) to createIntl, not descriptors.
+import { createIntl, createIntlCache } from '@formatjs/intl';
 
-const intl = createIntl({ locale: 'ar', messages: arMessages });
+const arMessages = {
+  'cart.itemCount': {
+    message: '{count, plural, =0 {سلتك فارغة} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}',
+    description: 'Cart header; count = item count.',
+  },
+};
+const messages = Object.fromEntries(
+  Object.entries(arMessages).map(([id, descriptor]) => [id, descriptor.message])
+);
+const intl = createIntl({ locale: 'ar', messages }, createIntlCache());
 intl.formatMessage({ id: 'cart.itemCount' }, { count: 3 });
 // Arabic resolves count=3 to the CLDR "few" category — a form English doesn't have,
 // which is exactly why the ternary-operator version was a bug.
 ```
+
+Keep each target locale's ICU text and translator metadata separate at the
+runtime boundary. Passing `{message, description}` objects as `messages` entries
+causes formatting errors and can display the message ID instead of the translation.
+Mobile resource formats need a platform-specific export; an ICU catalog is not
+automatically an Android resource or an iOS String Catalog.
 
 ### Locale-Aware Formatting: Delete the Hand-Rolled Helpers
 
@@ -108,8 +123,11 @@ const locale = user.locale; // e.g. 'de-DE', 'ar-EG', 'ja-JP'
 new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(1234.5);
 // de-DE: "1.234,50 €"   en-US: "€1,234.50"   ar-EG: "١٬٢٣٤٫٥٠ €"
 
-new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date('2026-07-04'));
-// de-DE: "4. Juli 2026"   ja-JP: "2026年7月4日"
+// This is a civil date, not an instant: avoid shifting July 4 to July 3 west of UTC.
+new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' })
+  .format(new Date('2026-07-04'));
+// de-DE: "4. Juli 2026"   ja-JP: "2026年7月4日" in every machine time zone
+// Real event timestamps instead use the user's explicitly chosen time zone.
 
 new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-1, 'day');
 // en: "yesterday"   de: "gestern" — free, correct, zero maintenance
@@ -144,16 +162,28 @@ new Intl.ListFormat(locale, { type: 'conjunction' }).format(['Ana', 'Luis', 'Mei
 ### Pseudo-Localization in CI: Catch It Before Translators Do
 
 ```javascript
-// Pseudo-locale transform: "Save changes" → "[!!! Šàvé çhàñĝéš one two !!!]"
-// - Accented chars expose encoding bugs
-// - +40% padding exposes truncation and fixed-width layouts
-// - Brackets expose concatenation (fragments render as separate bracketed chunks)
-// - Untransformed text on screen = hardcoded string, fail the check
+// Transform literal AST nodes, never ICU arguments, selectors or skeletons.
+import { parse, TYPE } from '@formatjs/icu-messageformat-parser';
+import { printAST } from '@formatjs/icu-messageformat-parser/printer.js';
+
 export function pseudoLocalize(message) {
   const map = { a: 'à', e: 'é', i: 'î', o: 'ö', u: 'ü', c: 'ç', n: 'ñ', s: 'š', g: 'ĝ' };
-  const swapped = message.replace(/[aeioucnsg]/g, (ch) => map[ch] ?? ch);
-  const padding = ' one two three'.slice(0, Math.ceil(message.length * 0.4));
-  return `[!!! ${swapped}${padding} !!!]`;
+  function transform(elements) {
+    for (const element of elements) {
+      if (element.type === TYPE.literal) {
+        const swapped = element.value.replace(/[aeioucnsg]/g, (ch) => map[ch] ?? ch);
+        const extra = Math.ceil(element.value.length * 0.4);
+        element.value = swapped + ' ~'.repeat(Math.ceil(extra / 2)).slice(0, extra);
+      } else if (element.type === TYPE.select || element.type === TYPE.plural) {
+        for (const option of Object.values(element.options)) transform(option.value);
+      } else if (element.type === TYPE.tag) {
+        transform(element.children);
+      }
+    }
+  }
+  const ast = parse(message);
+  transform(ast);
+  return `[!!! ${printAST(ast)} !!!]`;
 }
 ```
 

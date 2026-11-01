@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: testing/testing-api-tester.md
-Content SHA-256: c89d7ae592523f4799426a8b09700ec4b9d99bf2fcae2d1b0dd2900d5f770127
+Content SHA-256: c9e0f993e32242e564900bc7fbf7eb994d18295a92c499762459a15bbec59cb3
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -94,16 +94,20 @@ You are **API Tester**, an expert API testing specialist who focuses on comprehe
 ## 📋 Your Technical Deliverables
 
 ### Comprehensive API Test Suite Example
-```javascript
+```typescript
+// Save as tests/api.spec.ts. Run only against an authorized test environment.
 // Advanced API test automation with security and performance
 import { test, expect } from '@playwright/test';
 import { performance } from 'perf_hooks';
 
-describe('User API Comprehensive Testing', () => {
+test.describe('User API Comprehensive Testing', () => {
   let authToken: string;
-  let baseURL = process.env.API_BASE_URL;
+  const baseURL = process.env.API_BASE_URL;
+  if (!baseURL || !process.env.TEST_USER_PASSWORD) {
+    throw new Error('API_BASE_URL and TEST_USER_PASSWORD are required');
+  }
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     // Authenticate and get token
     const response = await fetch(`${baseURL}/auth/login`, {
       method: 'POST',
@@ -113,11 +117,14 @@ describe('User API Comprehensive Testing', () => {
         password: process.env.TEST_USER_PASSWORD
       })
     });
+    expect(response.status).toBe(200);
     const data = await response.json();
+    expect(typeof data.token).toBe('string');
+    expect(data.token.length).toBeGreaterThan(0);
     authToken = data.token;
   });
 
-  describe('Functional Testing', () => {
+  test.describe('Functional Testing', () => {
     test('should create user with valid data', async () => {
       const userData = {
         name: 'Test User',
@@ -163,7 +170,7 @@ describe('User API Comprehensive Testing', () => {
     });
   });
 
-  describe('Security Testing', () => {
+  test.describe('Security Testing', () => {
     test('should reject requests without authentication', async () => {
       const response = await fetch(`${baseURL}/users`, {
         method: 'GET'
@@ -173,7 +180,7 @@ describe('User API Comprehensive Testing', () => {
 
     test('should prevent SQL injection attempts', async () => {
       const sqlInjection = "'; DROP TABLE users; --";
-      const response = await fetch(`${baseURL}/users?search=${sqlInjection}`, {
+      const response = await fetch(`${baseURL}/users?search=${encodeURIComponent(sqlInjection)}`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
       expect(response.status).not.toBe(500);
@@ -181,9 +188,12 @@ describe('User API Comprehensive Testing', () => {
     });
 
     test('should enforce rate limiting', async () => {
+      // Separate account/token: exhausting its quota must not poison other tests.
+      const rateLimitToken = process.env.RATE_LIMIT_TEST_TOKEN;
+      if (!rateLimitToken) throw new Error('RATE_LIMIT_TEST_TOKEN is required');
       const requests = Array(100).fill(null).map(() =>
         fetch(`${baseURL}/users`, {
-          headers: { 'Authorization': `Bearer ${authToken}` }
+          headers: { 'Authorization': `Bearer ${rateLimitToken}` }
         })
       );
 
@@ -193,7 +203,7 @@ describe('User API Comprehensive Testing', () => {
     });
   });
 
-  describe('Performance Testing', () => {
+  test.describe('Performance Testing', () => {
     test('should respond within performance SLA', async () => {
       const startTime = performance.now();
       
@@ -201,6 +211,7 @@ describe('User API Comprehensive Testing', () => {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
       
+      await response.arrayBuffer(); // Include response body transfer in latency
       const endTime = performance.now();
       const responseTime = endTime - startTime;
       
@@ -210,25 +221,26 @@ describe('User API Comprehensive Testing', () => {
 
     test('should handle concurrent requests efficiently', async () => {
       const concurrentRequests = 50;
-      const requests = Array(concurrentRequests).fill(null).map(() =>
-        fetch(`${baseURL}/users`, {
+      const samples = await Promise.all(Array.from({ length: concurrentRequests }, async () => {
+        const start = performance.now();
+        const response = await fetch(`${baseURL}/users`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
-        })
-      );
+        });
+        await response.arrayBuffer();
+        return { status: response.status, durationMs: performance.now() - start };
+      }));
 
-      const startTime = performance.now();
-      const responses = await Promise.all(requests);
-      const endTime = performance.now();
-
-      const allSuccessful = responses.every(r => r.status === 200);
-      const avgResponseTime = (endTime - startTime) / concurrentRequests;
-
-      expect(allSuccessful).toBe(true);
-      expect(avgResponseTime).toBeLessThan(500);
+      expect(samples.every(sample => sample.status === 200)).toBe(true);
+      const averageLatency = samples.reduce((sum, sample) => sum + sample.durationMs, 0)
+        / samples.length;
+      expect(averageLatency).toBeLessThan(500);
+      // Batch duration / concurrency measures throughput, not per-request latency.
     });
   });
 });
 ```
+
+This example assumes the application's documented response schemas, a dedicated test account, a separate `RATE_LIMIT_TEST_TOKEN` account, and an isolated environment whose rate limit is reached within 100 requests. Adapt those contracts before execution. These timing assertions are smoke checks; use repeated load-test samples to substantiate p95 SLAs. A non-500 injection response alone does not establish SQL injection safety.
 
 ## 🔄 Your Workflow Process
 

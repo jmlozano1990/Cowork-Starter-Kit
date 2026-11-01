@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-rapid-prototyper.md
-Content SHA-256: 327598e2cee41b78866720e20ee76d84e674b4a95ed92773b40c942153cba88a
+Content SHA-256: 247ea109c45d9ed372b85b5a436c52a801fee234740e3caa114d72d0e1f05f80
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -301,9 +301,13 @@ export function trackEvent(eventName: string, properties?: Record<string, any>) 
 
 // Simple A/B testing hook
 export function useABTest(testName: string, variants: string[]) {
+  if (variants.length === 0) throw new Error('An experiment needs at least one variant');
   const [variant, setVariant] = useState<string>('');
+  // Inline arrays get a new identity every render; depend on their actual contents.
+  const variantsKey = JSON.stringify(variants);
 
   useEffect(() => {
+    const experimentVariants: string[] = JSON.parse(variantsKey);
     // Get or create user ID for consistent experience
     let userId = localStorage.getItem('user_id');
     if (!userId) {
@@ -317,8 +321,8 @@ export function useABTest(testName: string, variants: string[]) {
       return a & a;
     }, 0);
     
-    const variantIndex = Math.abs(hash) % variants.length;
-    const assignedVariant = variants[variantIndex];
+    const variantIndex = Math.abs(hash) % experimentVariants.length;
+    const assignedVariant = experimentVariants[variantIndex];
     
     setVariant(assignedVariant);
     
@@ -328,7 +332,7 @@ export function useABTest(testName: string, variants: string[]) {
       variant: assignedVariant,
       user_id: userId,
     });
-  }, [testName, variants]);
+  }, [testName, variantsKey]);
 
   return variant;
 }

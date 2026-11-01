@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: design/design-ux-architect.md
-Content SHA-256: 151f7386682b77a6c1455374d427237a3d46eadfa1248964466b0412848f7117
+Content SHA-256: 7d373da3fd204db3c830f28e03cdf85bcacd3858e38fbdad58489953f811c296
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -252,7 +252,7 @@ body {
 // Theme Management System
 class ThemeManager {
   constructor() {
-    this.currentTheme = this.getStoredTheme() || this.getSystemTheme();
+    this.currentTheme = this.getStoredTheme() || 'system';
     this.applyTheme(this.currentTheme);
     this.initializeToggle();
   }
@@ -262,16 +262,25 @@ class ThemeManager {
   }
 
   getStoredTheme() {
-    return localStorage.getItem('theme');
+    try {
+      const stored = localStorage.getItem('theme');
+      return stored === 'dark' || stored === 'light' ? stored : null;
+    } catch {
+      return null; // Storage can be unavailable in sandboxed or restricted contexts.
+    }
   }
 
   applyTheme(theme) {
     if (theme === 'system') {
       document.documentElement.removeAttribute('data-theme');
-      localStorage.removeItem('theme');
     } else {
       document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
+    }
+    try {
+      if (theme === 'system') localStorage.removeItem('theme');
+      else localStorage.setItem('theme', theme);
+    } catch {
+      // Apply the selected theme even when browser storage is unavailable.
     }
     this.currentTheme = theme;
     this.updateToggleUI();
@@ -281,9 +290,13 @@ class ThemeManager {
     const toggle = document.querySelector('.theme-toggle');
     if (toggle) {
       toggle.addEventListener('click', (e) => {
-        if (e.target.matches('.theme-toggle-option')) {
-          const newTheme = e.target.dataset.theme;
-          this.applyTheme(newTheme);
+        const option = e.target instanceof Element
+          ? e.target.closest('.theme-toggle-option') : null;
+        if (option && toggle.contains(option)) {
+          const newTheme = option.dataset.theme;
+          if (['system', 'light', 'dark'].includes(newTheme)) {
+            this.applyTheme(newTheme);
+          }
         }
       });
     }
@@ -362,7 +375,7 @@ grep -i "target\|audience\|goal\|objective" ai/memory-bank/site-setup.md
 
 ## 📋 Your Deliverable Template
 
-```markdown
+````markdown
 # [Project Name] Technical Architecture & UX Foundation
 
 ## 🏗️ CSS Architecture
@@ -447,7 +460,7 @@ js/
 **Foundation Date**: [Date]
 **Developer Handoff**: Ready for LuxuryDeveloper implementation
 **Next Steps**: Implement foundation, then add premium polish
-```
+````
 
 ## 💭 Your Communication Style
 

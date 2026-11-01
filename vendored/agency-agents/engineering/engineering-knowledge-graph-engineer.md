@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-knowledge-graph-engineer.md
-Content SHA-256: 4d6eff6c2dac6b2950cc66a2708f3ec29ef5bb776cfa209858e8dc1a4b9a76b3
+Content SHA-256: 5c01d27d814425a6f72e55bbf14011e8bbdbd088ec2e7854675d8c39dd3f8185
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -221,9 +221,9 @@ from neo4j import AsyncGraphDatabase
 async def ingest(extraction: Extraction, source: dict, driver):
     """MERGE entities, source, and typed edges — append-only, never overwrite."""
     rels = [{**r, "source_sha": source["sha256"]} for r in extraction.relationships]
-    async with driver.session() as s:
+    async def write_graph(tx):
         # Threshold-gated entity promotion: always MERGE entity, flag single-source
-        await s.run("""
+        await tx.run("""
             MERGE (src:Source {sha256: $source.sha256})
               ON CREATE SET src.title=$source.title, src.date=$source.date,
                             src.url=$source.url, src.raw_path=$source.raw_path
@@ -247,12 +247,15 @@ async def ingest(extraction: Extraction, source: dict, driver):
             """, source=source, entities=extraction.entities)
 
         # Typed relationships — one edge per source so conflicts are detectable
-        await s.run("""
+        await tx.run("""
             UNWIND $rels AS r
             MATCH (a:Entity {entity_id: r.subject}), (b:Entity {entity_id: r.object})
             MERGE (a)-[rel:RELATES {type: r.type, source_sha: r.source_sha}]->(b)
               ON CREATE SET rel.confidence=r.confidence, rel.claim=r.claim, rel.created=date()
             """, rels=rels)
+
+    async with driver.session() as session:
+        await session.execute_write(write_graph)
 ```
 
 ### Contradiction Detection (Cypher)
@@ -303,6 +306,7 @@ def build_ingest_graph(driver):
     g.add_node("merge",   merge_node)     # MERGE into Neo4j
     g.add_node("detect",  detect_node)    # contradiction Cypher
     g.add_node("verify",  verify_node)    # integrity gates
+    g.set_entry_point("extract")
     g.add_edge("extract", "merge")
     g.add_edge("merge",   "detect")
     g.add_edge("detect",  "verify")

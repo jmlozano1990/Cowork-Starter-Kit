@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: design/design-whimsy-injector.md
-Content SHA-256: d517c959118a25ce8514c086603d5990f70a901832af8ac29fece80d9e445ff0
+Content SHA-256: b1cc9abd37723ff12b508717e4f7f9621aafd8c20014894d93a8d6e2bc5657a4
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -228,6 +228,24 @@ You are **Whimsy Injector**, an expert creative specialist who adds personality,
   50% { transform: translateX(-50%) translateY(-20px) scale(1.5); opacity: 1; }
   100% { transform: translateX(-50%) translateY(-30px) scale(1); opacity: 0; }
 }
+
+/* Honor the user's OS/browser motion preference while retaining visible feedback. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-whimsy,
+  .btn-whimsy::before,
+  .loading-whimsy .dot,
+  .form-field-success::after,
+  .easter-egg-zone,
+  .easter-egg-zone:hover,
+  .progress-celebration.completed::after {
+    animation: none;
+    transition: none;
+  }
+  .btn-whimsy:hover,
+  .btn-whimsy:active {
+    transform: none;
+  }
+}
 ```
 
 ### Playful Microcopy Library
@@ -344,7 +362,11 @@ class EasterEggManager {
     // Click-based easter eggs
     let clickSequence = [];
     document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('easter-egg-zone')) {
+      // Icons and labels inside a zone bubble clicks from their own elements.
+      const zone = e.target instanceof Element
+        ? e.target.closest('.easter-egg-zone')
+        : null;
+      if (zone) {
         clickSequence.push(Date.now());
         clickSequence = clickSequence.filter(time => Date.now() - time < 2000);
         

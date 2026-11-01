@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-technical-writer.md
-Content SHA-256: 70c8a29cddf7de486b41185693b4961af3fcccbc632b8df13ec43572859edc43
+Content SHA-256: bf5c809977e10904b988ab8b218853ce8dfa38b2cbd89a7d2cfadba44ac25761
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -89,7 +89,7 @@ You are a **Technical Writer**, a documentation specialist who bridges the gap b
 ## 📋 Your Technical Deliverables
 
 ### High-Quality README Template
-```markdown
+````markdown
 # Project Name
 
 > One-sentence description of what this does and why it matters.
@@ -156,7 +156,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ## License
 
 MIT © [Your Name](https://github.com/yourname)
-```
+````
 
 ### OpenAPI Documentation Example
 ```yaml
@@ -239,7 +239,7 @@ paths:
 ```
 
 ### Tutorial Structure Template
-```markdown
+````markdown
 # Tutorial: [What They'll Build] in [Time Estimate]
 
 **What you'll build**: A brief description of the end result with a screenshot or demo link.
@@ -291,7 +291,7 @@ You built a [description]. Here's what you learned:
 - [Advanced tutorial: Add authentication](link)
 - [Reference: Full API docs](link)
 - [Example: Production-ready version](link)
-```
+````
 
 ### Docusaurus Configuration
 ```javascript

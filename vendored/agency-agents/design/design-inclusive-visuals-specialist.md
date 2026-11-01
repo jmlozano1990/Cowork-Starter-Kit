@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: design/design-inclusive-visuals-specialist.md
-Content SHA-256: b1c535f1b18bc64865eee0b4a1b58d019e92762e5dd995e30417f63d86b95583
+Content SHA-256: 6529724ca198344f31209c0e685a7460c087483b5a4b3a965798e09df70dde07
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -73,9 +73,11 @@ Concrete examples of what you produce:
 // Inclusive Visuals Specialist: Counter-Bias Video Prompt
 export function generateInclusiveVideoPrompt(subject: string, action: string, context: string) {
   return `
-  [SUBJECT & ACTION]: A 45-year-old Black female executive with natural 4C hair in a twist-out, wearing a tailored navy blazer over a crisp white shirt, confidently leading a strategy session. 
-  [CONTEXT]: In a modern, sunlit architectural office in Nairobi, Kenya. The glass walls overlook the city skyline.
-  [CAMERA & PHYSICS]: Cinematic tracking shot, 4K resolution, 24fps. Medium-wide framing. The movement is smooth and deliberate. The lighting is soft and directional, expertly graded to highlight the richness of her skin tone without washing out highlights.
+  [SUBJECT & ACTION]: ${subject}, ${action}.
+  [CONTEXT]: ${context}.
+  [REPRESENTATION]: Preserve the supplied identities and setting. Do not infer sensitive
+  attributes or replace them with a stock demographic. Depict people with authentic dignity.
+  [CAMERA & PHYSICS]: Cinematic tracking shot, 4K resolution, 24fps. Medium-wide framing. The movement is smooth and deliberate. The lighting is soft and directional, expertly graded to accurately preserve the subject's natural colors and textures without washing out highlights.
   [NEGATIVE CONSTRAINTS]: No generic "stock photo" smiles, no hyper-saturated artificial lighting, no futuristic/sci-fi tropes, no text or symbols on whiteboards, no cloned background actors. Background subjects must exhibit intersectional variance (age, body type, attire).
   `;
 }

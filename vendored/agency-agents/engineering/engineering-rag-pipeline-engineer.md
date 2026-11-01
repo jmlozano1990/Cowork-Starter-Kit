@@ -3,7 +3,7 @@
 Agency Source — msitarzewski/agency-agents
 Source: https://github.com/msitarzewski/agency-agents
 Upstream path: engineering/engineering-rag-pipeline-engineer.md
-Content SHA-256: a87135cd8a852aeec3da7edf00d2a019cbe30ee9cd9394ea00bd62a4668ca8c7
+Content SHA-256: d9b75715fc6eb5712054658727a6f9082d4be2579766d2b42a6060595caa9a96
 Lock file source: cowork.lock.json (cowork-starter-kit)
 Copyright (c) msitarzewski/agency-agents contributors
 
@@ -106,7 +106,7 @@ You've built these systems for real workloads: multilingual corpora, domain-spec
 ### Chunking Strategy — Semantic + Structural
 
 ```python
-from langchain.text_splitter import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
 def chunk_document(text: str, doc_type: str) -> list[dict]:
     """
@@ -126,22 +126,25 @@ def chunk_document(text: str, doc_type: str) -> list[dict]:
         char_splitter = RecursiveCharacterTextSplitter(
             chunk_size=800,
             chunk_overlap=100,
-            separators=["\n\n", "\n", ". ", " "]
+            separators=["\n\n", "\n", ". ", " ", ""]
         )
         chunks = []
         for doc in header_chunks:
             sub_chunks = char_splitter.split_documents([doc])
             chunks.extend(sub_chunks)
-        return chunks
+        return [{"content": doc.page_content, "metadata": doc.metadata} for doc in chunks]
 
     else:
         # Semantic chunking for unstructured text
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=600,
             chunk_overlap=80,
-            separators=["\n\n", "\n", ". ", "! ", "? ", " "]
+            separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]
         )
-        return splitter.create_documents([text])
+        return [
+            {"content": doc.page_content, "metadata": doc.metadata}
+            for doc in splitter.create_documents([text])
+        ]
 ```
 
 ### pgvector Schema & HNSW Index
@@ -177,6 +180,7 @@ CREATE INDEX ON document_chunks (document_id);
 
 ```python
 import asyncio
+import json
 from openai import AsyncOpenAI
 from pgvector.asyncpg import register_vector
 import asyncpg
@@ -192,7 +196,11 @@ async def embed_batch(texts: list[str], batch_size: int = 100) -> list[list[floa
             input=batch,
             model="text-embedding-3-small"
         )
-        all_embeddings.extend([r.embedding for r in response.data])
+        # The API supplies each embedding's input index; do not rely on wire order.
+        indexed = sorted(response.data, key=lambda item: item.index)
+        if [item.index for item in indexed] != list(range(len(batch))):
+            raise ValueError('Incomplete or duplicate embedding indices')
+        all_embeddings.extend(item.embedding for item in indexed)
     return all_embeddings
 
 async def ingest_document(document_id: str, chunks: list[dict], pool: asyncpg.Pool):
@@ -202,6 +210,8 @@ async def ingest_document(document_id: str, chunks: list[dict], pool: asyncpg.Po
     """
     texts = [c["content"] for c in chunks]
     embeddings = await embed_batch(texts)
+    if len(embeddings) != len(chunks):
+        raise ValueError('Embedding count must match chunk count before inserting')
 
     async with pool.acquire() as conn:
         await register_vector(conn)
@@ -213,7 +223,7 @@ async def ingest_document(document_id: str, chunks: list[dict], pool: asyncpg.Po
             VALUES ($1, $2, $3, $4, $5)
             """,
             [
-                (document_id, c["content"], emb, idx, c.get("metadata", {}))
+                (document_id, c["content"], emb, idx, json.dumps(c.get("metadata", {})))
                 for idx, (c, emb) in enumerate(zip(chunks, embeddings))
             ]
         )
@@ -238,7 +248,10 @@ async def hybrid_search(
     alpha=0.7 favors semantic; lower it for keyword-heavy domains.
     """
     filter_clause = ""
-    params = {"embedding": query_embedding, "query": query, "top_k": top_k * 2}
+    params = {
+        "embedding": query_embedding, "query": query,
+        "candidate_k": top_k * 2, "top_k": top_k,
+    }
 
     if metadata_filter:
         filter_clause = "AND metadata @> :filter"
@@ -247,12 +260,12 @@ async def hybrid_search(
     result = await db.execute(text(f"""
         WITH semantic AS (
             SELECT id, content, metadata,
-                   1 - (embedding <=> :embedding::vector) AS score,
-                   ROW_NUMBER() OVER (ORDER BY embedding <=> :embedding::vector) AS rank
+                   1 - (embedding <=> CAST(:embedding AS vector)) AS score,
+                   ROW_NUMBER() OVER (ORDER BY embedding <=> CAST(:embedding AS vector)) AS rank
             FROM document_chunks
             WHERE 1=1 {filter_clause}
-            ORDER BY embedding <=> :embedding::vector
-            LIMIT :top_k
+            ORDER BY embedding <=> CAST(:embedding AS vector)
+            LIMIT :candidate_k
         ),
         keyword AS (
             SELECT id, content, metadata,
@@ -265,7 +278,7 @@ async def hybrid_search(
             FROM document_chunks
             WHERE to_tsvector('english', content) @@ plainto_tsquery('english', :query)
             {filter_clause}
-            LIMIT :top_k
+            LIMIT :candidate_k
         ),
         fused AS (
             SELECT
@@ -282,7 +295,7 @@ async def hybrid_search(
         SELECT * FROM fused ORDER BY rrf_score DESC LIMIT :top_k
     """), params)
 
-    return [dict(row) for row in result.fetchall()]
+    return [dict(row) for row in result.mappings().all()]
 ```
 
 ### Cross-Encoder Re-Ranking
